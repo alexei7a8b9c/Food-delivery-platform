@@ -1,0 +1,26 @@
+### Try login with existing users
+POST http://localhost:8083/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@email.com",
+  "password": "password123"
+}
+
+### Or try with empty password
+POST http://localhost:8083/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@email.com",
+  "password": ""
+}
+
+### Or try simple password
+POST http://localhost:8083/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@email.com",
+  "password": "123"
+}

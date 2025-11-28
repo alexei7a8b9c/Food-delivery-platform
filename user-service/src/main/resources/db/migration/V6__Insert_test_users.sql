@@ -1,0 +1,7 @@
+INSERT INTO users (email, password_hash, full_name, telephone, created_at, updated_at) VALUES
+                                                                                           ('john.doe@email.com', '$2a$10$hashedpassword1', 'John Doe', '+1-555-0101', '2024-01-10 09:00:00', '2024-01-10 09:00:00'),
+                                                                                           ('jane.smith@email.com', '$2a$10$hashedpassword2', 'Jane Smith', '+1-555-0102', '2024-01-11 10:30:00', '2024-01-11 10:30:00'),
+                                                                                           ('mike.wilson@email.com', '$2a$10$hashedpassword3', 'Mike Wilson', '+1-555-0103', '2024-01-12 11:15:00', '2024-01-12 11:15:00'),
+                                                                                           ('sarah.johnson@email.com', '$2a$10$hashedpassword4', 'Sarah Johnson', '+1-555-0104', '2024-01-13 14:20:00', '2024-01-13 14:20:00'),
+                                                                                           ('alex.brown@email.com', '$2a$10$hashedpassword5', 'Alex Brown', '+1-555-0105', '2024-01-14 16:45:00', '2024-01-14 16:45:00'),
+                                                                                           ('lisa.davis@email.com', '$2a$10$hashedpassword6', 'Lisa Davis', '+1-555-0106', '2024-01-15 08:30:00', '2024-01-15 08:30:00');
