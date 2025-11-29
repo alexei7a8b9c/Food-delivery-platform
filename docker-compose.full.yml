@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # Базы данных
+  postgres:
+    image: postgres:15
+    container_name: food-delivery-postgres
+    environment:
+      POSTGRES_DB: food_delivery
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - food-delivery-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: food-delivery-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - food-delivery-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: food-delivery-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - food-delivery-network
+
+  # Сервис Discovery
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - food-delivery-network
+    depends_on:
+      - postgres
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - food-delivery-network
+    depends_on:
+      - eureka-server
+      - user-service
+      - order-service
+      - restaurant-service
+
+  # Микросервисы
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - food-delivery-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  restaurant-service:
+    build: ./restaurant-service
+    container_name: restaurant-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/restaurant_db
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - food-delivery-network
+    depends_on:
+      - postgres
+      - eureka-server
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - food-delivery-network
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - eureka-server
+
+  # Frontend (будет добавлен позже)
+  frontend:
+    build: ./front-end
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - food-delivery-network
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+
+networks:
+  food-delivery-network:
+    driver: bridge
