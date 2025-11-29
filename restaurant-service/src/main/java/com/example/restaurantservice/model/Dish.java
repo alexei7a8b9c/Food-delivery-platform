@@ -17,5 +17,5 @@ public class Dish {
     private String imageUrl;
 
     @Column(name = "restaurant_id")
-    private Long restaurantId;  // Должно быть Long, а не Integer
+    private Long restaurantId;
 }
