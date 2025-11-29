@@ -1,0 +1,5 @@
+# Front-end папка
+front-end/node_modules
+
+# Maven
+target/
