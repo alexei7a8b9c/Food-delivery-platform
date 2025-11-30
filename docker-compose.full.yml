@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Базы данных
   postgres:
     image: postgres:15
     container_name: food-delivery-postgres
@@ -16,6 +15,11 @@ services:
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - food-delivery-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d food_delivery"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -27,6 +31,11 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - food-delivery-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -39,8 +48,12 @@ services:
       - "15672:15672"
     networks:
       - food-delivery-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Сервис Discovery
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -51,9 +64,9 @@ services:
     networks:
       - food-delivery-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
-  # API Gateway
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -65,12 +78,9 @@ services:
     networks:
       - food-delivery-network
     depends_on:
-      - eureka-server
-      - user-service
-      - order-service
-      - restaurant-service
+      eureka-server:
+        condition: service_healthy
 
-  # Микросервисы
   user-service:
     build: ./user-service
     container_name: user-service
@@ -83,8 +93,10 @@ services:
     networks:
       - food-delivery-network
     depends_on:
-      - postgres
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   restaurant-service:
     build: ./restaurant-service
@@ -98,8 +110,10 @@ services:
     networks:
       - food-delivery-network
     depends_on:
-      - postgres
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   order-service:
     build: ./order-service
@@ -115,21 +129,14 @@ services:
     networks:
       - food-delivery-network
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-      - eureka-server
-
-  # Frontend (будет добавлен позже)
-  frontend:
-    build: ./front-end
-    container_name: frontend
-    ports:
-      - "3000:3000"
-    networks:
-      - food-delivery-network
-    depends_on:
-      - api-gateway
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
 volumes:
   postgres_data:
