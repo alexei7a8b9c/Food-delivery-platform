@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../../store/slices/authSlice'
-import { ShoppingCart, User, LogOut, Utensils } from 'lucide-react'
+import { ShoppingCart, User, LogOut, Utensils, Search } from 'lucide-react'
 
 const Header = () => {
     const { user } = useSelector((state) => state.auth)
@@ -34,6 +34,9 @@ const Header = () => {
                         <Link to="/restaurants" className="text-gray-700 hover:text-primary-500 transition-colors">
                             Restaurants
                         </Link>
+                        <Link to="/dishes" className="text-gray-700 hover:text-primary-500 transition-colors">
+                            All Dishes
+                        </Link>
                         {user && (
                             <Link to="/orders" className="text-gray-700 hover:text-primary-500 transition-colors">
                                 My Orders
@@ -58,13 +61,11 @@ const Header = () => {
                     </span>
                                     )}
                                 </Link>
-
                                 <div className="relative group">
                                     <button className="flex items-center space-x-2 p-2 text-gray-700 hover:text-primary-500 transition-colors">
                                         <User className="h-6 w-6" />
                                         <span className="hidden sm:block">{user.fullName}</span>
                                     </button>
-
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                         <div className="px-4 py-2 text-sm text-gray-700 border-b">
                                             {user.email}

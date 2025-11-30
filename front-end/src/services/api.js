@@ -6,7 +6,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000,
+    timeout: 15000,
 })
 
 // Request interceptor to add auth token
@@ -16,29 +16,49 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
-        // Добавляем заголовки для CORS
-        config.headers['X-Requested-With'] = 'XMLHttpRequest'
+
+        console.log(`Making ${config.method?.toUpperCase()} request to: ${config.url}`)
         return config
     },
     (error) => {
+        console.error('Request error:', error)
         return Promise.reject(error)
     }
 )
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log(`Response received from ${response.config.url}:`, response.status)
+        return response
+    },
     (error) => {
-        console.error('API Error:', error.response?.data || error.message)
+        console.error('API Response Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message
+        })
 
         if (error.response?.status === 401) {
+            console.log('Authentication required, redirecting to login...')
             localStorage.removeItem('token')
             localStorage.removeItem('user')
-            window.location.href = '/login'
+            // Не редиректим автоматически, чтобы не мешать просмотру ресторанов
         }
 
         if (error.code === 'ECONNABORTED') {
-            console.error('Request timeout')
+            console.error('Request timeout - backend might be down')
+        }
+
+        if (error.response?.status === 404) {
+            console.error('Endpoint not found - check API Gateway routing')
+        }
+
+        if (error.response?.status === 500) {
+            console.error('Server error - check backend services')
         }
 
         return Promise.reject(error)

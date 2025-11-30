@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { Utensils, Clock, Star, Truck } from 'lucide-react'
+import { Utensils, Clock, Star, Truck, Search } from 'lucide-react'
 
 const Home = () => {
     const { user } = useSelector((state) => state.auth)
@@ -47,7 +47,14 @@ const Home = () => {
                                 to="/restaurants"
                                 className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors"
                             >
-                                Order Now
+                                Browse Restaurants
+                            </Link>
+                            <Link
+                                to="/dishes"
+                                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-primary-600 transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <Search className="h-5 w-5" />
+                                <span>Explore All Dishes</span>
                             </Link>
                             {!user && (
                                 <Link
@@ -73,7 +80,6 @@ const Home = () => {
                             We make food delivery simple, fast, and reliable
                         </p>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {features.map((feature, index) => (
                             <div key={index} className="text-center p-6">
@@ -96,17 +102,25 @@ const Home = () => {
             <section className="bg-gray-50 py-16">
                 <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                        Ready to order?
+                        Ready to explore?
                     </h2>
                     <p className="text-xl text-gray-600 mb-8">
-                        Join thousands of satisfied customers enjoying great food
+                        Discover thousands of dishes from our partner restaurants
                     </p>
-                    <Link
-                        to="/restaurants"
-                        className="btn-primary text-lg px-8 py-4"
-                    >
-                        Browse Restaurants
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            to="/dishes"
+                            className="btn-primary text-lg px-8 py-4"
+                        >
+                            View All Dishes
+                        </Link>
+                        <Link
+                            to="/restaurants"
+                            className="btn-secondary text-lg px-8 py-4"
+                        >
+                            Browse Restaurants
+                        </Link>
+                    </div>
                 </div>
             </section>
         </div>

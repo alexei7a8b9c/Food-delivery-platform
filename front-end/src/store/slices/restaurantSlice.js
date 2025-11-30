@@ -5,13 +5,13 @@ export const fetchRestaurants = createAsyncThunk(
     'restaurants/fetchRestaurants',
     async (_, { rejectWithValue }) => {
         try {
-            console.log('Starting to fetch restaurants...')
+            console.log('Starting to fetch restaurants from backend...')
             const response = await restaurantService.getAllRestaurants()
-            console.log('Fetched restaurants successfully:', response)
+            console.log('Successfully fetched restaurants:', response.length)
             return response
         } catch (error) {
             console.error('Failed to fetch restaurants:', error)
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch restaurants')
+            return rejectWithValue(error.message || 'Failed to fetch restaurants from server')
         }
     }
 )
@@ -23,7 +23,7 @@ export const fetchRestaurantById = createAsyncThunk(
             const response = await restaurantService.getRestaurantById(restaurantId)
             return response
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch restaurant')
+            return rejectWithValue(error.message || 'Failed to fetch restaurant')
         }
     }
 )
@@ -32,13 +32,13 @@ export const fetchRestaurantMenu = createAsyncThunk(
     'restaurants/fetchRestaurantMenu',
     async (restaurantId, { rejectWithValue }) => {
         try {
-            console.log(`Fetching menu for restaurant ${restaurantId}...`)
+            console.log(`Fetching menu for restaurant ${restaurantId} from backend...`)
             const response = await restaurantService.getRestaurantMenu(restaurantId)
-            console.log(`Fetched menu for restaurant ${restaurantId}:`, response)
+            console.log(`Successfully fetched menu with ${response.length} items`)
             return response
         } catch (error) {
             console.error(`Failed to fetch menu for restaurant ${restaurantId}:`, error)
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch menu')
+            return rejectWithValue(error.message || 'Failed to fetch menu from server')
         }
     }
 )
@@ -51,6 +51,7 @@ const restaurantSlice = createSlice({
         menu: [],
         isLoading: false,
         error: null,
+        lastFetch: null
     },
     reducers: {
         clearRestaurantError: (state) => {
@@ -60,6 +61,12 @@ const restaurantSlice = createSlice({
             state.currentRestaurant = null
             state.menu = []
         },
+        clearAllData: (state) => {
+            state.restaurants = []
+            state.currentRestaurant = null
+            state.menu = []
+            state.error = null
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -72,12 +79,13 @@ const restaurantSlice = createSlice({
                 state.isLoading = false
                 state.restaurants = action.payload
                 state.error = null
-                console.log('Restaurants updated in state:', action.payload)
+                state.lastFetch = new Date().toISOString()
+                console.log('Updated restaurants in Redux store:', action.payload.length)
             })
             .addCase(fetchRestaurants.rejected, (state, action) => {
                 state.isLoading = false
                 state.error = action.payload
-                console.error('Restaurants fetch failed:', action.payload)
+                console.error('Restaurants fetch failed in Redux:', action.payload)
             })
             // Fetch Restaurant by ID
             .addCase(fetchRestaurantById.pending, (state) => {
@@ -102,7 +110,7 @@ const restaurantSlice = createSlice({
                 state.isLoading = false
                 state.menu = action.payload
                 state.error = null
-                console.log('Menu updated in state:', action.payload)
+                console.log('Updated menu in Redux store:', action.payload.length)
             })
             .addCase(fetchRestaurantMenu.rejected, (state, action) => {
                 state.isLoading = false
@@ -111,5 +119,5 @@ const restaurantSlice = createSlice({
     },
 })
 
-export const { clearRestaurantError, clearCurrentRestaurant } = restaurantSlice.actions
+export const { clearRestaurantError, clearCurrentRestaurant, clearAllData } = restaurantSlice.actions
 export default restaurantSlice.reducer

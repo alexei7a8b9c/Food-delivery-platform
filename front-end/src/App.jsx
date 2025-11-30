@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Restaurants from './pages/Restaurants'
 import RestaurantMenu from './pages/RestaurantMenu'
+import AllDishes from './pages/AllDishes' // Новая страница
 import Cart from './pages/Cart'
 import Orders from './pages/Orders'
 import OrderDetails from './pages/OrderDetails'
@@ -23,6 +24,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/restaurants" element={<Restaurants />} />
                 <Route path="/restaurants/:id" element={<RestaurantMenu />} />
+                <Route path="/dishes" element={<AllDishes />} /> {/* Новый маршрут */}
 
                 {/* Protected Routes */}
                 <Route path="/cart" element={

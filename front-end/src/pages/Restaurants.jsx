@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchRestaurants } from '../store/slices/restaurantSlice'
-import { Search, Utensils, Star, Clock, AlertCircle } from 'lucide-react'
+import { Search, Utensils, Star, Clock, AlertCircle, RefreshCw } from 'lucide-react'
 
 const Restaurants = () => {
     const dispatch = useDispatch()
-    const { restaurants, isLoading, error } = useSelector((state) => state.restaurants)
+    const { restaurants, isLoading, error, lastFetch } = useSelector((state) => state.restaurants)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedCuisine, setSelectedCuisine] = useState('')
 
@@ -25,12 +25,18 @@ const Restaurants = () => {
         return matchesSearch && matchesCuisine
     })
 
+    const handleRetry = () => {
+        console.log('Retrying fetch restaurants...')
+        dispatch(fetchRestaurants())
+    }
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading restaurants...</p>
+                    <RefreshCw className="h-12 w-12 text-primary-500 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-600">Loading restaurants from database...</p>
+                    <p className="text-sm text-gray-500 mt-2">Connecting to backend services</p>
                 </div>
             </div>
         )
@@ -39,16 +45,24 @@ const Restaurants = () => {
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
+                <div className="text-center max-w-md">
                     <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Error loading restaurants</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to load restaurants</h2>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={() => dispatch(fetchRestaurants())}
-                        className="btn-primary"
-                    >
-                        Try Again
-                    </button>
+                    <div className="space-y-3">
+                        <button
+                            onClick={handleRetry}
+                            className="w-full btn-primary"
+                        >
+                            Try Again
+                        </button>
+                        <div className="text-xs text-gray-500">
+                            <p>Check if backend services are running:</p>
+                            <p>• API Gateway: localhost:8080</p>
+                            <p>• Restaurant Service: localhost:8082</p>
+                            <p>• Database: PostgreSQL with Flyway migrations</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         )
@@ -61,6 +75,27 @@ const Restaurants = () => {
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Restaurants</h1>
                     <p className="text-gray-600">Discover amazing food from local restaurants</p>
+                    {lastFetch && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            Last updated: {new Date(lastFetch).toLocaleTimeString()}
+                        </p>
+                    )}
+                </div>
+
+                {/* Debug Info */}
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="flex justify-between items-center text-sm">
+            <span className="text-blue-700">
+              Showing {filteredRestaurants.length} of {restaurants.length} restaurants from database
+            </span>
+                        <button
+                            onClick={handleRetry}
+                            className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                        >
+                            <RefreshCw className="h-4 w-4" />
+                            <span>Refresh</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -87,11 +122,6 @@ const Restaurants = () => {
                             ))}
                         </select>
                     </div>
-                </div>
-
-                {/* Debug Info */}
-                <div className="mb-4 text-sm text-gray-500">
-                    Showing {filteredRestaurants.length} of {restaurants.length} restaurants
                 </div>
 
                 {/* Restaurants Grid */}
@@ -139,11 +169,11 @@ const Restaurants = () => {
                     </div>
                 )}
 
-                {restaurants.length === 0 && !isLoading && (
+                {restaurants.length === 0 && !isLoading && !error && (
                     <div className="text-center py-12">
                         <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants available</h3>
-                        <p className="text-gray-600">Check back later for new restaurant listings</p>
+                        <p className="text-gray-600">Check database connection and Flyway migrations</p>
                     </div>
                 )}
             </div>
