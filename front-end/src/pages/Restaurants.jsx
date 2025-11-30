@@ -1,149 +1,121 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { restaurantService } from '../services/restaurantService'
-import { Search, Star, Clock, MapPin } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchRestaurants } from '../store/slices/restaurantSlice'
+import { Search, Utensils, Star, Clock } from 'lucide-react'
 
 const Restaurants = () => {
-    const [restaurants, setRestaurants] = useState([])
-    const [filteredRestaurants, setFilteredRestaurants] = useState([])
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { restaurants, isLoading } = useSelector((state) => state.restaurants)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedCuisine, setSelectedCuisine] = useState('')
 
-    const cuisines = ['Italian', 'Chinese', 'American', 'Japanese', 'Mexican', 'French']
-
     useEffect(() => {
-        loadRestaurants()
-    }, [])
+        dispatch(fetchRestaurants())
+    }, [dispatch])
 
-    useEffect(() => {
-        filterRestaurants()
-    }, [searchTerm, selectedCuisine, restaurants])
+    const cuisines = [...new Set(restaurants.map(restaurant => restaurant.cuisine))]
 
-    const loadRestaurants = async () => {
-        try {
-            const response = await restaurantService.getAllRestaurants()
-            setRestaurants(response.data)
-        } catch (error) {
-            console.error('Error loading restaurants:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    const filteredRestaurants = restaurants.filter(restaurant => {
+        const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesCuisine = !selectedCuisine || restaurant.cuisine === selectedCuisine
+        return matchesSearch && matchesCuisine
+    })
 
-    const filterRestaurants = () => {
-        let filtered = restaurants
-
-        if (searchTerm) {
-            filtered = filtered.filter(restaurant =>
-                restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
-        if (selectedCuisine) {
-            filtered = filtered.filter(restaurant =>
-                restaurant.cuisine === selectedCuisine
-            )
-        }
-
-        setFilteredRestaurants(filtered)
-    }
-
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                </div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
         )
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Рестораны</h1>
-                <p className="text-gray-600">Выберите ресторан и начните заказ</p>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                <div className="grid md:grid-cols-2 gap-4">
-                    {/* Search */}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Поиск ресторанов или кухни..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        />
-                    </div>
-
-                    {/* Cuisine Filter */}
-                    <select
-                        value={selectedCuisine}
-                        onChange={(e) => setSelectedCuisine(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                        <option value="">Все кухни</option>
-                        {cuisines.map(cuisine => (
-                            <option key={cuisine} value={cuisine}>{cuisine}</option>
-                        ))}
-                    </select>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Our Restaurants</h1>
+                    <p className="text-gray-600">Discover amazing food from local restaurants</p>
                 </div>
-            </div>
 
-            {/* Restaurants Grid */}
-            {filteredRestaurants.length === 0 ? (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                        <Utensils size={64} className="mx-auto" />
+                {/* Filters */}
+                <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <input
+                                type="text"
+                                placeholder="Search restaurants or cuisines..."
+                                className="input-field pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <select
+                            className="input-field md:w-48"
+                            value={selectedCuisine}
+                            onChange={(e) => setSelectedCuisine(e.target.value)}
+                        >
+                            <option value="">All Cuisines</option>
+                            {cuisines.map(cuisine => (
+                                <option key={cuisine} value={cuisine}>{cuisine}</option>
+                            ))}
+                        </select>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Рестораны не найдены</h3>
-                    <p className="text-gray-600">Попробуйте изменить параметры поиска</p>
                 </div>
-            ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                {/* Restaurants Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredRestaurants.map(restaurant => (
-                        <div key={restaurant.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
-                            <div className="h-48 bg-gray-200 rounded-t-lg flex items-center justify-center">
-                                <Utensils size={48} className="text-gray-400" />
+                        <Link
+                            key={restaurant.id}
+                            to={`/restaurants/${restaurant.id}`}
+                            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                        >
+                            <div className="h-48 bg-gray-200 flex items-center justify-center">
+                                <Utensils className="h-16 w-16 text-gray-400" />
                             </div>
 
                             <div className="p-6">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                    {restaurant.name}
-                                </h3>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="text-xl font-semibold text-gray-900">{restaurant.name}</h3>
+                                </div>
 
                                 <div className="flex items-center text-gray-600 mb-2">
-                                    <MapPin size={16} className="mr-1" />
-                                    <span className="text-sm">{restaurant.address}</span>
+                                    <Utensils className="h-4 w-4 mr-1" />
+                                    <span className="text-sm">{restaurant.cuisine}</span>
                                 </div>
 
-                                <div className="flex items-center justify-between mb-4">
-                  <span className="inline-block bg-orange-100 text-orange-800 text-sm px-2 py-1 rounded">
-                    {restaurant.cuisine}
-                  </span>
-                                    <div className="flex items-center text-yellow-500">
-                                        <Star size={16} className="fill-current" />
-                                        <span className="text-sm text-gray-600 ml-1">4.5</span>
+                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                    {restaurant.address}
+                                </p>
+
+                                <div className="flex justify-between items-center text-sm text-gray-500">
+                                    <div className="flex items-center">
+                                        <Clock className="h-4 w-4 mr-1" />
+                                        <span>30-45 min</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                                        <span>4.5</span>
                                     </div>
                                 </div>
-
-                                <Link
-                                    to={`/restaurants/${restaurant.id}`}
-                                    className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors text-center block"
-                                >
-                                    Смотреть меню
-                                </Link>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
-            )}
+
+                {filteredRestaurants.length === 0 && (
+                    <div className="text-center py-12">
+                        <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants found</h3>
+                        <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
