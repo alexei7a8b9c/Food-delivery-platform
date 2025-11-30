@@ -1,156 +1,139 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { orderService } from '../services/orderService'
-import { Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchUserOrders } from '../store/slices/orderSlice'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../utils/constants'
+import { Package, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 const Orders = () => {
-    const [orders, setOrders] = useState([])
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { orders, isLoading } = useSelector((state) => state.orders)
+    const { user } = useSelector((state) => state.auth)
 
     useEffect(() => {
-        loadOrders()
-    }, [])
-
-    const loadOrders = async () => {
-        try {
-            const response = await orderService.getUserOrders()
-            setOrders(response.data)
-        } catch (error) {
-            console.error('Error loading orders:', error)
-        } finally {
-            setLoading(false)
+        if (user) {
+            dispatch(fetchUserOrders())
         }
-    }
+    }, [dispatch, user])
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case 'PENDING':
-                return <Clock className="text-yellow-500" size={20} />
-            case 'CONFIRMED':
-            case 'PREPARING':
-                return <Package className="text-blue-500" size={20} />
-            case 'OUT_FOR_DELIVERY':
-                return <Truck className="text-orange-500" size={20} />
             case 'DELIVERED':
-                return <CheckCircle className="text-green-500" size={20} />
+                return <CheckCircle className="h-5 w-5 text-green-500" />
             case 'CANCELLED':
-                return <XCircle className="text-red-500" size={20} />
+                return <XCircle className="h-5 w-5 text-red-500" />
             default:
-                return <Package className="text-gray-500" size={20} />
+                return <Clock className="h-5 w-5 text-yellow-500" />
         }
-    }
-
-    const getStatusText = (status) => {
-        const statusMap = {
-            'PENDING': 'Ожидает подтверждения',
-            'CONFIRMED': 'Подтвержден',
-            'PREPARING': 'Готовится',
-            'OUT_FOR_DELIVERY': 'В пути',
-            'DELIVERED': 'Доставлен',
-            'CANCELLED': 'Отменен'
-        }
-        return statusMap[status] || status
     }
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('ru-RU', {
+        return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
         })
     }
 
-    if (loading) {
+    if (!user) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Please log in</h2>
+                    <p className="text-gray-600 mb-4">You need to be logged in to view your orders</p>
+                    <Link to="/login" className="btn-primary">
+                        Sign In
+                    </Link>
                 </div>
             </div>
         )
     }
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Мои заказы</h1>
-                <p className="text-gray-600">История ваших заказов</p>
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
+        )
+    }
 
-            {orders.length === 0 ? (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                        <Package size={64} className="mx-auto" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Заказов пока нет</h3>
-                    <p className="text-gray-600 mb-6">Сделайте свой первый заказ!</p>
-                    <Link
-                        to="/restaurants"
-                        className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                        Выбрать ресторан
-                    </Link>
+    return (
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
+                    <p className="text-gray-600">Track your food delivery orders</p>
                 </div>
-            ) : (
-                <div className="space-y-6">
-                    {orders.map(order => (
-                        <div key={order.id} className="bg-white rounded-lg shadow-sm border p-6">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                                <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                                    {getStatusIcon(order.status)}
+
+                {orders.length === 0 ? (
+                    <div className="text-center py-12">
+                        <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                        <p className="text-gray-600 mb-4">Start by ordering some delicious food</p>
+                        <Link to="/restaurants" className="btn-primary">
+                            Browse Restaurants
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {orders.map(order => (
+                            <div key={order.id} className="bg-white rounded-lg shadow-sm p-6">
+                                <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">
-                                            Заказ #{order.id}
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                            Order #{order.id}
                                         </h3>
                                         <p className="text-gray-600 text-sm">
                                             {formatDate(order.orderDate)}
                                         </p>
                                     </div>
-                                </div>
 
-                                <div className="flex items-center space-x-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                              order.status === 'OUT_FOR_DELIVERY' ? 'bg-orange-100 text-orange-800' :
-                                  'bg-blue-100 text-blue-800'
-                  }`}>
-                    {getStatusText(order.status)}
-                  </span>
-                                    <span className="text-xl font-bold text-orange-500">
-                    {order.totalPrice} ₽
-                  </span>
-                                </div>
-                            </div>
-
-                            <div className="border-t pt-4">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 mb-2">Состав заказа:</h4>
-                                        <div className="space-y-1">
-                                            {order.items.map((item, index) => (
-                                                <div key={index} className="flex justify-between text-sm">
-                                                    <span>{item.dishName} × {item.quantity}</span>
-                                                    <span>{item.price * item.quantity} ₽</span>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="flex items-center space-x-2">
+                                        {getStatusIcon(order.status)}
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
+                      {ORDER_STATUS_LABELS[order.status]}
+                    </span>
                                     </div>
+                                </div>
 
-                                    <Link
-                                        to={`/orders/${order.id}`}
-                                        className="text-orange-500 hover:text-orange-600 transition-colors font-semibold"
-                                    >
-                                        Подробнее
-                                    </Link>
+                                <div className="mb-4">
+                                    <p className="text-gray-900 font-semibold">
+                                        Total: ${(order.totalPrice / 100).toFixed(2)}
+                                    </p>
+                                    <p className="text-gray-600 text-sm">
+                                        {order.items?.length || 0} items
+                                    </p>
+                                </div>
+
+                                <div className="border-t pt-4">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h4 className="font-medium text-gray-900 mb-2">Items:</h4>
+                                            <ul className="text-sm text-gray-600 space-y-1">
+                                                {order.items?.map((item, index) => (
+                                                    <li key={index}>
+                                                        {item.quantity}x {item.dishName} - ${((item.price * item.quantity) / 100).toFixed(2)}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <Link
+                                            to={`/orders/${order.id}`}
+                                            className="btn-secondary text-sm"
+                                        >
+                                            View Details
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
