@@ -15,7 +15,7 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-        config.setHostName("redis"); // ИЗМЕНИТЬ "localhost" на "redis" для Docker
+        config.setHostName("redis");
         config.setPort(6379);
         config.setPassword("redis123");
         return new LettuceConnectionFactory(config);

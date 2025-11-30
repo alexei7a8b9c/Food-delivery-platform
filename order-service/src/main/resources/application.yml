@@ -11,11 +11,12 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # ИЗМЕНИТЬ с update на validate
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -25,6 +26,11 @@ spring:
       host: localhost
       port: 6379
       password: redis123
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
 
 eureka:
   client:

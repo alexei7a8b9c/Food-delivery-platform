@@ -28,7 +28,11 @@ public class JwtFilter implements GatewayFilter {
             "/api/auth/login",
             "/api/auth/validate",
             "/eureka",
-            "/actuator/health"
+            "/actuator/health",
+            "/v3/api-docs",
+            "/swagger-ui",
+            "/api/restaurants",
+            "/api/menu"
     );
 
     private Predicate<ServerHttpRequest> isSecured = request ->
