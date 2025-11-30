@@ -6,21 +6,33 @@ export const fetchRestaurants = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const response = await restaurantService.getAllRestaurants()
-            return response.data
+            return response
         } catch (error) {
-            return rejectWithValue(error.response?.data || 'Failed to fetch restaurants')
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch restaurants')
         }
     }
 )
 
-export const fetchRestaurantDishes = createAsyncThunk(
-    'restaurants/fetchRestaurantDishes',
+export const fetchRestaurantById = createAsyncThunk(
+    'restaurants/fetchRestaurantById',
     async (restaurantId, { rejectWithValue }) => {
         try {
-            const response = await restaurantService.getRestaurantDishes(restaurantId)
-            return { restaurantId, dishes: response.data }
+            const response = await restaurantService.getRestaurantById(restaurantId)
+            return response
         } catch (error) {
-            return rejectWithValue(error.response?.data || 'Failed to fetch dishes')
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch restaurant')
+        }
+    }
+)
+
+export const fetchRestaurantMenu = createAsyncThunk(
+    'restaurants/fetchRestaurantMenu',
+    async (restaurantId, { rejectWithValue }) => {
+        try {
+            const response = await restaurantService.getRestaurantMenu(restaurantId)
+            return response
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch menu')
         }
     }
 )
@@ -29,37 +41,44 @@ const restaurantSlice = createSlice({
     name: 'restaurants',
     initialState: {
         restaurants: [],
-        dishes: {},
-        loading: false,
-        error: null
+        currentRestaurant: null,
+        menu: [],
+        isLoading: false,
+        error: null,
     },
     reducers: {
-        clearError: (state) => {
+        clearRestaurantError: (state) => {
             state.error = null
-        }
+        },
+        clearCurrentRestaurant: (state) => {
+            state.currentRestaurant = null
+            state.menu = []
+        },
     },
     extraReducers: (builder) => {
         builder
-            // Fetch restaurants
+            // Fetch Restaurants
             .addCase(fetchRestaurants.pending, (state) => {
-                state.loading = true
-                state.error = null
+                state.isLoading = true
             })
             .addCase(fetchRestaurants.fulfilled, (state, action) => {
-                state.loading = false
+                state.isLoading = false
                 state.restaurants = action.payload
             })
             .addCase(fetchRestaurants.rejected, (state, action) => {
-                state.loading = false
+                state.isLoading = false
                 state.error = action.payload
             })
-            // Fetch restaurant dishes
-            .addCase(fetchRestaurantDishes.fulfilled, (state, action) => {
-                const { restaurantId, dishes } = action.payload
-                state.dishes[restaurantId] = dishes
+            // Fetch Restaurant by ID
+            .addCase(fetchRestaurantById.fulfilled, (state, action) => {
+                state.currentRestaurant = action.payload
             })
-    }
+            // Fetch Restaurant Menu
+            .addCase(fetchRestaurantMenu.fulfilled, (state, action) => {
+                state.menu = action.payload
+            })
+    },
 })
 
-export const { clearError } = restaurantSlice.actions
+export const { clearRestaurantError, clearCurrentRestaurant } = restaurantSlice.actions
 export default restaurantSlice.reducer
