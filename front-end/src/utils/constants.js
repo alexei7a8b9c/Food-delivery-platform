@@ -1,3 +1,5 @@
+export const API_BASE_URL = '/api'
+
 export const ORDER_STATUS = {
     PENDING: 'PENDING',
     CONFIRMED: 'CONFIRMED',
@@ -8,28 +10,19 @@ export const ORDER_STATUS = {
 }
 
 export const ORDER_STATUS_LABELS = {
-    [ORDER_STATUS.PENDING]: 'Ожидает подтверждения',
-    [ORDER_STATUS.CONFIRMED]: 'Подтвержден',
-    [ORDER_STATUS.PREPARING]: 'Готовится',
-    [ORDER_STATUS.OUT_FOR_DELIVERY]: 'В пути',
-    [ORDER_STATUS.DELIVERED]: 'Доставлен',
-    [ORDER_STATUS.CANCELLED]: 'Отменен'
+    [ORDER_STATUS.PENDING]: 'Pending',
+    [ORDER_STATUS.CONFIRMED]: 'Confirmed',
+    [ORDER_STATUS.PREPARING]: 'Preparing',
+    [ORDER_STATUS.OUT_FOR_DELIVERY]: 'Out for Delivery',
+    [ORDER_STATUS.DELIVERED]: 'Delivered',
+    [ORDER_STATUS.CANCELLED]: 'Cancelled'
 }
 
-export const PAYMENT_METHODS = {
-    CREDIT_CARD: 'CREDIT_CARD',
-    PAYPAL: 'PAYPAL',
-    CASH_ON_DELIVERY: 'CASH_ON_DELIVERY'
+export const ORDER_STATUS_COLORS = {
+    [ORDER_STATUS.PENDING]: 'bg-yellow-100 text-yellow-800',
+    [ORDER_STATUS.CONFIRMED]: 'bg-blue-100 text-blue-800',
+    [ORDER_STATUS.PREPARING]: 'bg-orange-100 text-orange-800',
+    [ORDER_STATUS.OUT_FOR_DELIVERY]: 'bg-purple-100 text-purple-800',
+    [ORDER_STATUS.DELIVERED]: 'bg-green-100 text-green-800',
+    [ORDER_STATUS.CANCELLED]: 'bg-red-100 text-red-800'
 }
-
-export const CUISINE_TYPES = [
-    'Italian',
-    'Chinese',
-    'American',
-    'Japanese',
-    'Mexican',
-    'French',
-    'Indian',
-    'Thai',
-    'Mediterranean'
-]
