@@ -1,10 +1,13 @@
+server:
+  port: 8083  # ИЗМЕНИТЬ с 8081 на 8083
+
 spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/userdb
-    username: userdb
-    password: userdb
+    url: jdbc:postgresql://localhost:5432/user_db  # ИЗМЕНИТЬ userdb на user_db
+    username: user_db  # ИЗМЕНИТЬ userdb на user_db
+    password: user_db
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -22,9 +25,6 @@ spring:
 jwt:
   secret: "my-super-secret-jwt-key-for-food-delivery-platform-2024"
   expiration: 86400000
-
-server:
-  port: 8081
 
 eureka:
   client:
@@ -47,6 +47,6 @@ management:
     web:
       exposure:
         include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+    endpoint:
+      health:
+        show-details: always

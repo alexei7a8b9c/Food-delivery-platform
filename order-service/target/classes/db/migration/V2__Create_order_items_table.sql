@@ -6,7 +6,6 @@ CREATE TABLE order_item (
                             price INTEGER NOT NULL,
                             dish_name VARCHAR(255),
                             dish_description TEXT,
-
                             CONSTRAINT fk_order_item_order
                                 FOREIGN KEY (order_id)
                                     REFERENCES orders(id)
