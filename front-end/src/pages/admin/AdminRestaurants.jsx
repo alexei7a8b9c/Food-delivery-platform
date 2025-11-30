@@ -1,439 +1,229 @@
-import React, { useState, useEffect } from 'react'
-import { restaurantService } from '../../services/restaurantService'
-import { Plus, Edit, Trash2, Utensils, Search } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchRestaurants } from '../../store/slices/restaurantSlice'
+import { Plus, Search, Edit, Trash2, Utensils } from 'lucide-react'
 
 const AdminRestaurants = () => {
-    const [restaurants, setRestaurants] = useState([])
-    const [dishes, setDishes] = useState({})
-    const [loading, setLoading] = useState(true)
-    const [showForm, setShowForm] = useState(false)
-    const [editingRestaurant, setEditingRestaurant] = useState(null)
-    const [showDishForm, setShowDishForm] = useState(false)
-    const [selectedRestaurant, setSelectedRestaurant] = useState(null)
-    const [editingDish, setEditingDish] = useState(null)
+    const dispatch = useDispatch()
+    const { restaurants, isLoading } = useSelector((state) => state.restaurants)
     const [searchTerm, setSearchTerm] = useState('')
-
-    const [restaurantForm, setRestaurantForm] = useState({
+    const [showAddForm, setShowAddForm] = useState(false)
+    const [editingRestaurant, setEditingRestaurant] = useState(null)
+    const [formData, setFormData] = useState({
         name: '',
         cuisine: '',
         address: ''
     })
 
-    const [dishForm, setDishForm] = useState({
-        name: '',
-        description: '',
-        price: '',
-        imageUrl: ''
-    })
-
     useEffect(() => {
-        loadRestaurants()
-    }, [])
-
-    const loadRestaurants = async () => {
-        try {
-            const response = await restaurantService.getAllRestaurants()
-            setRestaurants(response.data)
-
-            // Load dishes for each restaurant
-            const dishesPromises = response.data.map(restaurant =>
-                restaurantService.getRestaurantDishes(restaurant.id)
-            )
-
-            const dishesResponses = await Promise.all(dishesPromises)
-            const dishesMap = {}
-
-            response.data.forEach((restaurant, index) => {
-                dishesMap[restaurant.id] = dishesResponses[index].data
-            })
-
-            setDishes(dishesMap)
-        } catch (error) {
-            console.error('Error loading restaurants:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleRestaurantSubmit = async (e) => {
-        e.preventDefault()
-        try {
-            if (editingRestaurant) {
-                await restaurantService.updateRestaurant(editingRestaurant.id, restaurantForm)
-            } else {
-                await restaurantService.createRestaurant(restaurantForm)
-            }
-
-            resetForms()
-            loadRestaurants()
-        } catch (error) {
-            console.error('Error saving restaurant:', error)
-            alert('Ошибка при сохранении ресторана')
-        }
-    }
-
-    const handleDishSubmit = async (e) => {
-        e.preventDefault()
-        try {
-            if (editingDish) {
-                await restaurantService.updateDish(selectedRestaurant.id, editingDish.id, dishForm)
-            } else {
-                await restaurantService.addDish(selectedRestaurant.id, dishForm)
-            }
-
-            resetForms()
-            loadRestaurants()
-        } catch (error) {
-            console.error('Error saving dish:', error)
-            alert('Ошибка при сохранении блюда')
-        }
-    }
-
-    const deleteRestaurant = async (id) => {
-        if (window.confirm('Вы уверены, что хотите удалить этот ресторан?')) {
-            try {
-                await restaurantService.deleteRestaurant(id)
-                loadRestaurants()
-            } catch (error) {
-                console.error('Error deleting restaurant:', error)
-                alert('Ошибка при удалении ресторана')
-            }
-        }
-    }
-
-    const deleteDish = async (restaurantId, dishId) => {
-        if (window.confirm('Вы уверены, что хотите удалить это блюдо?')) {
-            try {
-                await restaurantService.deleteDish(restaurantId, dishId)
-                loadRestaurants()
-            } catch (error) {
-                console.error('Error deleting dish:', error)
-                alert('Ошибка при удалении блюда')
-            }
-        }
-    }
-
-    const resetForms = () => {
-        setRestaurantForm({ name: '', cuisine: '', address: '' })
-        setDishForm({ name: '', description: '', price: '', imageUrl: '' })
-        setShowForm(false)
-        setShowDishForm(false)
-        setEditingRestaurant(null)
-        setEditingDish(null)
-        setSelectedRestaurant(null)
-    }
-
-    const openEditRestaurant = (restaurant) => {
-        setEditingRestaurant(restaurant)
-        setRestaurantForm({
-            name: restaurant.name,
-            cuisine: restaurant.cuisine,
-            address: restaurant.address
-        })
-        setShowForm(true)
-    }
-
-    const openAddDish = (restaurant) => {
-        setSelectedRestaurant(restaurant)
-        setShowDishForm(true)
-    }
-
-    const openEditDish = (restaurant, dish) => {
-        setSelectedRestaurant(restaurant)
-        setEditingDish(dish)
-        setDishForm({
-            name: dish.name,
-            description: dish.description || '',
-            price: dish.price.toString(),
-            imageUrl: dish.imageUrl || ''
-        })
-        setShowDishForm(true)
-    }
+        dispatch(fetchRestaurants())
+    }, [dispatch])
 
     const filteredRestaurants = restaurants.filter(restaurant =>
         restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
-    if (loading) {
+    const handleAddRestaurant = () => {
+        // Implement restaurant creation
+        console.log('Add restaurant:', formData)
+        setShowAddForm(false)
+        setFormData({ name: '', cuisine: '', address: '' })
+    }
+
+    const handleEditRestaurant = (restaurant) => {
+        setEditingRestaurant(restaurant)
+        setFormData({
+            name: restaurant.name,
+            cuisine: restaurant.cuisine,
+            address: restaurant.address
+        })
+    }
+
+    const handleUpdateRestaurant = () => {
+        // Implement restaurant update
+        console.log('Update restaurant:', editingRestaurant.id, formData)
+        setEditingRestaurant(null)
+        setFormData({ name: '', cuisine: '', address: '' })
+    }
+
+    const handleDeleteRestaurant = (restaurantId) => {
+        if (window.confirm('Are you sure you want to delete this restaurant?')) {
+            // Implement restaurant deletion
+            console.log('Delete restaurant:', restaurantId)
+        }
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (editingRestaurant) {
+            handleUpdateRestaurant()
+        } else {
+            handleAddRestaurant()
+        }
+    }
+
+    if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                </div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
         )
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление ресторанами</h1>
-                    <p className="text-gray-600">Добавление и редактирование ресторанов и меню</p>
-                </div>
-
-                <div className="flex space-x-4 mt-4 md:mt-0">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Поиск ресторанов..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        />
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Manage Restaurants</h1>
+                        <p className="text-gray-600">Add, edit, or remove restaurants</p>
                     </div>
 
                     <button
-                        onClick={() => setShowForm(true)}
-                        className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center"
+                        onClick={() => setShowAddForm(true)}
+                        className="btn-primary flex items-center space-x-2"
                     >
-                        <Plus size={20} className="mr-2" />
-                        Добавить ресторан
+                        <Plus className="h-4 w-4" />
+                        <span>Add Restaurant</span>
                     </button>
                 </div>
-            </div>
 
-            {/* Restaurant Form Modal */}
-            {showForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">
-                            {editingRestaurant ? 'Редактировать ресторан' : 'Добавить ресторан'}
-                        </h3>
+                {/* Search */}
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <input
+                            type="text"
+                            placeholder="Search restaurants..."
+                            className="input-field pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
 
-                        <form onSubmit={handleRestaurantSubmit}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Название
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={restaurantForm.name}
-                                        onChange={(e) => setRestaurantForm(prev => ({ ...prev, name: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
+                {/* Add/Edit Form */}
+                {(showAddForm || editingRestaurant) && (
+                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                            {editingRestaurant ? 'Edit Restaurant' : 'Add New Restaurant'}
+                        </h2>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Кухня
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={restaurantForm.cuisine}
-                                        onChange={(e) => setRestaurantForm(prev => ({ ...prev, cuisine: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Адрес
-                                    </label>
-                                    <textarea
-                                        required
-                                        value={restaurantForm.address}
-                                        onChange={(e) => setRestaurantForm(prev => ({ ...prev, address: e.target.value }))}
-                                        rows="3"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Restaurant Name
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="input-field"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
                             </div>
 
-                            <div className="flex space-x-3 mt-6">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-                                >
-                                    {editingRestaurant ? 'Сохранить' : 'Добавить'}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Cuisine Type
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="input-field"
+                                    value={formData.cuisine}
+                                    onChange={(e) => setFormData({ ...formData, cuisine: e.target.value })}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Address
+                                </label>
+                                <textarea
+                                    required
+                                    rows={3}
+                                    className="input-field"
+                                    value={formData.address}
+                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex space-x-3">
+                                <button type="submit" className="btn-primary">
+                                    {editingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={resetForms}
-                                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                                    onClick={() => {
+                                        setShowAddForm(false)
+                                        setEditingRestaurant(null)
+                                        setFormData({ name: '', cuisine: '', address: '' })
+                                    }}
+                                    className="btn-secondary"
                                 >
-                                    Отмена
+                                    Cancel
                                 </button>
                             </div>
                         </form>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Restaurants List */}
-            <div className="space-y-6">
-                {filteredRestaurants.map(restaurant => (
-                    <div key={restaurant.id} className="bg-white rounded-lg shadow-sm border">
-                        <div className="p-6 border-b">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                                        {restaurant.name}
-                                    </h3>
-                                    <div className="flex items-center space-x-4 text-gray-600">
-                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">
-                      {restaurant.cuisine}
-                    </span>
-                                        <span className="text-sm">{restaurant.address}</span>
-                                    </div>
+                {/* Restaurants Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredRestaurants.map(restaurant => (
+                        <div key={restaurant.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                            <div className="h-32 bg-gray-200 flex items-center justify-center">
+                                <Utensils className="h-12 w-12 text-gray-400" />
+                            </div>
+
+                            <div className="p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    {restaurant.name}
+                                </h3>
+
+                                <div className="space-y-2 mb-4">
+                                    <p className="text-sm text-gray-600">
+                                        <span className="font-medium">Cuisine:</span> {restaurant.cuisine}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        <span className="font-medium">Address:</span> {restaurant.address}
+                                    </p>
                                 </div>
 
-                                <div className="flex space-x-2 mt-4 md:mt-0">
+                                <div className="flex space-x-2">
                                     <button
-                                        onClick={() => openAddDish(restaurant)}
-                                        className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors flex items-center"
+                                        onClick={() => handleEditRestaurant(restaurant)}
+                                        className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center space-x-1"
                                     >
-                                        <Plus size={16} className="mr-1" />
-                                        Блюдо
+                                        <Edit className="h-4 w-4" />
+                                        <span>Edit</span>
                                     </button>
+
                                     <button
-                                        onClick={() => openEditRestaurant(restaurant)}
-                                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center"
+                                        onClick={() => handleDeleteRestaurant(restaurant.id)}
+                                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors flex items-center justify-center space-x-1"
                                     >
-                                        <Edit size={16} className="mr-1" />
-                                        Редактировать
-                                    </button>
-                                    <button
-                                        onClick={() => deleteRestaurant(restaurant.id)}
-                                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors flex items-center"
-                                    >
-                                        <Trash2 size={16} className="mr-1" />
-                                        Удалить
+                                        <Trash2 className="h-4 w-4" />
+                                        <span>Delete</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
+                    ))}
+                </div>
 
-                        {/* Dishes List */}
-                        <div className="p-6">
-                            <h4 className="font-semibold text-gray-900 mb-4">Меню</h4>
-
-                            {dishes[restaurant.id]?.length > 0 ? (
-                                <div className="grid gap-4">
-                                    {dishes[restaurant.id].map(dish => (
-                                        <div key={dish.id} className="flex items-center justify-between p-4 border rounded-lg">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                                    <Utensils size={20} className="text-gray-400" />
-                                                </div>
-                                                <div>
-                                                    <h5 className="font-medium text-gray-900">{dish.name}</h5>
-                                                    <p className="text-sm text-gray-600">{dish.description}</p>
-                                                    <p className="text-lg font-bold text-orange-500">{dish.price} ₽</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => openEditDish(restaurant, dish)}
-                                                    className="text-blue-500 hover:text-blue-700 transition-colors"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteDish(restaurant.id, dish.id)}
-                                                    className="text-red-500 hover:text-red-700 transition-colors"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-gray-500 text-center py-4">Меню пустое</p>
-                            )}
-                        </div>
+                {filteredRestaurants.length === 0 && (
+                    <div className="text-center py-12">
+                        <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants found</h3>
+                        <p className="text-gray-600">
+                            {searchTerm ? 'Try adjusting your search' : 'Get started by adding your first restaurant'}
+                        </p>
                     </div>
-                ))}
+                )}
             </div>
-
-            {/* Dish Form Modal */}
-            {showDishForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">
-                            {editingDish ? 'Редактировать блюдо' : 'Добавить блюдо'}
-                        </h3>
-
-                        <form onSubmit={handleDishSubmit}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Название блюда
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={dishForm.name}
-                                        onChange={(e) => setDishForm(prev => ({ ...prev, name: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Описание
-                                    </label>
-                                    <textarea
-                                        value={dishForm.description}
-                                        onChange={(e) => setDishForm(prev => ({ ...prev, description: e.target.value }))}
-                                        rows="3"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Цена (₽)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="0"
-                                        value={dishForm.price}
-                                        onChange={(e) => setDishForm(prev => ({ ...prev, price: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        URL изображения
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={dishForm.imageUrl}
-                                        onChange={(e) => setDishForm(prev => ({ ...prev, imageUrl: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex space-x-3 mt-6">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-                                >
-                                    {editingDish ? 'Сохранить' : 'Добавить'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={resetForms}
-                                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
-                                >
-                                    Отмена
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
