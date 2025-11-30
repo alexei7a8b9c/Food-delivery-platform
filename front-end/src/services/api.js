@@ -1,15 +1,14 @@
 import axios from 'axios'
-
-const API_BASE_URL = 'http://localhost:8080'
+import { API_BASE_URL } from '../utils/constants'
 
 const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+    },
 })
 
-// Интерцептор для добавления токена к запросам
+// Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token')
@@ -23,7 +22,7 @@ api.interceptors.request.use(
     }
 )
 
-// Интерцептор для обработки ошибок
+// Response interceptor to handle errors
 api.interceptors.response.use(
     (response) => response,
     (error) => {
