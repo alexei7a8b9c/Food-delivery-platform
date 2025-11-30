@@ -36,9 +36,22 @@ eureka:
   client:
     service-url:
       defaultZone: http://admin:admin123@localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
 logging:
   level:
-    org.flywaydb: DEBUG
-    org.hibernate.SQL: DEBUG
     com.example.orderservice: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

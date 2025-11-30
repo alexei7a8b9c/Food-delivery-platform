@@ -11,7 +11,8 @@ export const login = createAsyncThunk(
             localStorage.setItem('user', JSON.stringify(response))
             return response
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Login failed')
+            console.error('Login thunk error:', error)
+            return rejectWithValue(error.message || 'Login failed')
         }
     }
 )
@@ -25,7 +26,8 @@ export const register = createAsyncThunk(
             localStorage.setItem('user', JSON.stringify(response))
             return response
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Registration failed')
+            console.error('Registration thunk error:', error)
+            return rejectWithValue(error.message || 'Registration failed')
         }
     }
 )
@@ -37,6 +39,7 @@ export const validateToken = createAsyncThunk(
             const response = await userService.validateToken()
             return response
         } catch (error) {
+            console.error('Token validation thunk error:', error)
             return rejectWithValue('Token validation failed')
         }
     }
@@ -72,6 +75,7 @@ const authSlice = createSlice({
                 state.isLoading = false
                 state.user = action.payload
                 state.token = action.payload.token
+                state.error = null
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false
@@ -86,6 +90,7 @@ const authSlice = createSlice({
                 state.isLoading = false
                 state.user = action.payload
                 state.token = action.payload.token
+                state.error = null
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false

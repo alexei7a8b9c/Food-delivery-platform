@@ -6,6 +6,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 10000,
 })
 
 // Request interceptor to add auth token
@@ -15,6 +16,8 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
+        // Добавляем заголовки для CORS
+        config.headers['X-Requested-With'] = 'XMLHttpRequest'
         return config
     },
     (error) => {
@@ -26,11 +29,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.error('API Error:', error.response?.data || error.message)
+
         if (error.response?.status === 401) {
             localStorage.removeItem('token')
             localStorage.removeItem('user')
             window.location.href = '/login'
         }
+
+        if (error.code === 'ECONNABORTED') {
+            console.error('Request timeout')
+        }
+
         return Promise.reject(error)
     }
 )

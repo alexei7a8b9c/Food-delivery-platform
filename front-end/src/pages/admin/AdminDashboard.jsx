@@ -1,19 +1,18 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchAllOrders, fetchOrderStatistics } from '../store/slices/orderSlice'
-import { fetchRestaurants } from '../store/slices/restaurantSlice'
+import { fetchAllOrders } from '../../store/slices/orderSlice'
+import { fetchRestaurants } from '../../store/slices/restaurantSlice'
 import { Package, Utensils, Users, DollarSign } from 'lucide-react'
 
 const AdminDashboard = () => {
     const dispatch = useDispatch()
-    const { orders, statistics } = useSelector((state) => state.orders)
+    const { orders } = useSelector((state) => state.orders)
     const { restaurants } = useSelector((state) => state.restaurants)
 
     useEffect(() => {
         dispatch(fetchAllOrders())
         dispatch(fetchRestaurants())
-        // Note: You'll need to add fetchOrderStatistics to your orderService and orderSlice
     }, [dispatch])
 
     const recentOrders = orders.slice(0, 5)
@@ -24,13 +23,13 @@ const AdminDashboard = () => {
     const stats = [
         {
             title: 'Total Orders',
-            value: statistics?.totalOrders || orders.length,
+            value: orders.length,
             icon: Package,
             color: 'bg-blue-500'
         },
         {
             title: 'Pending Orders',
-            value: statistics?.pendingOrders || orders.filter(o => o.status === 'PENDING').length,
+            value: orders.filter(o => o.status === 'PENDING').length,
             icon: Package,
             color: 'bg-yellow-500'
         },

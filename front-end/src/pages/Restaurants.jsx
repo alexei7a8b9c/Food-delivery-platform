@@ -2,22 +2,24 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchRestaurants } from '../store/slices/restaurantSlice'
-import { Search, Utensils, Star, Clock } from 'lucide-react'
+import { Search, Utensils, Star, Clock, AlertCircle } from 'lucide-react'
 
 const Restaurants = () => {
     const dispatch = useDispatch()
-    const { restaurants, isLoading } = useSelector((state) => state.restaurants)
+    const { restaurants, isLoading, error } = useSelector((state) => state.restaurants)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedCuisine, setSelectedCuisine] = useState('')
 
     useEffect(() => {
+        console.log('Restaurants component mounted, fetching restaurants...')
         dispatch(fetchRestaurants())
     }, [dispatch])
 
     const cuisines = [...new Set(restaurants.map(restaurant => restaurant.cuisine))]
 
     const filteredRestaurants = restaurants.filter(restaurant => {
-        const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch =
+            restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCuisine = !selectedCuisine || restaurant.cuisine === selectedCuisine
         return matchesSearch && matchesCuisine
@@ -26,7 +28,28 @@ const Restaurants = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading restaurants...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Error loading restaurants</h2>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button
+                        onClick={() => dispatch(fetchRestaurants())}
+                        className="btn-primary"
+                    >
+                        Try Again
+                    </button>
+                </div>
             </div>
         )
     }
@@ -53,7 +76,6 @@ const Restaurants = () => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-
                         <select
                             className="input-field md:w-48"
                             value={selectedCuisine}
@@ -67,32 +89,33 @@ const Restaurants = () => {
                     </div>
                 </div>
 
+                {/* Debug Info */}
+                <div className="mb-4 text-sm text-gray-500">
+                    Showing {filteredRestaurants.length} of {restaurants.length} restaurants
+                </div>
+
                 {/* Restaurants Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredRestaurants.map(restaurant => (
                         <Link
                             key={restaurant.id}
                             to={`/restaurants/${restaurant.id}`}
-                            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:transform hover:scale-105 duration-200"
                         >
-                            <div className="h-48 bg-gray-200 flex items-center justify-center">
-                                <Utensils className="h-16 w-16 text-gray-400" />
+                            <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                                <Utensils className="h-16 w-16 text-primary-600" />
                             </div>
-
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="text-xl font-semibold text-gray-900">{restaurant.name}</h3>
                                 </div>
-
                                 <div className="flex items-center text-gray-600 mb-2">
                                     <Utensils className="h-4 w-4 mr-1" />
-                                    <span className="text-sm">{restaurant.cuisine}</span>
+                                    <span className="text-sm capitalize">{restaurant.cuisine}</span>
                                 </div>
-
                                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                                     {restaurant.address}
                                 </p>
-
                                 <div className="flex justify-between items-center text-sm text-gray-500">
                                     <div className="flex items-center">
                                         <Clock className="h-4 w-4 mr-1" />
@@ -108,11 +131,19 @@ const Restaurants = () => {
                     ))}
                 </div>
 
-                {filteredRestaurants.length === 0 && (
+                {filteredRestaurants.length === 0 && restaurants.length > 0 && (
                     <div className="text-center py-12">
-                        <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants found</h3>
                         <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+                    </div>
+                )}
+
+                {restaurants.length === 0 && !isLoading && (
+                    <div className="text-center py-12">
+                        <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants available</h3>
+                        <p className="text-gray-600">Check back later for new restaurant listings</p>
                     </div>
                 )}
             </div>

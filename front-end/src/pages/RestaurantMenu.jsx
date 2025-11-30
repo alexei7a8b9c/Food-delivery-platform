@@ -3,18 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchRestaurantById, fetchRestaurantMenu } from '../store/slices/restaurantSlice'
 import { addToCart } from '../store/slices/cartSlice'
-import { ArrowLeft, Plus, Minus, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, Plus, Minus, ShoppingCart, AlertCircle } from 'lucide-react'
 
 const RestaurantMenu = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { currentRestaurant, menu, isLoading } = useSelector((state) => state.restaurants)
+    const { currentRestaurant, menu, isLoading, error } = useSelector((state) => state.restaurants)
     const { user } = useSelector((state) => state.auth)
-
     const [quantities, setQuantities] = useState({})
 
     useEffect(() => {
+        console.log(`Fetching restaurant ${id} and menu...`)
         dispatch(fetchRestaurantById(id))
         dispatch(fetchRestaurantMenu(id))
     }, [dispatch, id])
@@ -38,6 +38,7 @@ const RestaurantMenu = () => {
                 price: dish.price
             }))
             setQuantities(prev => ({ ...prev, [dish.id]: 0 }))
+            alert(`Added ${quantity} ${dish.name} to cart!`)
         }
     }
 
@@ -52,7 +53,25 @@ const RestaurantMenu = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading menu...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Error loading restaurant</h2>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button onClick={() => navigate('/restaurants')} className="btn-primary">
+                        Back to Restaurants
+                    </button>
+                </div>
             </div>
         )
     }
@@ -61,6 +80,7 @@ const RestaurantMenu = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
+                    <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant not found</h2>
                     <button onClick={() => navigate('/restaurants')} className="btn-primary">
                         Back to Restaurants
@@ -82,16 +102,14 @@ const RestaurantMenu = () => {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Restaurants
                     </button>
-
                     <div className="flex justify-between items-start">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
                                 {currentRestaurant.name}
                             </h1>
-                            <p className="text-gray-600 mb-1">{currentRestaurant.cuisine} Cuisine</p>
+                            <p className="text-gray-600 mb-1 capitalize">{currentRestaurant.cuisine} Cuisine</p>
                             <p className="text-gray-500 text-sm">{currentRestaurant.address}</p>
                         </div>
-
                         <button
                             onClick={handleOrderNow}
                             className="btn-primary flex items-center space-x-2"
@@ -108,8 +126,10 @@ const RestaurantMenu = () => {
                 <div className="bg-white rounded-lg shadow-sm">
                     <div className="px-6 py-4 border-b">
                         <h2 className="text-2xl font-semibold text-gray-900">Menu</h2>
+                        <p className="text-gray-600 text-sm mt-1">
+                            {menu.length} items available
+                        </p>
                     </div>
-
                     <div className="divide-y">
                         {menu.map(dish => (
                             <div key={dish.id} className="p-6 flex justify-between items-start">
@@ -124,20 +144,18 @@ const RestaurantMenu = () => {
                                         ${(dish.price / 100).toFixed(2)}
                                     </p>
                                 </div>
-
                                 <div className="flex items-center space-x-4">
                                     <div className="flex items-center space-x-2">
                                         <button
                                             onClick={() => handleQuantityChange(dish.id, -1)}
-                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                                            disabled={!quantities[dish.id]}
                                         >
                                             <Minus className="h-4 w-4" />
                                         </button>
-
                                         <span className="w-8 text-center font-medium">
                       {quantities[dish.id] || 0}
                     </span>
-
                                         <button
                                             onClick={() => handleQuantityChange(dish.id, 1)}
                                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
@@ -145,7 +163,6 @@ const RestaurantMenu = () => {
                                             <Plus className="h-4 w-4" />
                                         </button>
                                     </div>
-
                                     <button
                                         onClick={() => handleAddToCart(dish)}
                                         disabled={!quantities[dish.id]}
@@ -157,9 +174,9 @@ const RestaurantMenu = () => {
                             </div>
                         ))}
                     </div>
-
                     {menu.length === 0 && (
                         <div className="text-center py-12">
+                            <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items available</h3>
                             <p className="text-gray-600">This restaurant hasn't added any dishes yet.</p>
                         </div>

@@ -34,6 +34,7 @@ const Register = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
+        console.log('Submitting registration form:', formData)
         dispatch(register(formData))
     }
 

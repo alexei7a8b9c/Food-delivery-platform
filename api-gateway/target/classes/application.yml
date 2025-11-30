@@ -12,7 +12,7 @@ spring:
           lower-case-service-id: true
       httpclient:
         connect-timeout: 1000
-        response-timeout: 5s
+        response-timeout: 10s
 
 eureka:
   client:
@@ -30,3 +30,13 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     com.example.apigateway: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

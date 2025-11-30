@@ -1,12 +1,12 @@
 server:
-  port: 8083  # ИЗМЕНИТЬ с 8081 на 8083
+  port: 8083
 
 spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/user_db  # ИЗМЕНИТЬ userdb на user_db
-    username: user_db  # ИЗМЕНИТЬ userdb на user_db
+    url: jdbc:postgresql://localhost:5432/user_db
+    username: user_db
     password: user_db
     driver-class-name: org.postgresql.Driver
   jpa:
@@ -23,30 +23,30 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-  secret: "my-super-secret-jwt-key-for-food-delivery-platform-2024"
+  secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
   expiration: 86400000
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://admin:admin123@localhost:8761/eureka/
     fetch-registry: true
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
 logging:
   level:
     com.example.userservice: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.eureka: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
-    endpoint:
-      health:
-        show-details: always
+  endpoint:
+    health:
+      show-details: always

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchAllOrders, updateOrderStatus } from '../store/slices/orderSlice'
+import { fetchAllOrders, updateOrderStatus } from '../../store/slices/orderSlice'
 import { ORDER_STATUS, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../../utils/constants'
 import { Package, Search, Filter } from 'lucide-react'
 

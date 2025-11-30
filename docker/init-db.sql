@@ -13,12 +13,18 @@ GRANT ALL PRIVILEGES ON DATABASE user_db TO user_db;
 GRANT ALL PRIVILEGES ON DATABASE order_db TO order_db;
 GRANT ALL PRIVILEGES ON DATABASE restaurant_db TO restaurant_db;
 
--- Grant schema privileges
+-- Connect to each database and grant schema privileges
 \c user_db;
 GRANT ALL ON SCHEMA public TO user_db;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO user_db;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO user_db;
 
 \c order_db;
 GRANT ALL ON SCHEMA public TO order_db;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO order_db;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO order_db;
 
 \c restaurant_db;
 GRANT ALL ON SCHEMA public TO restaurant_db;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO restaurant_db;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO restaurant_db;
