@@ -1,206 +1,171 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { restaurantService } from '../services/restaurantService'
+import { fetchRestaurantById, fetchRestaurantMenu } from '../store/slices/restaurantSlice'
 import { addToCart } from '../store/slices/cartSlice'
-import { Plus, Minus, ShoppingCart, ArrowLeft, Star } from 'lucide-react'
+import { ArrowLeft, Plus, Minus, ShoppingCart } from 'lucide-react'
 
 const RestaurantMenu = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const { items, restaurantId } = useSelector(state => state.cart)
+    const { currentRestaurant, menu, isLoading } = useSelector((state) => state.restaurants)
+    const { user } = useSelector((state) => state.auth)
 
-    const [restaurant, setRestaurant] = useState(null)
-    const [dishes, setDishes] = useState([])
-    const [loading, setLoading] = useState(true)
     const [quantities, setQuantities] = useState({})
 
     useEffect(() => {
-        loadRestaurantData()
-    }, [id])
+        dispatch(fetchRestaurantById(id))
+        dispatch(fetchRestaurantMenu(id))
+    }, [dispatch, id])
 
-    const loadRestaurantData = async () => {
-        try {
-            const [restaurantResponse, dishesResponse] = await Promise.all([
-                restaurantService.getRestaurantById(id),
-                restaurantService.getRestaurantDishes(id)
-            ])
-
-            setRestaurant(restaurantResponse.data)
-            setDishes(dishesResponse.data)
-
-            // Initialize quantities
-            const initialQuantities = {}
-            dishesResponse.data.forEach(dish => {
-                const cartItem = items.find(item => item.dishId === dish.id)
-                initialQuantities[dish.id] = cartItem ? cartItem.quantity : 0
-            })
-            setQuantities(initialQuantities)
-        } catch (error) {
-            console.error('Error loading restaurant data:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const updateQuantity = (dishId, change) => {
+    const handleQuantityChange = (dishId, change) => {
         setQuantities(prev => ({
             ...prev,
             [dishId]: Math.max(0, (prev[dishId] || 0) + change)
         }))
     }
 
-    const addDishToCart = (dish) => {
-        if (quantities[dish.id] > 0) {
+    const handleAddToCart = (dish) => {
+        const quantity = quantities[dish.id] || 1
+        if (quantity > 0) {
             dispatch(addToCart({
-                dish: {
-                    dishId: dish.id,
-                    dishName: dish.name,
-                    dishDescription: dish.description,
-                    price: dish.price,
-                    restaurantId: parseInt(id)
-                },
-                restaurantId: parseInt(id)
+                dishId: dish.id,
+                quantity: quantity,
+                restaurantId: parseInt(id),
+                dishName: dish.name,
+                dishDescription: dish.description,
+                price: dish.price
             }))
+            setQuantities(prev => ({ ...prev, [dish.id]: 0 }))
         }
     }
 
-    const goToCart = () => {
+    const handleOrderNow = () => {
+        if (!user) {
+            navigate('/login')
+            return
+        }
         navigate('/cart')
     }
 
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                </div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
         )
     }
 
-    if (!restaurant) {
+    if (!currentRestaurant) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Ресторан не найден</h2>
-                    <button
-                        onClick={() => navigate('/restaurants')}
-                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                        Вернуться к ресторанам
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Restaurant not found</h2>
+                    <button onClick={() => navigate('/restaurants')} className="btn-primary">
+                        Back to Restaurants
                     </button>
                 </div>
             </div>
         )
     }
 
-    const cartItemsCount = items.reduce((total, item) => total + item.quantity, 0)
-
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gray-50">
             {/* Restaurant Header */}
-            <div className="mb-8">
-                <button
-                    onClick={() => navigate('/restaurants')}
-                    className="flex items-center text-gray-600 hover:text-orange-500 mb-4 transition-colors"
-                >
-                    <ArrowLeft size={20} className="mr-2" />
-                    Назад к ресторанам
-                </button>
+            <div className="bg-white shadow-sm border-b">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <button
+                        onClick={() => navigate('/restaurants')}
+                        className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Restaurants
+                    </button>
 
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div className="flex justify-between items-start">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
-                            <div className="flex items-center space-x-4 text-gray-600">
-                <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                  {restaurant.cuisine}
-                </span>
-                                <div className="flex items-center">
-                                    <Star size={16} className="fill-current text-yellow-500 mr-1" />
-                                    <span>4.5 • 30-40 мин</span>
-                                </div>
-                            </div>
-                            <p className="text-gray-600 mt-2">{restaurant.address}</p>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                {currentRestaurant.name}
+                            </h1>
+                            <p className="text-gray-600 mb-1">{currentRestaurant.cuisine} Cuisine</p>
+                            <p className="text-gray-500 text-sm">{currentRestaurant.address}</p>
                         </div>
 
-                        {cartItemsCount > 0 && (
-                            <button
-                                onClick={goToCart}
-                                className="mt-4 md:mt-0 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center"
-                            >
-                                <ShoppingCart size={20} className="mr-2" />
-                                Корзина ({cartItemsCount})
-                            </button>
-                        )}
+                        <button
+                            onClick={handleOrderNow}
+                            className="btn-primary flex items-center space-x-2"
+                        >
+                            <ShoppingCart className="h-4 w-4" />
+                            <span>View Cart</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Menu */}
-            <div className="grid gap-6">
-                {dishes.map(dish => (
-                    <div key={dish.id} className="bg-white rounded-lg shadow-sm border p-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between">
-                            <div className="flex-1">
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">{dish.name}</h3>
-                                <p className="text-gray-600 mb-3">{dish.description}</p>
-                                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-orange-500">
-                    {dish.price} ₽
-                  </span>
-                                </div>
-                            </div>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="bg-white rounded-lg shadow-sm">
+                    <div className="px-6 py-4 border-b">
+                        <h2 className="text-2xl font-semibold text-gray-900">Menu</h2>
+                    </div>
 
-                            <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                                {/* Quantity Controls */}
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => updateQuantity(dish.id, -1)}
-                                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                    >
-                                        <Minus size={16} />
-                                    </button>
-                                    <span className="w-8 text-center font-semibold">
-                    {quantities[dish.id] || 0}
-                  </span>
-                                    <button
-                                        onClick={() => updateQuantity(dish.id, 1)}
-                                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                    >
-                                        <Plus size={16} />
-                                    </button>
+                    <div className="divide-y">
+                        {menu.map(dish => (
+                            <div key={dish.id} className="p-6 flex justify-between items-start">
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                        {dish.name}
+                                    </h3>
+                                    <p className="text-gray-600 mb-2 text-sm">
+                                        {dish.description}
+                                    </p>
+                                    <p className="text-lg font-semibold text-primary-600">
+                                        ${(dish.price / 100).toFixed(2)}
+                                    </p>
                                 </div>
 
-                                {/* Add to Cart Button */}
-                                <button
-                                    onClick={() => addDishToCart(dish)}
-                                    disabled={!quantities[dish.id]}
-                                    className={`px-4 py-2 rounded-lg transition-colors ${
-                                        quantities[dish.id]
-                                            ? 'bg-orange-500 text-white hover:bg-orange-600'
-                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    }`}
-                                >
-                                    В корзину
-                                </button>
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handleQuantityChange(dish.id, -1)}
+                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </button>
+
+                                        <span className="w-8 text-center font-medium">
+                      {quantities[dish.id] || 0}
+                    </span>
+
+                                        <button
+                                            onClick={() => handleQuantityChange(dish.id, 1)}
+                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={() => handleAddToCart(dish)}
+                                        disabled={!quantities[dish.id]}
+                                        className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Add to Cart
+                                    </button>
+                                </div>
                             </div>
+                        ))}
+                    </div>
+
+                    {menu.length === 0 && (
+                        <div className="text-center py-12">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items available</h3>
+                            <p className="text-gray-600">This restaurant hasn't added any dishes yet.</p>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {dishes.length === 0 && (
-                <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                        <Utensils size={64} className="mx-auto" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Меню пустое</h3>
-                    <p className="text-gray-600">В этом ресторане пока нет блюд</p>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     )
 }
