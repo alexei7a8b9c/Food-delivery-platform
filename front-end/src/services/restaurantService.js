@@ -1,16 +1,33 @@
 import api from './api'
 
 export const restaurantService = {
-    getAllRestaurants: () => api.get('/restaurants'),
-    getRestaurantById: (id) => api.get(`/restaurants/${id}`),
-    getRestaurantsByCuisine: (cuisine) => api.get(`/restaurants/cuisine/${cuisine}`),
-    getRestaurantDishes: (restaurantId) => api.get(`/restaurants/${restaurantId}/dishes`),
+    getAllRestaurants: async () => {
+        const response = await api.get('/restaurants')
+        return response.data
+    },
 
-    // Admin endpoints
-    createRestaurant: (data) => api.post('/admin/restaurants', data),
-    updateRestaurant: (id, data) => api.put(`/admin/restaurants/${id}`, data),
-    deleteRestaurant: (id) => api.delete(`/admin/restaurants/${id}`),
-    addDish: (restaurantId, data) => api.post(`/admin/restaurants/${restaurantId}/dishes`, data),
-    updateDish: (restaurantId, dishId, data) => api.put(`/admin/restaurants/${restaurantId}/dishes/${dishId}`, data),
-    deleteDish: (restaurantId, dishId) => api.delete(`/admin/restaurants/${restaurantId}/dishes/${dishId}`)
+    getRestaurantById: async (id) => {
+        const response = await api.get(`/restaurants/${id}`)
+        return response.data
+    },
+
+    getRestaurantsByCuisine: async (cuisine) => {
+        const response = await api.get(`/restaurants/cuisine/${cuisine}`)
+        return response.data
+    },
+
+    getRestaurantMenu: async (restaurantId) => {
+        const response = await api.get(`/restaurants/${restaurantId}/dishes`)
+        return response.data
+    },
+
+    getAllDishes: async () => {
+        const response = await api.get('/menu/dishes')
+        return response.data
+    },
+
+    searchDishes: async (query) => {
+        const response = await api.get(`/menu/search?query=${query}`)
+        return response.data
+    }
 }
