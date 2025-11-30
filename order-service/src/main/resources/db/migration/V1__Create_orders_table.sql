@@ -2,8 +2,8 @@ CREATE TABLE orders (
                         id BIGSERIAL PRIMARY KEY,
                         status VARCHAR(50) NOT NULL,
                         order_date TIMESTAMP NOT NULL,
-                        user_id INTEGER NOT NULL,
-                        restaurant_id INTEGER NOT NULL,
+                        user_id BIGINT NOT NULL, -- ИЗМЕНИТЬ INTEGER на BIGINT
+                        restaurant_id BIGINT NOT NULL, -- ИЗМЕНИТЬ INTEGER на BIGINT
                         total_price INTEGER NOT NULL
 );
 
