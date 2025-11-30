@@ -1,62 +1,48 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { orderService } from '../services/orderService'
-import { Package, Clock, CheckCircle, XCircle, Truck, ArrowLeft } from 'lucide-react'
+import React, { useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchOrderById, cancelOrder } from '../store/slices/orderSlice'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../utils/constants'
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react'
 
 const OrderDetails = () => {
     const { id } = useParams()
     const navigate = useNavigate()
-    const location = useLocation()
-    const [order, setOrder] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const dispatch = useDispatch()
+    const { currentOrder, isLoading } = useSelector((state) => state.orders)
+    const { user } = useSelector((state) => state.auth)
 
     useEffect(() => {
-        loadOrder()
-    }, [id])
+        if (user && id) {
+            dispatch(fetchOrderById(id))
+        }
+    }, [dispatch, id, user])
 
-    const loadOrder = async () => {
-        try {
-            const response = await orderService.getOrderById(id)
-            setOrder(response.data)
-        } catch (error) {
-            console.error('Error loading order:', error)
-        } finally {
-            setLoading(false)
+    const handleCancelOrder = async () => {
+        if (window.confirm('Are you sure you want to cancel this order?')) {
+            try {
+                await dispatch(cancelOrder(id)).unwrap()
+            } catch (error) {
+                console.error('Failed to cancel order:', error)
+            }
         }
     }
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case 'PENDING':
-                return <Clock className="text-yellow-500" size={24} />
-            case 'CONFIRMED':
-            case 'PREPARING':
-                return <Package className="text-blue-500" size={24} />
-            case 'OUT_FOR_DELIVERY':
-                return <Truck className="text-orange-500" size={24} />
             case 'DELIVERED':
-                return <CheckCircle className="text-green-500" size={24} />
+                return <CheckCircle className="h-6 w-6 text-green-500" />
             case 'CANCELLED':
-                return <XCircle className="text-red-500" size={24} />
+                return <XCircle className="h-6 w-6 text-red-500" />
+            case 'OUT_FOR_DELIVERY':
+                return <Truck className="h-6 w-6 text-purple-500" />
             default:
-                return <Package className="text-gray-500" size={24} />
+                return <Clock className="h-6 w-6 text-yellow-500" />
         }
-    }
-
-    const getStatusText = (status) => {
-        const statusMap = {
-            'PENDING': 'Ожидает подтверждения',
-            'CONFIRMED': 'Подтвержден',
-            'PREPARING': 'Готовится',
-            'OUT_FOR_DELIVERY': 'В пути',
-            'DELIVERED': 'Доставлен',
-            'CANCELLED': 'Отменен'
-        }
-        return statusMap[status] || status
     }
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('ru-RU', {
+        return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -65,26 +51,39 @@ const OrderDetails = () => {
         })
     }
 
-    if (loading) {
+    const canCancel = currentOrder?.status === 'PENDING' || currentOrder?.status === 'CONFIRMED'
+
+    if (!user) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Please log in</h2>
+                    <p className="text-gray-600 mb-4">You need to be logged in to view order details</p>
+                    <button onClick={() => navigate('/login')} className="btn-primary">
+                        Sign In
+                    </button>
                 </div>
             </div>
         )
     }
 
-    if (!order) {
+    if (isLoading) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
+        )
+    }
+
+    if (!currentOrder) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Заказ не найден</h2>
-                    <button
-                        onClick={() => navigate('/orders')}
-                        className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                        Вернуться к заказам
+                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Order not found</h2>
+                    <button onClick={() => navigate('/orders')} className="btn-primary">
+                        Back to Orders
                     </button>
                 </div>
             </div>
@@ -92,118 +91,129 @@ const OrderDetails = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-6">
-                <button
-                    onClick={() => navigate('/orders')}
-                    className="flex items-center text-gray-600 hover:text-orange-500 transition-colors"
-                >
-                    <ArrowLeft size={20} className="mr-2" />
-                    Назад к заказам
-                </button>
-            </div>
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <button
+                        onClick={() => navigate('/orders')}
+                        className="flex items-center text-gray-600 hover:text-gray-900"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Orders
+                    </button>
 
-            {location.state?.orderSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-center">
-                        <CheckCircle className="text-green-500 mr-2" size={20} />
-                        <span className="text-green-700 font-semibold">Заказ успешно создан!</span>
-                    </div>
-                    <p className="text-green-600 mt-1">Номер вашего заказа: #{order.id}</p>
+                    {canCancel && (
+                        <button
+                            onClick={handleCancelOrder}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            Cancel Order
+                        </button>
+                    )}
                 </div>
-            )}
 
-            <div className="bg-white rounded-lg shadow-sm border">
-                <div className="p-6 border-b">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                            {getStatusIcon(order.status)}
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    {/* Order Header */}
+                    <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-6">
+                        <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
-                                    Заказ #{order.id}
-                                </h1>
-                                <p className="text-gray-600">
-                                    {formatDate(order.orderDate)}
+                                <h1 className="text-2xl font-bold mb-2">Order #{currentOrder.id}</h1>
+                                <p className="text-primary-100">
+                                    Placed on {formatDate(currentOrder.orderDate)}
+                                </p>
+                            </div>
+
+                            <div className="text-right">
+                                <div className="flex items-center justify-end space-x-2 mb-2">
+                                    {getStatusIcon(currentOrder.status)}
+                                    <span className="text-lg font-semibold">
+                    {ORDER_STATUS_LABELS[currentOrder.status]}
+                  </span>
+                                </div>
+                                <p className="text-2xl font-bold">
+                                    ${(currentOrder.totalPrice / 100).toFixed(2)}
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="flex items-center space-x-4">
-              <span className={`px-3 py-2 rounded-full text-sm font-medium ${
-                  order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                      order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                          order.status === 'OUT_FOR_DELIVERY' ? 'bg-orange-100 text-orange-800' :
-                              'bg-blue-100 text-blue-800'
-              }`}>
-                {getStatusText(order.status)}
-              </span>
-                            <span className="text-2xl font-bold text-orange-500">
-                {order.totalPrice} ₽
-              </span>
+                    {/* Order Items */}
+                    <div className="p-6 border-b">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Items</h2>
+                        <div className="space-y-4">
+                            {currentOrder.items?.map((item, index) => (
+                                <div key={index} className="flex justify-between items-center py-2">
+                                    <div className="flex-1">
+                                        <h3 className="font-medium text-gray-900">{item.dishName}</h3>
+                                        <p className="text-gray-600 text-sm">{item.dishDescription}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-medium text-gray-900">
+                                            {item.quantity} x ${(item.price / 100).toFixed(2)}
+                                        </p>
+                                        <p className="text-gray-600">
+                                            ${((item.price * item.quantity) / 100).toFixed(2)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
 
-                <div className="p-6">
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {/* Order Items */}
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Состав заказа</h3>
-                            <div className="space-y-4">
-                                {order.items.map((item, index) => (
-                                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                                        <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900">{item.dishName}</h4>
-                                            <p className="text-sm text-gray-600 mt-1">{item.dishDescription}</p>
-                                            <div className="flex items-center justify-between mt-2">
-                                                <span className="text-gray-600">{item.quantity} × {item.price} ₽</span>
-                                                <span className="font-semibold text-orange-500">
-                          {item.quantity * item.price} ₽
-                        </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                    {/* Order Summary */}
+                    <div className="p-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Subtotal</span>
+                                <span className="font-medium">
+                  ${(currentOrder.totalPrice / 100).toFixed(2)}
+                </span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Delivery Fee</span>
+                                <span className="font-medium">$2.99</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Tax</span>
+                                <span className="font-medium">
+                  ${((currentOrder.totalPrice * 0.08) / 100).toFixed(2)}
+                </span>
+                            </div>
+                            <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                                <span>Total</span>
+                                <span className="text-primary-600">
+                  ${((currentOrder.totalPrice * 1.08 + 299) / 100).toFixed(2)}
+                </span>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Order Info */}
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Информация о заказе</h3>
-                            <div className="space-y-4">
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <h4 className="font-medium text-gray-900 mb-2">Статус доставки</h4>
-                                    <div className="flex items-center space-x-2">
-                                        {getStatusIcon(order.status)}
-                                        <span className="text-gray-700">{getStatusText(order.status)}</span>
-                                    </div>
+                    {/* Order Status Timeline */}
+                    <div className="p-6 border-t">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Status</h2>
+                        <div className="space-y-3">
+                            {Object.keys(ORDER_STATUS_LABELS).map((status, index) => (
+                                <div key={status} className="flex items-center">
+                                    <div className={`w-3 h-3 rounded-full mr-3 ${
+                                        currentOrder.status === status
+                                            ? 'bg-primary-500'
+                                            : index <= Object.keys(ORDER_STATUS_LABELS).indexOf(currentOrder.status)
+                                                ? 'bg-green-500'
+                                                : 'bg-gray-300'
+                                    }`} />
+                                    <span className={`${
+                                        currentOrder.status === status
+                                            ? 'text-primary-600 font-semibold'
+                                            : index <= Object.keys(ORDER_STATUS_LABELS).indexOf(currentOrder.status)
+                                                ? 'text-green-600'
+                                                : 'text-gray-400'
+                                    }`}>
+                    {ORDER_STATUS_LABELS[status]}
+                  </span>
                                 </div>
-
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <h4 className="font-medium text-gray-900 mb-2">Детали</h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">ID заказа:</span>
-                                            <span className="font-medium">#{order.id}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Дата заказа:</span>
-                                            <span className="font-medium">{formatDate(order.orderDate)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">ID ресторана:</span>
-                                            <span className="font-medium">{order.restaurantId}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-orange-50 rounded-lg p-4">
-                                    <h4 className="font-medium text-gray-900 mb-2">Итоговая сумма</h4>
-                                    <div className="text-2xl font-bold text-orange-500 text-center">
-                                        {order.totalPrice} ₽
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
