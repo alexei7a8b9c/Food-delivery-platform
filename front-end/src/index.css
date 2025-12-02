@@ -1,3 +1,4 @@
+/* Удалите все и оставьте только это: */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,9 +10,4 @@ body {
     sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
 }

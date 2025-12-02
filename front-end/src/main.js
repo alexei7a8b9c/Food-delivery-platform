@@ -1,17 +1,29 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { Provider } from 'react-redux'
-import { BrowserRouter } from 'react-router-dom'
-import './index.css'
-import App from './App.js'
-import { store } from './store/index.js'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-        <Provider store={store}>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
-        </Provider>
-    </React.StrictMode>,
-)
+const App = () => {
+    return React.createElement('div', {
+            style: {
+                padding: '40px',
+                fontFamily: 'Arial, sans-serif'
+            }
+        },
+        React.createElement('h1', { style: { color: '#f97316' } }, 'Food Delivery Platform'),
+        React.createElement('p', null, 'Frontend is loading...'),
+        React.createElement('a', {
+            href: '/restaurants',
+            style: {
+                color: '#3b82f6',
+                textDecoration: 'underline',
+                marginTop: '20px',
+                display: 'block'
+            }
+        }, 'Go to Restaurants')
+    );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(React.StrictMode, null,
+    React.createElement(App)
+));
