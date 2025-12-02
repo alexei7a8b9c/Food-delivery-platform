@@ -1,0 +1,22 @@
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
+export const USER_ROLES = {
+    USER: 'USER',
+    MANAGER: 'MANAGER',
+    ADMIN: 'ADMIN'
+};
+
+export const ORDER_STATUS = {
+    PENDING: 'PENDING',
+    CONFIRMED: 'CONFIRMED',
+    PREPARING: 'PREPARING',
+    OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+    DELIVERED: 'DELIVERED',
+    CANCELLED: 'CANCELLED'
+};
+
+export const PAYMENT_METHODS = {
+    CREDIT_CARD: 'CREDIT_CARD',
+    PAYPAL: 'PAYPAL',
+    CASH_ON_DELIVERY: 'CASH_ON_DELIVERY'
+};
