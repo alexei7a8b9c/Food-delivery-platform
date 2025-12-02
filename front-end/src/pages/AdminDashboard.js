@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../styles/common.css';
 import api from '../services/api';
 import { FaUsers, FaUtensils, FaShoppingCart, FaDollarSign } from 'react-icons/fa';
 

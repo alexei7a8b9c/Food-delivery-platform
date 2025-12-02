@@ -1,49 +1,78 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaHome, FaUtensils, FaShoppingCart, FaUser } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import '../styles/common.css';
 
-function Header() {
+const Header = () => {
+    const { user, logout } = useAuth();
+    const { cartItems = [] } = useCart(); // Значение по умолчанию
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     return (
         <header className="header">
-            <div className="container flex-between">
-                <div className="logo">
-                    <Link to="/" className="flex-center gap-10">
-                        <FaHome size={24} />
-                        <h1>Food Delivery</h1>
-                    </Link>
-                </div>
+            <div className="container">
+                <div className="header-content">
+                    {/* Лого */}
+                    <div className="logo">
+                        <Link to="/">
+                            <h1>FoodDelivery</h1>
+                        </Link>
+                    </div>
 
-                <nav className="nav">
-                    <ul className="flex gap-20">
-                        <li>
-                            <Link to="/" className="flex-center gap-5">
-                                <FaHome />
-                                Home
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/restaurants" className="flex-center gap-5">
-                                <FaUtensils />
-                                Restaurants
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/cart" className="flex-center gap-5">
-                                <FaShoppingCart />
-                                Cart
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/login" className="flex-center gap-5">
-                                <FaUser />
-                                Login
-                            </Link>
-                        </li>
-                    </ul>
-                </nav>
+                    {/* Навигация */}
+                    <nav className="nav">
+                        <Link to="/" className="nav-link">Главная</Link>
+                        <Link to="/restaurants" className="nav-link">Рестораны</Link>
+                        <Link to="/menu" className="nav-link">Все блюда</Link>
+
+                        {user && (
+                            <>
+                                <Link to="/orders" className="nav-link">Мои заказы</Link>
+                                {(user.roles && user.roles.includes('ADMIN')) && (
+                                    <Link to="/admin" className="nav-link">Админ</Link>
+                                )}
+                            </>
+                        )}
+                    </nav>
+
+                    {/* Правая часть */}
+                    <div className="header-right">
+                        {/* Корзина */}
+                        <Link to="/cart" className="cart-link">
+                            <span className="cart-icon">🛒</span>
+                            {Array.isArray(cartItems) && cartItems.length > 0 && ( // Проверяем что это массив
+                                <span className="cart-count">{cartItems.length}</span>
+                            )}
+                        </Link>
+
+                        {/* Профиль */}
+                        {user ? (
+                            <div className="user-menu">
+                                <span className="user-name">{user.fullName || user.email}</span>
+                                <div className="dropdown">
+                                    <Link to="/profile" className="dropdown-item">Профиль</Link>
+                                    <button onClick={handleLogout} className="dropdown-item">
+                                        Выйти
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="auth-buttons">
+                                <Link to="/login" className="btn btn-outline">Войти</Link>
+                                <Link to="/register" className="btn btn-primary">Регистрация</Link>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </header>
     );
-}
+};
 
 export default Header;

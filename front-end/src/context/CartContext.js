@@ -2,66 +2,73 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const CartContext = createContext({});
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+    const context = useContext(CartContext);
+    if (!context) {
+        throw new Error('useCart must be used within a CartProvider');
+    }
+    return context;
+};
 
 export const CartProvider = ({ children }) => {
-    const [cart, setCart] = useState(() => {
+    // Инициализируем cartItems из localStorage или пустым массивом
+    const [cartItems, setCartItems] = useState(() => {
         const savedCart = localStorage.getItem('cart');
         return savedCart ? JSON.parse(savedCart) : [];
     });
 
+    // Сохраняем корзину в localStorage при изменении
     useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }, [cart]);
+        localStorage.setItem('cart', JSON.stringify(cartItems));
+    }, [cartItems]);
 
     const addToCart = (item) => {
-        setCart(prevCart => {
-            const existingItem = prevCart.find(cartItem => cartItem.dishId === item.dishId);
+        setCartItems(prevItems => {
+            // Проверяем, есть ли уже такое блюдо в корзине
+            const existingItemIndex = prevItems.findIndex(
+                i => i.dishId === item.dishId && i.restaurantId === item.restaurantId
+            );
 
-            if (existingItem) {
-                return prevCart.map(cartItem =>
-                    cartItem.dishId === item.dishId
-                        ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
-                        : cartItem
-                );
+            if (existingItemIndex >= 0) {
+                // Обновляем количество существующего товара
+                const updatedItems = [...prevItems];
+                updatedItems[existingItemIndex].quantity += item.quantity;
+                return updatedItems;
+            } else {
+                // Добавляем новый товар
+                return [...prevItems, item];
             }
-
-            return [...prevCart, item];
         });
     };
 
-    const removeFromCart = (dishId) => {
-        setCart(prevCart => prevCart.filter(item => item.dishId !== dishId));
+    const updateQuantity = (index, quantity) => {
+        if (quantity < 1) return;
+
+        setCartItems(prevItems => {
+            const updatedItems = [...prevItems];
+            updatedItems[index].quantity = quantity;
+            return updatedItems;
+        });
     };
 
-    const updateQuantity = (dishId, quantity) => {
-        if (quantity < 1) {
-            removeFromCart(dishId);
-            return;
-        }
-
-        setCart(prevCart =>
-            prevCart.map(item =>
-                item.dishId === dishId ? { ...item, quantity } : item
-            )
-        );
+    const removeFromCart = (index) => {
+        setCartItems(prevItems => {
+            const updatedItems = [...prevItems];
+            updatedItems.splice(index, 1);
+            return updatedItems;
+        });
     };
 
     const clearCart = () => {
-        setCart([]);
+        setCartItems([]);
     };
 
-    const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
-    const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-
     const value = {
-        cart,
+        cartItems: cartItems || [], // Гарантируем, что это всегда массив
         addToCart,
-        removeFromCart,
         updateQuantity,
-        clearCart,
-        itemCount,
-        totalPrice
+        removeFromCart,
+        clearCart
     };
 
     return (

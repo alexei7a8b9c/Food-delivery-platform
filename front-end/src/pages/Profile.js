@@ -1,85 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Добавляем useCallback
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { FaUser, FaEnvelope, FaPhone, FaEdit } from 'react-icons/fa';
+import '../styles/common.css';
 
-function Profile() {
-    const { user, logout } = useAuth();
-    const [userData, setUserData] = useState(null);
+const Profile = () => {
+    const { user } = useAuth();
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        if (user?.userId) {
-            fetchUserProfile();
-        }
-    }, [user]);
-
-    const fetchUserProfile = async () => {
+    // Используем useCallback
+    const fetchUserProfile = useCallback(async () => {
         try {
-            const response = await api.get(`/api/users/profile`, {
-                headers: { 'X-User-Id': user.userId }
+            setLoading(true);
+            const response = await api.get('/api/users/profile', {
+                headers: {
+                    'X-User-Id': user.userId
+                }
             });
-            setUserData(response.data);
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
+            setProfile(response.data);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to fetch profile:', err);
+            setError('Не удалось загрузить профиль');
         } finally {
             setLoading(false);
         }
-    };
+    }, [user.userId]); // Зависимость
+
+    useEffect(() => {
+        fetchUserProfile();
+    }, [fetchUserProfile]); // Теперь зависимость стабильна
 
     if (loading) {
-        return <div className="text-center mt-20">Loading profile...</div>;
+        return (
+            <div className="container">
+                <div className="loading">
+                    <h2>Загрузка профиля...</h2>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container">
+                <div className="error">
+                    <h2>{error}</h2>
+                    <button onClick={fetchUserProfile} className="btn btn-primary">
+                        Попробовать снова
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="profile-page">
-            <div className="profile-header card">
-                <div className="profile-avatar">
-                    <FaUser size={80} />
-                </div>
-
-                <div className="profile-info">
-                    <h1>{userData?.fullName || user?.fullName}</h1>
-                    <p className="profile-email">
-                        <FaEnvelope /> {userData?.email || user?.email}
-                    </p>
-                    {userData?.telephone && (
-                        <p className="profile-phone">
-                            <FaPhone /> {userData.telephone}
-                        </p>
-                    )}
-                </div>
+        <div className="container">
+            <div className="profile-header">
+                <h1>Мой профиль</h1>
             </div>
 
-            <div className="profile-sections mt-20">
-                <div className="card">
-                    <h3>Account Information</h3>
-                    <div className="info-grid">
-                        <div className="info-item">
-                            <label>Member Since</label>
-                            <p>{userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString() : 'N/A'}</p>
-                        </div>
-                        <div className="info-item">
-                            <label>User ID</label>
-                            <p>{user?.userId}</p>
-                        </div>
+            <div className="profile-card">
+                <div className="profile-info">
+                    <div className="profile-field">
+                        <label>Имя:</label>
+                        <span>{profile.fullName}</span>
                     </div>
-                </div>
-
-                <div className="card mt-20">
-                    <h3>Actions</h3>
-                    <div className="action-buttons">
-                        <button className="btn btn-secondary">
-                            <FaEdit /> Edit Profile
-                        </button>
-                        <button onClick={logout} className="btn btn-danger">
-                            Logout
-                        </button>
+                    <div className="profile-field">
+                        <label>Email:</label>
+                        <span>{profile.email}</span>
+                    </div>
+                    {profile.telephone && (
+                        <div className="profile-field">
+                            <label>Телефон:</label>
+                            <span>{profile.telephone}</span>
+                        </div>
+                    )}
+                    <div className="profile-field">
+                        <label>Дата регистрации:</label>
+                        <span>{new Date(profile.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default Profile;

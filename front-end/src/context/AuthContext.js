@@ -1,53 +1,60 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authService } from '../services/auth';
 
 const AuthContext = createContext({});
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(authService.getCurrentUser());
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
+
+    const [token, setToken] = useState(() => {
+        return localStorage.getItem('token') || null;
+    });
 
     useEffect(() => {
-        const validateAuth = async () => {
-            if (authService.isAuthenticated()) {
-                const isValid = await authService.validateToken();
-                if (!isValid) {
-                    authService.logout();
-                    setUser(null);
-                }
-            }
-            setLoading(false);
-        };
+        if (token) {
+            localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
+        }
+    }, [token]);
 
-        validateAuth();
-    }, []);
+    useEffect(() => {
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('user');
+        }
+    }, [user]);
 
-    const login = async (email, password) => {
-        const result = await authService.login(email, password);
-        setUser(authService.getCurrentUser());
-        return result;
-    };
-
-    const register = async (email, password, fullName, telephone) => {
-        const result = await authService.register(email, password, fullName, telephone);
-        setUser(authService.getCurrentUser());
-        return result;
+    const login = (userData, token) => {
+        setUser(userData);
+        setToken(token);
     };
 
     const logout = () => {
-        authService.logout();
         setUser(null);
+        setToken(null);
+        localStorage.removeItem('cart'); // Очищаем корзину при выходе
     };
 
+    const isAuthenticated = !!token;
+
     const value = {
-        user,
+        user: user || {}, // Гарантируем, что user всегда объект
+        token,
         login,
-        register,
         logout,
-        isAuthenticated: authService.isAuthenticated(),
-        loading
+        isAuthenticated
     };
 
     return (
