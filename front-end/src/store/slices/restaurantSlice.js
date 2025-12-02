@@ -1,123 +1,75 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { restaurantService } from '../../services/restaurantService'
+import { restaurantService } from '../../services/restaurantService.js'
 
 export const fetchRestaurants = createAsyncThunk(
-    'restaurants/fetchRestaurants',
+    'restaurant/fetchAll',
     async (_, { rejectWithValue }) => {
         try {
-            console.log('Starting to fetch restaurants from backend...')
-            const response = await restaurantService.getAllRestaurants()
-            console.log('Successfully fetched restaurants:', response.length)
-            return response
+            return await restaurantService.getAllRestaurants()
         } catch (error) {
-            console.error('Failed to fetch restaurants:', error)
-            return rejectWithValue(error.message || 'Failed to fetch restaurants from server')
-        }
-    }
-)
-
-export const fetchRestaurantById = createAsyncThunk(
-    'restaurants/fetchRestaurantById',
-    async (restaurantId, { rejectWithValue }) => {
-        try {
-            const response = await restaurantService.getRestaurantById(restaurantId)
-            return response
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to fetch restaurant')
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch restaurants')
         }
     }
 )
 
 export const fetchRestaurantMenu = createAsyncThunk(
-    'restaurants/fetchRestaurantMenu',
+    'restaurant/fetchMenu',
     async (restaurantId, { rejectWithValue }) => {
         try {
-            console.log(`Fetching menu for restaurant ${restaurantId} from backend...`)
-            const response = await restaurantService.getRestaurantMenu(restaurantId)
-            console.log(`Successfully fetched menu with ${response.length} items`)
-            return response
+            return await restaurantService.getRestaurantMenu(restaurantId)
         } catch (error) {
-            console.error(`Failed to fetch menu for restaurant ${restaurantId}:`, error)
-            return rejectWithValue(error.message || 'Failed to fetch menu from server')
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch menu')
         }
     }
 )
 
 const restaurantSlice = createSlice({
-    name: 'restaurants',
+    name: 'restaurant',
     initialState: {
         restaurants: [],
         currentRestaurant: null,
         menu: [],
-        isLoading: false,
+        loading: false,
         error: null,
-        lastFetch: null
     },
     reducers: {
-        clearRestaurantError: (state) => {
-            state.error = null
-        },
         clearCurrentRestaurant: (state) => {
             state.currentRestaurant = null
             state.menu = []
         },
-        clearAllData: (state) => {
-            state.restaurants = []
-            state.currentRestaurant = null
-            state.menu = []
+        clearError: (state) => {
             state.error = null
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
-            // Fetch Restaurants
             .addCase(fetchRestaurants.pending, (state) => {
-                state.isLoading = true
+                state.loading = true
                 state.error = null
             })
             .addCase(fetchRestaurants.fulfilled, (state, action) => {
-                state.isLoading = false
+                state.loading = false
                 state.restaurants = action.payload
-                state.error = null
-                state.lastFetch = new Date().toISOString()
-                console.log('Updated restaurants in Redux store:', action.payload.length)
             })
             .addCase(fetchRestaurants.rejected, (state, action) => {
-                state.isLoading = false
-                state.error = action.payload
-                console.error('Restaurants fetch failed in Redux:', action.payload)
-            })
-            // Fetch Restaurant by ID
-            .addCase(fetchRestaurantById.pending, (state) => {
-                state.isLoading = true
-                state.error = null
-            })
-            .addCase(fetchRestaurantById.fulfilled, (state, action) => {
-                state.isLoading = false
-                state.currentRestaurant = action.payload
-                state.error = null
-            })
-            .addCase(fetchRestaurantById.rejected, (state, action) => {
-                state.isLoading = false
+                state.loading = false
                 state.error = action.payload
             })
-            // Fetch Restaurant Menu
             .addCase(fetchRestaurantMenu.pending, (state) => {
-                state.isLoading = true
+                state.loading = true
                 state.error = null
             })
             .addCase(fetchRestaurantMenu.fulfilled, (state, action) => {
-                state.isLoading = false
-                state.menu = action.payload
-                state.error = null
-                console.log('Updated menu in Redux store:', action.payload.length)
+                state.loading = false
+                state.currentRestaurant = action.payload.restaurant
+                state.menu = action.payload.dishes
             })
             .addCase(fetchRestaurantMenu.rejected, (state, action) => {
-                state.isLoading = false
+                state.loading = false
                 state.error = action.payload
             })
     },
 })
 
-export const { clearRestaurantError, clearCurrentRestaurant, clearAllData } = restaurantSlice.actions
+export const { clearCurrentRestaurant, clearError } = restaurantSlice.actions
 export default restaurantSlice.reducer
