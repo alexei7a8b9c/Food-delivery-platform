@@ -1,47 +1,33 @@
-import api from './api'
+import api from './api.js'
 
 export const userService = {
-    login: async (email, password) => {
-        try {
-            console.log('Attempting login for:', email)
-            const response = await api.post('/auth/login', { email, password })
-            console.log('Login successful:', response.data)
-            return response.data
-        } catch (error) {
-            console.error('Login failed:', error.response?.data || error.message)
-            throw new Error(error.response?.data?.message || 'Login failed')
-        }
+    async login(credentials) {
+        const response = await api.post('/auth/login', credentials)
+        return response.data
     },
 
-    register: async (userData) => {
-        try {
-            console.log('Attempting registration for:', userData.email)
-            const response = await api.post('/auth/register', userData)
-            console.log('Registration successful:', response.data)
-            return response.data
-        } catch (error) {
-            console.error('Registration failed:', error.response?.data || error.message)
-            throw new Error(error.response?.data?.message || 'Registration failed')
-        }
+    async register(userData) {
+        const response = await api.post('/auth/register', userData)
+        return response.data
     },
 
-    getProfile: async () => {
-        try {
-            const response = await api.get('/users/profile')
-            return response.data
-        } catch (error) {
-            console.error('Get profile failed:', error)
-            throw error
-        }
+    async getProfile() {
+        const response = await api.get('/users/profile')
+        return response.data
     },
 
-    validateToken: async () => {
-        try {
-            const response = await api.post('/auth/validate')
-            return response.data
-        } catch (error) {
-            console.error('Token validation failed:', error)
-            throw error
-        }
-    }
+    async updateProfile(userData) {
+        const response = await api.put('/users/profile', userData)
+        return response.data
+    },
+
+    async getAllUsers() {
+        const response = await api.get('/admin/users')
+        return response.data
+    },
+
+    async updateUserRole(userId, role) {
+        const response = await api.put(`/admin/users/${userId}/role`, { role })
+        return response.data
+    },
 }

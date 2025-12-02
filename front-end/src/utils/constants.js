@@ -1,28 +1,28 @@
-export const API_BASE_URL = '/api'
-
 export const ORDER_STATUS = {
     PENDING: 'PENDING',
     CONFIRMED: 'CONFIRMED',
     PREPARING: 'PREPARING',
-    OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+    READY: 'READY',
+    DELIVERING: 'DELIVERING',
     DELIVERED: 'DELIVERED',
-    CANCELLED: 'CANCELLED'
+    CANCELLED: 'CANCELLED',
 }
 
-export const ORDER_STATUS_LABELS = {
-    [ORDER_STATUS.PENDING]: 'Pending',
-    [ORDER_STATUS.CONFIRMED]: 'Confirmed',
-    [ORDER_STATUS.PREPARING]: 'Preparing',
-    [ORDER_STATUS.OUT_FOR_DELIVERY]: 'Out for Delivery',
-    [ORDER_STATUS.DELIVERED]: 'Delivered',
-    [ORDER_STATUS.CANCELLED]: 'Cancelled'
+export const USER_ROLES = {
+    CUSTOMER: 'CUSTOMER',
+    RESTAURANT_OWNER: 'RESTAURANT_OWNER',
+    ADMIN: 'ADMIN',
 }
 
-export const ORDER_STATUS_COLORS = {
-    [ORDER_STATUS.PENDING]: 'bg-yellow-100 text-yellow-800',
-    [ORDER_STATUS.CONFIRMED]: 'bg-blue-100 text-blue-800',
-    [ORDER_STATUS.PREPARING]: 'bg-orange-100 text-orange-800',
-    [ORDER_STATUS.OUT_FOR_DELIVERY]: 'bg-purple-100 text-purple-800',
-    [ORDER_STATUS.DELIVERED]: 'bg-green-100 text-green-800',
-    [ORDER_STATUS.CANCELLED]: 'bg-red-100 text-red-800'
+export const API_ENDPOINTS = {
+    AUTH: {
+        LOGIN: '/auth/login',
+        REGISTER: '/auth/register',
+    },
+    USERS: {
+        PROFILE: '/users/profile',
+    },
+    RESTAURANTS: '/restaurants',
+    ORDERS: '/orders',
+    CART: '/cart',
 }

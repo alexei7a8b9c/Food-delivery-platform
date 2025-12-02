@@ -1,32 +1,43 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchRestaurants } from '../store/slices/restaurantSlice'
-import { Search, Utensils, Star, Clock, AlertCircle, RefreshCw } from 'lucide-react'
+import { fetchRestaurants } from '../store/slices/restaurantSlice.js'
 
 const Restaurants = () => {
     const dispatch = useDispatch()
-    const { restaurants, isLoading, error, lastFetch } = useSelector((state) => state.restaurants)
+    const { restaurants, isLoading, error, lastFetch } = useSelector((state) => state.restaurant)
+
     const [searchTerm, setSearchTerm] = useState('')
-    const [selectedCuisine, setSelectedCuisine] = useState('')
+    const [selectedCuisine, setSelectedCuisine] = useState('all')
+    const [filteredRestaurants, setFilteredRestaurants] = useState([])
 
     useEffect(() => {
-        console.log('Restaurants component mounted, fetching restaurants...')
         dispatch(fetchRestaurants())
     }, [dispatch])
 
-    const cuisines = [...new Set(restaurants.map(restaurant => restaurant.cuisine))]
+    useEffect(() => {
+        let result = restaurants
 
-    const filteredRestaurants = restaurants.filter(restaurant => {
-        const matchesSearch =
-            restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesCuisine = !selectedCuisine || restaurant.cuisine === selectedCuisine
-        return matchesSearch && matchesCuisine
-    })
+        if (searchTerm) {
+            result = result.filter(restaurant =>
+                restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                restaurant.cuisineType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        }
+
+        if (selectedCuisine !== 'all') {
+            result = result.filter(restaurant =>
+                restaurant.cuisineType === selectedCuisine
+            )
+        }
+
+        setFilteredRestaurants(result)
+    }, [restaurants, searchTerm, selectedCuisine])
+
+    const cuisineTypes = ['all', ...new Set(restaurants.map(r => r.cuisineType))]
 
     const handleRetry = () => {
-        console.log('Retrying fetch restaurants...')
         dispatch(fetchRestaurants())
     }
 
@@ -34,7 +45,7 @@ const Restaurants = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <RefreshCw className="h-12 w-12 text-primary-500 animate-spin mx-auto mb-4" />
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading restaurants from database...</p>
                     <p className="text-sm text-gray-500 mt-2">Connecting to backend services</p>
                 </div>
@@ -46,13 +57,13 @@ const Restaurants = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center max-w-md">
-                    <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                    <div className="text-6xl mb-4">⚠️</div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to load restaurants</h2>
                     <p className="text-gray-600 mb-4">{error}</p>
                     <div className="space-y-3">
                         <button
                             onClick={handleRetry}
-                            className="w-full btn-primary"
+                            className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                         >
                             Try Again
                         </button>
@@ -92,7 +103,7 @@ const Restaurants = () => {
                             onClick={handleRetry}
                             className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                         >
-                            <RefreshCw className="h-4 w-4" />
+                            <span>🔄</span>
                             <span>Refresh</span>
                         </button>
                     </div>
@@ -102,23 +113,24 @@ const Restaurants = () => {
                 <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
                             <input
                                 type="text"
                                 placeholder="Search restaurants or cuisines..."
-                                className="input-field pl-10"
+                                className="w-full px-10 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         <select
-                            className="input-field md:w-48"
+                            className="md:w-48 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                             value={selectedCuisine}
                             onChange={(e) => setSelectedCuisine(e.target.value)}
                         >
-                            <option value="">All Cuisines</option>
-                            {cuisines.map(cuisine => (
-                                <option key={cuisine} value={cuisine}>{cuisine}</option>
+                            {cuisineTypes.map(cuisine => (
+                                <option key={cuisine} value={cuisine}>
+                                    {cuisine === 'all' ? 'All Cuisines' : cuisine}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -129,31 +141,30 @@ const Restaurants = () => {
                     {filteredRestaurants.map(restaurant => (
                         <Link
                             key={restaurant.id}
-                            to={`/restaurants/${restaurant.id}`}
+                            to={`/restaurants/${restaurant.id}/menu`}
                             className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden hover:transform hover:scale-105 duration-200"
                         >
-                            <div className="h-48 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                                <Utensils className="h-16 w-16 text-primary-600" />
+                            <div className="h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                                <span className="text-6xl">🏪</span>
                             </div>
                             <div className="p-6">
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="text-xl font-semibold text-gray-900">{restaurant.name}</h3>
                                 </div>
                                 <div className="flex items-center text-gray-600 mb-2">
-                                    <Utensils className="h-4 w-4 mr-1" />
-                                    <span className="text-sm capitalize">{restaurant.cuisine}</span>
+                                    <span className="text-sm capitalize">{restaurant.cuisineType}</span>
                                 </div>
                                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                    {restaurant.address}
+                                    {restaurant.description || 'Delicious cuisine served fresh'}
                                 </p>
                                 <div className="flex justify-between items-center text-sm text-gray-500">
                                     <div className="flex items-center">
-                                        <Clock className="h-4 w-4 mr-1" />
-                                        <span>30-45 min</span>
+                                        <span className="mr-1">🕒</span>
+                                        <span>{restaurant.deliveryTime || '30-45'} min</span>
                                     </div>
                                     <div className="flex items-center">
-                                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                                        <span>4.5</span>
+                                        <span className="mr-1">⭐</span>
+                                        <span>{restaurant.rating || '4.5'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -163,7 +174,7 @@ const Restaurants = () => {
 
                 {filteredRestaurants.length === 0 && restaurants.length > 0 && (
                     <div className="text-center py-12">
-                        <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <div className="text-6xl mb-4">🔍</div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants found</h3>
                         <p className="text-gray-600">Try adjusting your search or filter criteria</p>
                     </div>
@@ -171,7 +182,7 @@ const Restaurants = () => {
 
                 {restaurants.length === 0 && !isLoading && !error && (
                     <div className="text-center py-12">
-                        <Utensils className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <div className="text-6xl mb-4">🏪</div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants available</h3>
                         <p className="text-gray-600">Check database connection and Flyway migrations</p>
                     </div>
