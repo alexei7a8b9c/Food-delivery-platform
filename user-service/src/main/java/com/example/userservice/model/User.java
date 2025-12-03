@@ -15,19 +15,22 @@ import java.util.Set;
 @Table(name = "users")
 @Data
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
     @Email
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @NotBlank
+    @Column(nullable = false)
     private String passwordHash;
 
     @NotBlank
+    @Column(nullable = false)
     private String fullName;
 
     private String telephone;

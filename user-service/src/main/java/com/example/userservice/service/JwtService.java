@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
@@ -26,17 +29,37 @@ public class JwtService {
     }
 
     public String generateToken(String username, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("type", "access");
+
         return Jwts.builder()
                 .setSubject(username)
-                .claim("userId", userId)
-                .claim("type", "access")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + (expirationSeconds * 1000)))
+                .addClaims(claims)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public Claims extractClaims(String token) {
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -44,18 +67,13 @@ public class JwtService {
                 .getBody();
     }
 
-    public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
+    private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
     }
 
-    public Long extractUserId(String token) {
-        return extractClaims(token).get("userId", Long.class);
-    }
-
-    public boolean isTokenValid(String token) {
+    public Boolean isTokenValid(String token) {
         try {
-            extractClaims(token);
-            return true;
+            return !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }

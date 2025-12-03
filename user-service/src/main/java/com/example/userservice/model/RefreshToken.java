@@ -20,7 +20,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String token;
 
     @Column(nullable = false)
@@ -38,4 +38,14 @@ public class RefreshToken {
     private LocalDateTime revokedAt;
     private String revokedByIp;
     private String replacedByToken;
+
+    @PrePersist
+    public void prePersist() {
+        if (issuedAt == null) {
+            issuedAt = LocalDateTime.now();
+        }
+        if (expiresAt == null) {
+            expiresAt = LocalDateTime.now().plusDays(7);
+        }
+    }
 }
