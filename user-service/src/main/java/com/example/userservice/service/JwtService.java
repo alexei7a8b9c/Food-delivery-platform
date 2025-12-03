@@ -13,11 +13,12 @@ import java.util.Date;
 
 @Service
 public class JwtService {
+
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    @Value("${jwt.expiration:3600}")
+    private Long expirationSeconds;
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = Base64.getDecoder().decode(secret);
@@ -28,8 +29,9 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("userId", userId)
+                .claim("type", "access")
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + (expirationSeconds * 1000)))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -57,5 +59,9 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public Long getExpirationSeconds() {
+        return expirationSeconds;
     }
 }
