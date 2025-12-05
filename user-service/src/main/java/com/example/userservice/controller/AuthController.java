@@ -1,6 +1,7 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.dto.*;
+import com.example.userservice.model.Role;
 import com.example.userservice.model.User;
 import com.example.userservice.service.AuthenticationService;
 import com.example.userservice.service.JwtService;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -220,5 +223,23 @@ public class AuthController {
         }
     }
 
-    // ... остальные методы (refresh, logout, validate) остаются без изменений
+    @GetMapping("/debug/user/{id}")
+    public ResponseEntity<?> debugUser(@PathVariable Long id) {
+        try {
+            User user = userService.findById(id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("roles", user.getRoles().stream()
+                    .map(Role::getName)
+                    .collect(Collectors.toList()));
+            response.put("authorities", user.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList()));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
