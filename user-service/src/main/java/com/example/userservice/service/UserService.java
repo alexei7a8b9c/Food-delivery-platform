@@ -36,6 +36,8 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setTelephone(request.getTelephone());
 
+        // ВСЕГДА назначаем только роль USER при регистрации
+        // Админ или менеджер должны быть назначены через отдельный endpoint
         Role userRole = roleRepository.findByName("USER")
                 .orElseGet(() -> {
                     log.warn("USER role not found, creating it...");
@@ -50,11 +52,57 @@ public class UserService {
         return savedUser;
     }
 
+    // ДОБАВИТЬ: метод для назначения ролей админом
+    @Transactional
+    public User assignRoleToUser(Long userId, String roleName) {
+        User user = findById(userId);
+
+        // Приводим роль к верхнему регистру
+        String normalizedRoleName = roleName.toUpperCase();
+
+        Role role = roleRepository.findByName(normalizedRoleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + normalizedRoleName));
+
+        // Проверяем, есть ли уже эта роль у пользователя
+        if (!user.getRoles().contains(role)) {
+            user.getRoles().add(role);
+            log.info("Assigned role '{}' to user '{}' (ID: {})",
+                    roleName, user.getEmail(), user.getId());
+        } else {
+            log.info("User '{}' already has role '{}'", user.getEmail(), roleName);
+        }
+
+        return userRepository.save(user);
+    }
+
+    // ДОБАВИТЬ: метод для удаления роли у пользователя
+    @Transactional
+    public User removeRoleFromUser(Long userId, String roleName) {
+        User user = findById(userId);
+
+        // Приводим роль к верхнему регистру
+        String normalizedRoleName = roleName.toUpperCase();
+
+        Role role = roleRepository.findByName(normalizedRoleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + normalizedRoleName));
+
+        if (user.getRoles().contains(role)) {
+            user.getRoles().remove(role);
+            log.info("Removed role '{}' from user '{}' (ID: {})",
+                    roleName, user.getEmail(), user.getId());
+        } else {
+            log.info("User '{}' doesn't have role '{}'", user.getEmail(), roleName);
+        }
+
+        return userRepository.save(user);
+    }
+
     public User findByEmail(String email) {
         log.info("Finding user by email: {}", email);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.error("User not found with email: {}", email);
+                    String errorMessage = "User not found with email: " + email;
+                    log.error(errorMessage);
                     return new RuntimeException("User not found");
                 });
     }
@@ -63,7 +111,8 @@ public class UserService {
         log.info("Finding user by ID: {}", id);
         return userRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("User not found with ID: {}", id);
+                    String errorMessage = "User not found with ID: " + id;
+                    log.error(errorMessage);
                     return new RuntimeException("User not found");
                 });
     }

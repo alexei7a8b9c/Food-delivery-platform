@@ -6,6 +6,7 @@ import com.example.userservice.service.AuthenticationService;
 import com.example.userservice.service.JwtService;
 import com.example.userservice.service.TokenBlacklistService;
 import com.example.userservice.service.UserService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -176,7 +177,8 @@ public class AuthController {
 
             // Проверяем, если это ошибка "пользователь не найден"
             if (e.getMessage() != null &&
-                    (e.getMessage().contains("not found") || e.getMessage().contains("User not found"))) {
+                    (e.getMessage().contains("not found") ||
+                            e.getMessage().contains("User not found"))) {
                 return ResponseEntity.badRequest().body("User not found");
             }
 
@@ -185,6 +187,36 @@ public class AuthController {
             errorResponse.put("message", e.getMessage());
 
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    // ДОБАВИТЬ: Проверка токена и ролей
+    @PostMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.badRequest().body("Invalid authorization header");
+            }
+
+            String token = authHeader.substring(7);
+            Claims claims = jwtService.extractClaims(token);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", true);
+            response.put("username", claims.getSubject());
+            response.put("userId", claims.get("userId"));
+            response.put("email", claims.get("email"));
+            response.put("fullName", claims.get("fullName"));
+            response.put("roles", claims.get("roles"));
+            response.put("authorities", claims.get("authorities"));
+            response.put("expiration", claims.getExpiration());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "valid", false,
+                    "error", e.getMessage()
+            ));
         }
     }
 

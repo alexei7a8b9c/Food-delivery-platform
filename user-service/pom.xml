@@ -115,12 +115,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.fooddelivery</groupId>
-            <artifactId>order-service</artifactId>
-            <version>1.0.0</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -133,7 +127,7 @@
                     <source>21</source>
                     <target>21</target>
                     <compilerArgs>
-                        <arg>-parameters</arg> <!-- Критически важно для Spring Data JPA! -->
+                        <arg>-parameters</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>

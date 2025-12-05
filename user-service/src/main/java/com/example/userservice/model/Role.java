@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "roles")  // Должно совпадать с именем таблицы в SQL
+@Table(name = "roles")
 @Data
 public class Role {
 
@@ -13,5 +13,6 @@ public class Role {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name;
+    private String name; // Должно быть: "USER", "MANAGER", "ADMIN" (без ROLE_ префикса)
+
 }

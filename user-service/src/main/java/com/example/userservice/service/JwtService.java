@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -45,6 +47,13 @@ public class JwtService {
             claims.put("userId", user.getId());
             claims.put("email", user.getEmail());
             claims.put("fullName", user.getFullName());
+
+            // ВАЖНО: Добавляем роли в claims
+            String roles = user.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(","));
+            claims.put("roles", roles);
+            claims.put("authorities", roles);
         }
         return buildToken(claims, userDetails, accessTokenExpiration);
     }
@@ -81,6 +90,10 @@ public class JwtService {
 
     public Long extractUserId(String token) {
         return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    public String extractRoles(String token) {
+        return extractClaim(token, claims -> claims.get("roles", String.class));
     }
 
     public boolean isTokenValid(String token) {
