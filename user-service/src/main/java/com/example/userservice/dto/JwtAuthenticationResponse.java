@@ -9,10 +9,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TokenPair {
+public class JwtAuthenticationResponse {
     private String accessToken;
     private String refreshToken;
-    private String tokenType;
-    private Long expiresIn;
+    private Long accessTokenExpiresIn;
     private Long refreshTokenExpiresIn;
+    private String email;
+    private String fullName;
+    private Long userId;
 }

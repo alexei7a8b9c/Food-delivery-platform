@@ -1,65 +1,115 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import authService from '../services/auth';
 
 const AuthContext = createContext({});
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        const savedUser = localStorage.getItem('user');
-        return savedUser ? JSON.parse(savedUser) : null;
-    });
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const [token, setToken] = useState(() => {
-        return localStorage.getItem('token') || null;
-    });
-
+    // Проверяем аутентификацию при загрузке
     useEffect(() => {
-        if (token) {
-            localStorage.setItem('token', token);
-        } else {
-            localStorage.removeItem('token');
-        }
-    }, [token]);
+        checkAuth();
+    }, []);
 
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem('user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('user');
-        }
-    }, [user]);
+    const checkAuth = () => {
+        const userInfo = authService.getUserInfo();
+        const token = authService.getAccessToken();
 
-    const login = (userData, token) => {
-        setUser(userData);
-        setToken(token);
+        if (token && userInfo) {
+            setUser(userInfo);
+        }
+        setLoading(false);
     };
 
-    const logout = () => {
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('cart'); // Очищаем корзину при выходе
+    // Регистрация
+    const register = async (userData) => {
+        setError(null);
+        try {
+            const result = await authService.register(userData);
+
+            if (result.success) {
+                const userInfo = authService.getUserInfo();
+                setUser(userInfo);
+                return { success: true };
+            } else {
+                setError(result.error || 'Registration failed');
+                return { success: false, error: result.error };
+            }
+        } catch (error) {
+            const errorMessage = error.message || 'Registration failed';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
     };
 
-    const isAuthenticated = !!token;
+    // Вход
+    const login = async (email, password) => {
+        setError(null);
+        try {
+            const result = await authService.login(email, password);
+
+            if (result.success) {
+                const userInfo = authService.getUserInfo();
+                setUser(userInfo);
+                return { success: true };
+            } else {
+                setError(result.error || 'Login failed');
+                return { success: false, error: result.error };
+            }
+        } catch (error) {
+            const errorMessage = error.message || 'Login failed';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+    };
+
+    // Выход
+    const logout = async () => {
+        setError(null);
+        try {
+            await authService.logout();
+            setUser(null);
+            return { success: true };
+        } catch (error) {
+            setError(error.message);
+            return { success: false, error: error.message };
+        }
+    };
+
+    // Проверка email
+    const checkEmailAvailability = async (email) => {
+        try {
+            return await authService.checkEmailAvailability(email);
+        } catch (error) {
+            console.error('Email check error:', error);
+            return { available: false };
+        }
+    };
+
+    // Очистка ошибок
+    const clearError = () => {
+        setError(null);
+    };
 
     const value = {
-        user: user || {}, // Гарантируем, что user всегда объект
-        token,
+        user,
+        loading,
+        error,
+        isAuthenticated: !!user,
+        register,
         login,
         logout,
-        isAuthenticated
+        checkEmailAvailability,
+        clearError
     };
 
     return (
         <AuthContext.Provider value={value}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

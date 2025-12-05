@@ -1,6 +1,6 @@
-CREATE TABLE role (
-                      id BIGSERIAL PRIMARY KEY,
-                      name VARCHAR(50) NOT NULL UNIQUE
-);
+CREATE TABLE IF NOT EXISTS roles (
+                                     id BIGSERIAL PRIMARY KEY,
+                                     name VARCHAR(50) NOT NULL UNIQUE
+    );
 
-CREATE INDEX idx_role_name ON role(name);
+CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name);

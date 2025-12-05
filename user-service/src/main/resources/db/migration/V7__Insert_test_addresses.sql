@@ -6,4 +6,5 @@ INSERT INTO address (street, city, zip, state, country, user_id) VALUES
                                                                      ('654 Maple Drive', 'San Francisco', '94102', 'CA', 'USA', 4),
                                                                      ('987 Elm Street', 'Austin', '73301', 'TX', 'USA', 5),
                                                                      ('111 Birch Lane', 'Boston', '02101', 'MA', 'USA', 6),
-                                                                     ('222 Cedar Road', 'Miami', '33101', 'FL', 'USA', 2);
+                                                                     ('222 Cedar Road', 'Miami', '33101', 'FL', 'USA', 2)
+    ON CONFLICT DO NOTHING;

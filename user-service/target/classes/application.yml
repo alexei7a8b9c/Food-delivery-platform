@@ -21,10 +21,15 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  main:
+    allow-circular-references: true  # ✅ Перемещено сюда
 
+# JWT Configuration
 jwt:
   secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
-  expiration: 86400000
+  expiration:
+    access: 300          # 5 минут
+    refresh: 2592000     # 30 дней (в секундах)
 
 eureka:
   client:
@@ -39,8 +44,8 @@ eureka:
 logging:
   level:
     com.example.userservice: DEBUG
+    org.springframework.security: DEBUG
     org.springframework.cloud.netflix.eureka: DEBUG
-    com.netflix.eureka: DEBUG
 
 management:
   endpoints:

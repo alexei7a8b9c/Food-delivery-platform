@@ -1,33 +1,37 @@
 package com.example.userservice.repository;
 
-import com.example.userservice.model.RefreshToken;
+import com.example.userservice.entity.RefreshToken;
+import com.example.userservice.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByToken(String token);
-    List<RefreshToken> findAllByUserId(Long userId);
+
+    @Query("SELECT rt FROM RefreshToken rt WHERE rt.token = :token")
+    Optional<RefreshToken> findByToken(@Param("token") String token);
+
+    @Query("SELECT rt FROM RefreshToken rt WHERE rt.token = :token AND rt.revoked = false")
+    Optional<RefreshToken> findByTokenAndRevokedFalse(@Param("token") String token);
+
+    @Query("SELECT rt FROM RefreshToken rt WHERE rt.user = :user AND rt.revoked = false")
+    List<RefreshToken> findByUserAndRevokedFalse(@Param("user") User user);
 
     @Modifying
-    @Transactional
-    @Query("DELETE FROM RefreshToken rt WHERE rt.token = :token")
-    void deleteByToken(@Param("token") String token);
+    @Query("UPDATE RefreshToken rt SET rt.revoked = true WHERE rt.user = :user AND rt.revoked = false")
+    void revokeAllUserTokens(@Param("user") User user);
 
     @Modifying
-    @Transactional
-    @Query("DELETE FROM RefreshToken rt WHERE rt.userId = :userId")
-    void deleteAllByUserId(@Param("userId") Long userId);
+    @Query("DELETE FROM RefreshToken rt WHERE rt.expiryDate < :date")
+    void deleteExpiredTokens(@Param("date") LocalDateTime date);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM RefreshToken rt WHERE rt.expiresAt < CURRENT_TIMESTAMP")
-    void deleteExpiredTokens();
+    @Query("SELECT CASE WHEN COUNT(rt) > 0 THEN true ELSE false END FROM RefreshToken rt WHERE rt.token = :token AND rt.revoked = false")
+    boolean existsByTokenAndRevokedFalse(@Param("token") String token);
 }
