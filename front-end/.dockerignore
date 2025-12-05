@@ -1,7 +1,10 @@
 node_modules
-npm-debug.log
-.git
+build
+*.log
 .env
-.nyc_output
-coverage
 .DS_Store
+.git
+.gitignore
+README.md
+Dockerfile
+nginx.conf

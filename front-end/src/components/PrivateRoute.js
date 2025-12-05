@@ -1,39 +1,63 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
-const PrivateRoute = ({ children, roles = [] }) => {
-    const { user, loading, isAuthenticated } = useAuth();
-    const location = useLocation();
+const PrivateRoute = ({ children, requiredRoles = [] }) => {
+    const { user, loading } = useContext(AuthContext);
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-                <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
+            <div style={styles.loadingContainer}>
+                <div style={styles.spinner}></div>
+                <p>Загрузка...</p>
             </div>
         );
     }
 
-    if (!isAuthenticated) {
-        // Сохраняем текущий путь для редиректа после входа
-        return <Navigate to="/login" state={{ from: location }} replace />;
+    if (!user) {
+        return <Navigate to="/login" />;
     }
 
-    // Проверка ролей, если указаны
-    if (roles.length > 0 && user) {
+    if (requiredRoles.length > 0) {
         const userRoles = user.roles || [];
-        const hasRequiredRole = roles.some(role =>
-            userRoles.includes(role) || userRoles.map(r => r.name).includes(role)
-        );
+        const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
 
         if (!hasRequiredRole) {
-            return <Navigate to="/unauthorized" replace />;
+            return (
+                <div style={styles.accessDenied}>
+                    <h2>Доступ запрещен</h2>
+                    <p>У вас нет прав для доступа к этой странице.</p>
+                </div>
+            );
         }
     }
 
     return children;
+};
+
+const styles = {
+    loadingContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '300px',
+        gap: '20px',
+    },
+    spinner: {
+        border: '4px solid rgba(0, 0, 0, 0.1)',
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        borderLeftColor: '#ff6b35',
+        animation: 'spin 1s ease infinite',
+    },
+    accessDenied: {
+        textAlign: 'center',
+        padding: '50px 20px',
+        maxWidth: '600px',
+        margin: '0 auto',
+    },
 };
 
 export default PrivateRoute;

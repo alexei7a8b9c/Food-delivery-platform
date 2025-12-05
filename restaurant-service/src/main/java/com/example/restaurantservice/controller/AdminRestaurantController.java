@@ -9,24 +9,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/admin/restaurants")
 @RequiredArgsConstructor
 public class AdminRestaurantController {
+
     private final RestaurantRepository restaurantRepository;
     private final DishRepository dishRepository;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Restaurant> createRestaurant(@RequestBody Restaurant restaurant) {
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
         return ResponseEntity.ok(savedRestaurant);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Restaurant> updateRestaurant(@PathVariable Long id, @RequestBody Restaurant restaurant) {
         if (!restaurantRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -37,7 +36,7 @@ public class AdminRestaurantController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable Long id) {
         if (!restaurantRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -47,7 +46,7 @@ public class AdminRestaurantController {
     }
 
     @PostMapping("/{restaurantId}/dishes")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Dish> addDish(@PathVariable Long restaurantId, @RequestBody Dish dish) {
         dish.setRestaurantId(restaurantId);
         Dish savedDish = dishRepository.save(dish);
@@ -55,7 +54,7 @@ public class AdminRestaurantController {
     }
 
     @PutMapping("/{restaurantId}/dishes/{dishId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Dish> updateDish(@PathVariable Long restaurantId, @PathVariable Long dishId, @RequestBody Dish dish) {
         if (!dishRepository.existsById(dishId)) {
             return ResponseEntity.notFound().build();
@@ -67,7 +66,7 @@ public class AdminRestaurantController {
     }
 
     @DeleteMapping("/{restaurantId}/dishes/{dishId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteDish(@PathVariable Long restaurantId, @PathVariable Long dishId) {
         if (!dishRepository.existsById(dishId)) {
             return ResponseEntity.notFound().build();

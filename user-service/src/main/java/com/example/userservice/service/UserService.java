@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -134,5 +135,19 @@ public class UserService {
         User user = findById(userId);
         return user.getRoles().stream()
                 .anyMatch(role -> "ADMIN".equals(role.getName()));
+    }
+
+    // Метод для проверки, является ли пользователь менеджером
+    public boolean isManager(Long userId) {
+        User user = findById(userId);
+        return user.getRoles().stream()
+                .anyMatch(role -> "MANAGER".equals(role.getName()));
+    }
+
+    // Метод для получения всех пользователей (только для администратора)
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        log.info("Getting all users (admin only)");
+        return userRepository.findAll();
     }
 }

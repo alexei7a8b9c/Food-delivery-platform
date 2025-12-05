@@ -33,6 +33,7 @@ public class JwtFilter implements GatewayFilter {
             "/api/menu",
             "/api/menu/",
             "/eureka",
+            "/eureka/",
             "/actuator",
             "/actuator/",
             "/v3/api-docs",
@@ -100,14 +101,18 @@ public class JwtFilter implements GatewayFilter {
 
             String username = claims.getSubject();
             Long userId = claims.get("userId", Long.class);
+            String roles = claims.get("roles", String.class);
+            String authorities = claims.get("authorities", String.class);
 
-            // Добавляем username и userId в заголовки для downstream сервисов
+            // Добавляем информацию пользователя в заголовки для downstream сервисов
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Name", username)
                     .header("X-User-Id", userId != null ? userId.toString() : "")
+                    .header("X-User-Roles", roles != null ? roles : "")
+                    .header("X-User-Authorities", authorities != null ? authorities : "")
                     .build();
 
-            System.out.println("JWT validated for user: " + username + ", path: " + path);
+            System.out.println("JWT validated for user: " + username + ", roles: " + roles + ", path: " + path);
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
         } catch (Exception e) {

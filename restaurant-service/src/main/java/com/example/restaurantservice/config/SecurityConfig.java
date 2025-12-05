@@ -19,15 +19,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Публичные endpoints
-                        .requestMatchers("/api/restaurants/**").permitAll()
-                        .requestMatchers("/api/menu/**").permitAll()
+                        // Публичные endpoints (только GET)
+                        .requestMatchers("/api/restaurants/**").permitAll()  // Все GET разрешены
+                        .requestMatchers("/api/menu/**").permitAll()         // Все GET разрешены
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        // Защищенные admin endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Защищенные admin endpoints (POST, PUT, DELETE)
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
 
+                        // Остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 );
 

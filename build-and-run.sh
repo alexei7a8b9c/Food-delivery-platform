@@ -8,13 +8,24 @@ mvn clean install -DskipTests
 # Сборка Docker образов
 docker-compose -f docker-compose.full.yml build
 
-# Запуск системы
+# Запуск бэкенда
 docker-compose -f docker-compose.full.yml up -d
 
-echo "Waiting for services to start..."
+echo "Waiting for backend services to start..."
 sleep 30
 
+echo "Building frontend..."
+cd front-end
+npm install
+npm run build
+
+echo "Starting frontend..."
+docker-compose up -d
+
+cd ..
+
 echo "Food Delivery Platform is starting..."
+echo "Frontend: http://localhost:3000"
 echo "Eureka Server: http://localhost:8761"
 echo "API Gateway: http://localhost:8080"
 echo "User Service: http://localhost:8083"

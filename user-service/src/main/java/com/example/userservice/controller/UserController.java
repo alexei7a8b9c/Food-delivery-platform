@@ -27,6 +27,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and #id == authentication.principal.id)")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userService.findById(id);
         // Очищаем пароль для безопасности
@@ -136,5 +137,34 @@ public class UserController {
                 "email", user.getEmail(),
                 "roles", user.getRoles()
         ));
+    }
+
+    // Получить всех пользователей - только для администраторов
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAllUsers(@RequestHeader("X-User-Id") Long adminId) {
+        try {
+            // Проверка, что запрос от админа
+            if (!userService.isAdmin(adminId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "error", "Access denied",
+                        "message", "Only administrators can view all users"
+                ));
+            }
+
+            // Здесь должен быть метод для получения всех пользователей
+            // return ResponseEntity.ok(userService.getAllUsers());
+            return ResponseEntity.ok(Map.of(
+                    "message", "Get all users endpoint - to be implemented"
+            ));
+        } catch (Exception e) {
+            log.error("Error getting all users: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Failed to get users",
+                    "message", e.getMessage()
+            ));
+        }
     }
 }

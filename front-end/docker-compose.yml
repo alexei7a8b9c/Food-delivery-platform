@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    container_name: food-delivery-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE: http://localhost:8080
+    networks:
+      - food-delivery-network
+
+networks:
+  food-delivery-network:
+    external: true

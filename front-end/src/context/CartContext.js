@@ -1,7 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { AuthContext } from './AuthContext';
+import { cartService } from '../services/api';
 
-const CartContext = createContext({});
+export const CartContext = createContext();
 
+// Создаем кастомный хук для удобства использования
 export const useCart = () => {
     const context = useContext(CartContext);
     if (!context) {
@@ -11,64 +14,176 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-    // Инициализируем cartItems из localStorage или пустым массивом
-    const [cartItems, setCartItems] = useState(() => {
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const { user } = useContext(AuthContext);
+
+    // Загружаем корзину из localStorage при монтировании
+    useEffect(() => {
         const savedCart = localStorage.getItem('cart');
-        return savedCart ? JSON.parse(savedCart) : [];
-    });
+        if (savedCart) {
+            try {
+                setCartItems(JSON.parse(savedCart));
+            } catch (error) {
+                console.error('Error parsing cart from localStorage:', error);
+                localStorage.removeItem('cart');
+            }
+        }
+    }, []);
+
+    // Синхронизируем корзину с сервером при авторизации
+    useEffect(() => {
+        if (user) {
+            syncCartWithServer();
+        }
+    }, [user]);
 
     // Сохраняем корзину в localStorage при изменении
     useEffect(() => {
         localStorage.setItem('cart', JSON.stringify(cartItems));
     }, [cartItems]);
 
-    const addToCart = (item) => {
-        setCartItems(prevItems => {
-            // Проверяем, есть ли уже такое блюдо в корзине
-            const existingItemIndex = prevItems.findIndex(
-                i => i.dishId === item.dishId && i.restaurantId === item.restaurantId
+    const syncCartWithServer = async () => {
+        if (!user) return;
+
+        try {
+            setLoading(true);
+            const serverCart = await cartService.getCart();
+
+            // Слияние локальной и серверной корзины
+            const mergedCart = [...serverCart];
+            cartItems.forEach(localItem => {
+                const existingItem = mergedCart.find(item => item.dishId === localItem.dishId);
+                if (existingItem) {
+                    existingItem.quantity += localItem.quantity;
+                } else {
+                    mergedCart.push(localItem);
+                }
+            });
+
+            // Обновляем серверную корзину
+            await Promise.all(
+                mergedCart.map(item =>
+                    cartService.addToCart(item)
+                )
             );
 
-            if (existingItemIndex >= 0) {
-                // Обновляем количество существующего товара
-                const updatedItems = [...prevItems];
-                updatedItems[existingItemIndex].quantity += item.quantity;
-                return updatedItems;
-            } else {
-                // Добавляем новый товар
-                return [...prevItems, item];
+            // Получаем обновленную корзину с сервера
+            const updatedCart = await cartService.getCart();
+            setCartItems(updatedCart);
+        } catch (error) {
+            console.error('Error syncing cart with server:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addToCart = async (item) => {
+        if (user) {
+            try {
+                await cartService.addToCart(item);
+                const updatedCart = await cartService.getCart();
+                setCartItems(updatedCart);
+            } catch (error) {
+                console.error('Error adding to cart on server:', error);
+                // Локальное добавление при ошибке
+                const existingItem = cartItems.find(cartItem => cartItem.dishId === item.dishId);
+                if (existingItem) {
+                    setCartItems(cartItems.map(cartItem =>
+                        cartItem.dishId === item.dishId
+                            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                            : cartItem
+                    ));
+                } else {
+                    setCartItems([...cartItems, { ...item, quantity: 1 }]);
+                }
             }
-        });
+        } else {
+            // Локальное добавление для неавторизованных пользователей
+            const existingItem = cartItems.find(cartItem => cartItem.dishId === item.dishId);
+            if (existingItem) {
+                setCartItems(cartItems.map(cartItem =>
+                    cartItem.dishId === item.dishId
+                        ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                        : cartItem
+                ));
+            } else {
+                setCartItems([...cartItems, { ...item, quantity: 1 }]);
+            }
+        }
     };
 
-    const updateQuantity = (index, quantity) => {
-        if (quantity < 1) return;
-
-        setCartItems(prevItems => {
-            const updatedItems = [...prevItems];
-            updatedItems[index].quantity = quantity;
-            return updatedItems;
-        });
+    const removeFromCart = async (dishId) => {
+        if (user) {
+            try {
+                await cartService.removeFromCart(dishId);
+                const updatedCart = await cartService.getCart();
+                setCartItems(updatedCart);
+            } catch (error) {
+                console.error('Error removing from cart on server:', error);
+                setCartItems(cartItems.filter(item => item.dishId !== dishId));
+            }
+        } else {
+            setCartItems(cartItems.filter(item => item.dishId !== dishId));
+        }
     };
 
-    const removeFromCart = (index) => {
-        setCartItems(prevItems => {
-            const updatedItems = [...prevItems];
-            updatedItems.splice(index, 1);
-            return updatedItems;
-        });
+    const updateQuantity = async (dishId, quantity) => {
+        if (quantity < 1) {
+            removeFromCart(dishId);
+            return;
+        }
+
+        if (user) {
+            try {
+                await cartService.updateQuantity(dishId, quantity);
+                const updatedCart = await cartService.getCart();
+                setCartItems(updatedCart);
+            } catch (error) {
+                console.error('Error updating quantity on server:', error);
+                setCartItems(cartItems.map(item =>
+                    item.dishId === dishId ? { ...item, quantity } : item
+                ));
+            }
+        } else {
+            setCartItems(cartItems.map(item =>
+                item.dishId === dishId ? { ...item, quantity } : item
+            ));
+        }
     };
 
-    const clearCart = () => {
-        setCartItems([]);
+    const clearCart = async () => {
+        if (user) {
+            try {
+                await cartService.clearCart();
+                setCartItems([]);
+            } catch (error) {
+                console.error('Error clearing cart on server:', error);
+                setCartItems([]);
+            }
+        } else {
+            setCartItems([]);
+        }
+    };
+
+    const getTotalPrice = () => {
+        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    const getItemCount = () => {
+        return cartItems.reduce((total, item) => total + item.quantity, 0);
     };
 
     const value = {
-        cartItems: cartItems || [], // Гарантируем, что это всегда массив
+        cartItems,
+        loading,
         addToCart,
-        updateQuantity,
         removeFromCart,
-        clearCart
+        updateQuantity,
+        clearCart,
+        getTotalPrice,
+        getItemCount,
+        syncCartWithServer,
     };
 
     return (

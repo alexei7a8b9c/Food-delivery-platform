@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -55,13 +55,17 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        // Публичные endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // ВРЕМЕННО для теста: разрешить доступ всем к управлению пользователями
-                        .requestMatchers("/api/users/**").permitAll()
+                        // User endpoints - доступны аутентифицированным пользователям
+                        .requestMatchers("/api/users/profile").authenticated()
+
+                        // Admin endpoints - только для администраторов
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

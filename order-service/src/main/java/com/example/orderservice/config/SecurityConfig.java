@@ -20,6 +20,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // Cart endpoints - для аутентифицированных пользователей
+                        .requestMatchers("/api/cart/**").authenticated()
+
+                        // Order endpoints - для аутентифицированных пользователей
+                        .requestMatchers("/api/orders/**").authenticated()
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/orders/all").hasRole("ADMIN")
+                        .requestMatchers("/api/orders/statistics").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 );
 

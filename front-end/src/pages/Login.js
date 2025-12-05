@@ -1,203 +1,422 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import { FaEnvelope, FaLock, FaGoogle, FaFacebook, FaUserPlus } from 'react-icons/fa';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const { login, error: authError, clearError, isAuthenticated } = useAuth();
+    const { login } = useContext(AuthContext);
     const navigate = useNavigate();
-    const location = useLocation();
-
-    const from = location.state?.from?.pathname || '/';
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate(from, { replace: true });
-        }
-    }, [isAuthenticated, navigate, from]);
-
-    useEffect(() => {
-        clearError();
-        setErrors({});
-    }, [email, password, clearError]);
-
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (!email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = 'Email is invalid';
-        }
-
-        if (!password) {
-            newErrors.password = 'Password is required';
-        } else if (password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateForm()) {
+        if (!email || !password) {
+            toast.error('Пожалуйста, заполните все поля');
             return;
         }
 
-        setIsSubmitting(true);
+        if (!validateEmail(email)) {
+            toast.error('Пожалуйста, введите корректный email');
+            return;
+        }
+
+        setIsLoading(true);
 
         try {
             const result = await login(email, password);
 
             if (result.success) {
-                console.log('Login successful!');
-                navigate(from, { replace: true });
-            } else {
-                console.error('Login failed:', result.error);
+                toast.success('Вход выполнен успешно!');
+
+                // Сохраняем remember me
+                if (rememberMe) {
+                    localStorage.setItem('rememberMe', 'true');
+                }
+
+                // Перенаправляем на главную
+                navigate('/');
             }
         } catch (error) {
             console.error('Login error:', error);
+            toast.error('Ошибка входа. Проверьте данные.');
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
-    const handleDemoLogin = async () => {
-        setEmail('john.doe@email.com');
-        setPassword('password123');
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
 
-        setTimeout(async () => {
-            setIsSubmitting(true);
-            try {
-                const result = await login('john.doe@email.com', 'password123');
-
-                if (result.success) {
-                    console.log('Demo login successful!');
-                    navigate(from, { replace: true });
-                }
-            } catch (error) {
-                console.error('Demo login failed. Please try manual login.');
-            } finally {
-                setIsSubmitting(false);
-            }
-        }, 100);
+    const handleSocialLogin = (provider) => {
+        toast.info(`Вход через ${provider} в разработке`);
     };
 
     return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-6 col-lg-4">
-                    <div className="card shadow">
-                        <div className="card-body">
-                            <h2 className="card-title text-center mb-4">Login</h2>
-
-                            {authError && (
-                                <div className="alert alert-danger" role="alert">
-                                    {authError}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmit} noValidate>
-                                <div className="mb-3">
-                                    <label htmlFor="email" className="form-label">
-                                        Email address
-                                    </label>
-                                    <input
-                                        type="email"
-                                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                                        id="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        disabled={isSubmitting}
-                                        required
-                                    />
-                                    {errors.email && (
-                                        <div className="invalid-feedback">{errors.email}</div>
-                                    )}
-                                </div>
-
-                                <div className="mb-3">
-                                    <label htmlFor="password" className="form-label">
-                                        Password
-                                    </label>
-                                    <input
-                                        type="password"
-                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                                        id="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        disabled={isSubmitting}
-                                        required
-                                    />
-                                    {errors.password && (
-                                        <div className="invalid-feedback">{errors.password}</div>
-                                    )}
-                                </div>
-
-                                <div className="d-grid gap-2 mb-3">
-                                    <button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Logging in...
-                                            </>
-                                        ) : (
-                                            'Login'
-                                        )}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-secondary"
-                                        onClick={handleDemoLogin}
-                                        disabled={isSubmitting}
-                                    >
-                                        Try Demo Account
-                                    </button>
-                                </div>
-
-                                <div className="text-center">
-                                    <Link to="/forgot-password" className="text-decoration-none">
-                                        Forgot password?
-                                    </Link>
-                                </div>
-                            </form>
-
-                            <hr className="my-4" />
-
-                            <div className="text-center">
-                                <p className="mb-0">Don't have an account?</p>
-                                <Link to="/register" className="btn btn-link text-decoration-none">
-                                    Create new account
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card mt-3">
-                        <div className="card-body">
-                            <h6 className="card-subtitle mb-2 text-muted">Demo Credentials</h6>
-                            <p className="card-text small">
-                                <strong>Email:</strong> john.doe@email.com<br />
-                                <strong>Password:</strong> password123
-                            </p>
-                        </div>
-                    </div>
+        <div style={styles.container}>
+            <div style={styles.card}>
+                <div style={styles.header}>
+                    <h2 style={styles.title}>Вход в аккаунт</h2>
+                    <p style={styles.subtitle}>Войдите, чтобы продолжить</p>
                 </div>
+
+                <form onSubmit={handleSubmit} style={styles.form}>
+                    <div style={styles.formGroup}>
+                        <label htmlFor="email" style={styles.label}>
+                            <FaEnvelope style={styles.labelIcon} />
+                            Email адрес
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Введите ваш email"
+                            style={styles.input}
+                            disabled={isLoading}
+                            required
+                        />
+                    </div>
+
+                    <div style={styles.formGroup}>
+                        <div style={styles.passwordHeader}>
+                            <label htmlFor="password" style={styles.label}>
+                                <FaLock style={styles.labelIcon} />
+                                Пароль
+                            </label>
+                            <Link to="/forgot-password" style={styles.forgotLink}>
+                                Забыли пароль?
+                            </Link>
+                        </div>
+                        <div style={styles.passwordInputContainer}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Введите ваш пароль"
+                                style={styles.passwordInput}
+                                disabled={isLoading}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={styles.showPasswordBtn}
+                                disabled={isLoading}
+                            >
+                                {showPassword ? '🙈' : '👁️'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style={styles.rememberMe}>
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            style={styles.checkbox}
+                            disabled={isLoading}
+                        />
+                        <label htmlFor="rememberMe" style={styles.checkboxLabel}>
+                            Запомнить меня
+                        </label>
+                    </div>
+
+                    <button
+                        type="submit"
+                        style={styles.submitButton}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <div style={styles.spinnerContainer}>
+                                <div style={styles.spinner}></div>
+                                <span style={{ marginLeft: '10px' }}>Вход...</span>
+                            </div>
+                        ) : (
+                            'Войти'
+                        )}
+                    </button>
+
+                    <div style={styles.divider}>
+                        <span style={styles.dividerText}>или войдите через</span>
+                    </div>
+
+                    <div style={styles.socialButtons}>
+                        <button
+                            type="button"
+                            onClick={() => handleSocialLogin('Google')}
+                            style={styles.socialButton}
+                            disabled={isLoading}
+                        >
+                            <FaGoogle style={styles.socialIcon} />
+                            Google
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSocialLogin('Facebook')}
+                            style={styles.socialButton}
+                            disabled={isLoading}
+                        >
+                            <FaFacebook style={styles.socialIcon} />
+                            Facebook
+                        </button>
+                    </div>
+
+                    <div style={styles.registerLink}>
+                        <p style={styles.registerText}>
+                            Нет аккаунта?{' '}
+                            <Link to="/register" style={styles.registerLinkText}>
+                                <FaUserPlus style={{ marginRight: '5px' }} />
+                                Зарегистрируйтесь
+                            </Link>
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     );
+};
+
+const styles = {
+    container: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 'calc(100vh - 200px)',
+        padding: '20px',
+        backgroundColor: '#f8f9fa',
+    },
+    card: {
+        backgroundColor: 'white',
+        borderRadius: '15px',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '450px',
+    },
+    header: {
+        textAlign: 'center',
+        marginBottom: '30px',
+    },
+    title: {
+        fontSize: '2rem',
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginBottom: '10px',
+    },
+    subtitle: {
+        color: '#7f8c8d',
+        fontSize: '0.95rem',
+    },
+    form: {
+        width: '100%',
+    },
+    formGroup: {
+        marginBottom: '20px',
+    },
+    label: {
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '8px',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        color: '#2c3e50',
+    },
+    labelIcon: {
+        marginRight: '8px',
+        color: '#ff6b35',
+        fontSize: '0.9rem',
+    },
+    input: {
+        width: '100%',
+        padding: '12px 15px',
+        border: '2px solid #e9ecef',
+        borderRadius: '8px',
+        fontSize: '1rem',
+        transition: 'all 0.3s ease',
+        ':focus': {
+            outline: 'none',
+            borderColor: '#ff6b35',
+            boxShadow: '0 0 0 3px rgba(255, 107, 53, 0.1)',
+        },
+    },
+    passwordHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '8px',
+    },
+    forgotLink: {
+        fontSize: '0.85rem',
+        color: '#ff6b35',
+        textDecoration: 'none',
+        fontWeight: '600',
+        ':hover': {
+            textDecoration: 'underline',
+        },
+    },
+    passwordInputContainer: {
+        position: 'relative',
+    },
+    passwordInput: {
+        width: '100%',
+        padding: '12px 45px 12px 15px',
+        border: '2px solid #e9ecef',
+        borderRadius: '8px',
+        fontSize: '1rem',
+        transition: 'all 0.3s ease',
+        ':focus': {
+            outline: 'none',
+            borderColor: '#ff6b35',
+            boxShadow: '0 0 0 3px rgba(255, 107, 53, 0.1)',
+        },
+    },
+    showPasswordBtn: {
+        position: 'absolute',
+        right: '10px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '1.2rem',
+        color: '#7f8c8d',
+        padding: '5px',
+        ':hover': {
+            color: '#ff6b35',
+        },
+    },
+    rememberMe: {
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '25px',
+    },
+    checkbox: {
+        marginRight: '10px',
+        width: '18px',
+        height: '18px',
+        cursor: 'pointer',
+    },
+    checkboxLabel: {
+        fontSize: '0.9rem',
+        color: '#7f8c8d',
+        cursor: 'pointer',
+    },
+    submitButton: {
+        width: '100%',
+        backgroundColor: '#ff6b35',
+        color: 'white',
+        border: 'none',
+        padding: '15px',
+        borderRadius: '8px',
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        marginBottom: '20px',
+        ':hover': {
+            backgroundColor: '#e55a2e',
+            transform: 'translateY(-2px)',
+            boxShadow: '0 5px 15px rgba(255, 107, 53, 0.3)',
+        },
+        ':disabled': {
+            backgroundColor: '#95a5a6',
+            cursor: 'not-allowed',
+            transform: 'none',
+            boxShadow: 'none',
+        },
+    },
+    spinnerContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    spinner: {
+        width: '20px',
+        height: '20px',
+        border: '2px solid rgba(255, 255, 255, 0.3)',
+        borderTop: '2px solid white',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+    },
+    divider: {
+        display: 'flex',
+        alignItems: 'center',
+        margin: '25px 0',
+        '::before, ::after': {
+            content: '""',
+            flex: 1,
+            height: '1px',
+            backgroundColor: '#e9ecef',
+        },
+    },
+    dividerText: {
+        padding: '0 15px',
+        color: '#7f8c8d',
+        fontSize: '0.85rem',
+        backgroundColor: 'white',
+    },
+    socialButtons: {
+        display: 'flex',
+        gap: '15px',
+        marginBottom: '25px',
+    },
+    socialButton: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        padding: '12px',
+        border: '2px solid #e9ecef',
+        borderRadius: '8px',
+        backgroundColor: 'white',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        ':hover': {
+            borderColor: '#ff6b35',
+            color: '#ff6b35',
+            transform: 'translateY(-2px)',
+        },
+        ':disabled': {
+            opacity: 0.5,
+            cursor: 'not-allowed',
+            transform: 'none',
+        },
+    },
+    socialIcon: {
+        fontSize: '1.2rem',
+    },
+    registerLink: {
+        textAlign: 'center',
+        marginTop: '20px',
+    },
+    registerText: {
+        color: '#7f8c8d',
+        fontSize: '0.9rem',
+    },
+    registerLinkText: {
+        color: '#ff6b35',
+        textDecoration: 'none',
+        fontWeight: 'bold',
+        display: 'inline-flex',
+        alignItems: 'center',
+        ':hover': {
+            textDecoration: 'underline',
+        },
+    },
 };
 
 export default Login;

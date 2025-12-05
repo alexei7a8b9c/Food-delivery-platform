@@ -2,57 +2,26 @@ import api from './api';
 
 export const restaurantService = {
     // Получить все рестораны
-    getAllRestaurants: async () => {
-        try {
-            const response = await api.get('/api/restaurants');
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching restaurants:', error);
-            throw error;
-        }
-    },
+    getAllRestaurants: () =>
+        api.get('/restaurants').then(response => response.data),
 
     // Получить ресторан по ID
-    getRestaurantById: async (id) => {
-        try {
-            const response = await api.get(`/api/restaurants/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching restaurant:', error);
-            throw error;
-        }
-    },
+    getRestaurantById: (id) =>
+        api.get(`/restaurants/${id}`).then(response => response.data),
+
+    // Получить рестораны по кухне
+    getRestaurantsByCuisine: (cuisine) =>
+        api.get(`/restaurants/cuisine/${cuisine}`).then(response => response.data),
 
     // Получить блюда ресторана
-    getRestaurantDishes: async (restaurantId) => {
-        try {
-            const response = await api.get(`/api/restaurants/${restaurantId}/dishes`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching dishes:', error);
-            throw error;
-        }
-    },
+    getDishesByRestaurant: (restaurantId) =>
+        api.get(`/restaurants/${restaurantId}/dishes`).then(response => response.data),
 
     // Получить все блюда
-    getAllDishes: async () => {
-        try {
-            const response = await api.get('/api/menu/dishes');
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching dishes:', error);
-            throw error;
-        }
-    },
+    getAllDishes: () =>
+        api.get('/menu/dishes').then(response => response.data),
 
     // Поиск блюд
-    searchDishes: async (query) => {
-        try {
-            const response = await api.get(`/api/menu/search?query=${query}`);
-            return response.data;
-        } catch (error) {
-            console.error('Error searching dishes:', error);
-            throw error;
-        }
-    }
+    searchDishes: (query) =>
+        api.get(`/menu/search?query=${query}`).then(response => response.data),
 };
