@@ -36,8 +36,8 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setTelephone(request.getTelephone());
 
-        // ВСЕГДА назначаем только роль USER при регистрации
-        // Админ или менеджер должны быть назначены через отдельный endpoint
+        // ВАЖНО: Все новые пользователи получают ТОЛЬКО роль USER
+        // Роли ADMIN и MANAGER могут быть назначены только администратором
         Role userRole = roleRepository.findByName("USER")
                 .orElseGet(() -> {
                     log.warn("USER role not found, creating it...");
@@ -46,13 +46,15 @@ public class UserService {
                     return roleRepository.save(newRole);
                 });
 
+        // Убедимся, что только роль USER назначена
         user.setRoles(Collections.singleton(userRole));
+
         User savedUser = userRepository.save(user);
-        log.info("User registered successfully with ID: {}", savedUser.getId());
+        log.info("User registered successfully with ID: {} with ONLY USER role", savedUser.getId());
         return savedUser;
     }
 
-    // ДОБАВИТЬ: метод для назначения ролей админом
+    // Метод для назначения ролей ТОЛЬКО админом
     @Transactional
     public User assignRoleToUser(Long userId, String roleName) {
         User user = findById(userId);
@@ -60,13 +62,19 @@ public class UserService {
         // Приводим роль к верхнему регистру
         String normalizedRoleName = roleName.toUpperCase();
 
+        // Проверяем, существует ли такая роль
         Role role = roleRepository.findByName(normalizedRoleName)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + normalizedRoleName));
+
+        // Проверяем, не пытаемся ли назначить роль USER через этот метод
+        if ("USER".equals(normalizedRoleName)) {
+            throw new RuntimeException("USER role is automatically assigned during registration. Use only for ADMIN or MANAGER roles.");
+        }
 
         // Проверяем, есть ли уже эта роль у пользователя
         if (!user.getRoles().contains(role)) {
             user.getRoles().add(role);
-            log.info("Assigned role '{}' to user '{}' (ID: {})",
+            log.info("Admin assigned role '{}' to user '{}' (ID: {})",
                     roleName, user.getEmail(), user.getId());
         } else {
             log.info("User '{}' already has role '{}'", user.getEmail(), roleName);
@@ -75,20 +83,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ДОБАВИТЬ: метод для удаления роли у пользователя
+    // Метод для удаления роли (кроме USER)
     @Transactional
     public User removeRoleFromUser(Long userId, String roleName) {
         User user = findById(userId);
 
-        // Приводим роль к верхнему регистру
         String normalizedRoleName = roleName.toUpperCase();
+
+        // Нельзя удалить базовую роль USER
+        if ("USER".equals(normalizedRoleName)) {
+            throw new RuntimeException("Cannot remove USER role. Every user must have at least USER role.");
+        }
 
         Role role = roleRepository.findByName(normalizedRoleName)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + normalizedRoleName));
 
         if (user.getRoles().contains(role)) {
             user.getRoles().remove(role);
-            log.info("Removed role '{}' from user '{}' (ID: {})",
+            log.info("Admin removed role '{}' from user '{}' (ID: {})",
                     roleName, user.getEmail(), user.getId());
         } else {
             log.info("User '{}' doesn't have role '{}'", user.getEmail(), roleName);
@@ -115,5 +127,12 @@ public class UserService {
                     log.error(errorMessage);
                     return new RuntimeException("User not found");
                 });
+    }
+
+    // Метод для проверки, является ли пользователь администратором
+    public boolean isAdmin(Long userId) {
+        User user = findById(userId);
+        return user.getRoles().stream()
+                .anyMatch(role -> "ADMIN".equals(role.getName()));
     }
 }

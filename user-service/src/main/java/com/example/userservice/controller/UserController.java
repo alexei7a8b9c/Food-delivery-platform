@@ -4,6 +4,7 @@ import com.example.userservice.model.User;
 import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // Назначение роли (только для админа)
+    // Назначение роли - ТОЛЬКО для админа
     @PostMapping("/{userId}/roles/{roleName}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> assignRoleToUser(
@@ -45,6 +46,15 @@ public class UserController {
                 adminId, roleName, userId);
 
         try {
+            // Дополнительная проверка: убедимся, что запрос от админа
+            if (!userService.isAdmin(adminId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "error", "Access denied",
+                        "message", "Only administrators can assign roles"
+                ));
+            }
+
             User updatedUser = userService.assignRoleToUser(userId, roleName);
             updatedUser.setPasswordHash(null);
 
@@ -63,7 +73,7 @@ public class UserController {
         }
     }
 
-    // Удаление роли (только для админа)
+    // Удаление роли - ТОЛЬКО для админа
     @DeleteMapping("/{userId}/roles/{roleName}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> removeRoleFromUser(
@@ -75,6 +85,15 @@ public class UserController {
                 adminId, roleName, userId);
 
         try {
+            // Дополнительная проверка: убедимся, что запрос от админа
+            if (!userService.isAdmin(adminId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "error", "Access denied",
+                        "message", "Only administrators can remove roles"
+                ));
+            }
+
             User updatedUser = userService.removeRoleFromUser(userId, roleName);
             updatedUser.setPasswordHash(null);
 
@@ -93,10 +112,22 @@ public class UserController {
         }
     }
 
-    // Получение всех ролей пользователя
+    // Получение всех ролей пользователя - ТОЛЬКО для админа
     @GetMapping("/{userId}/roles")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getUserRoles(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserRoles(
+            @PathVariable Long userId,
+            @RequestHeader("X-User-Id") Long adminId) {
+
+        // Проверка, что запрос от админа
+        if (!userService.isAdmin(adminId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "error", "Access denied",
+                    "message", "Only administrators can view user roles"
+            ));
+        }
+
         User user = userService.findById(userId);
         user.setPasswordHash(null);
 
