@@ -1,189 +1,223 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { AuthContext } from './AuthContext';
-import { cartService } from '../services/api';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 export const CartContext = createContext();
 
-// Создаем кастомный хук для удобства использования
-export const useCart = () => {
-    const context = useContext(CartContext);
-    if (!context) {
-        throw new Error('useCart must be used within a CartProvider');
-    }
-    return context;
-};
-
 export const CartProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const { user } = useContext(AuthContext);
+    const [cartCount, setCartCount] = useState(0);
+    const { currentUser, isAuthenticated } = useContext(AuthContext);
+    const navigate = useNavigate();
 
-    // Загружаем корзину из localStorage при монтировании
-    useEffect(() => {
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-            try {
-                setCartItems(JSON.parse(savedCart));
-            } catch (error) {
-                console.error('Error parsing cart from localStorage:', error);
-                localStorage.removeItem('cart');
-            }
+    // Получаем ключ для localStorage на основе пользователя
+    const getCartKey = () => {
+        if (currentUser && currentUser.userId) {
+            return `cart_user_${currentUser.userId}`;
         }
-    }, []);
+        return 'cart_anonymous';
+    };
 
-    // Синхронизируем корзину с сервером при авторизации
+    // Инициализация корзины при загрузке
     useEffect(() => {
-        if (user) {
-            syncCartWithServer();
+        if (isAuthenticated() && currentUser) {
+            fetchCart();
+        } else {
+            loadLocalCart();
         }
-    }, [user]);
+    }, [currentUser]);
 
-    // Сохраняем корзину в localStorage при изменении
-    useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cartItems));
-    }, [cartItems]);
-
-    const syncCartWithServer = async () => {
-        if (!user) return;
-
+    // Загружаем корзину из localStorage
+    const loadLocalCart = () => {
         try {
-            setLoading(true);
-            const serverCart = await cartService.getCart();
-
-            // Слияние локальной и серверной корзины
-            const mergedCart = [...serverCart];
-            cartItems.forEach(localItem => {
-                const existingItem = mergedCart.find(item => item.dishId === localItem.dishId);
-                if (existingItem) {
-                    existingItem.quantity += localItem.quantity;
-                } else {
-                    mergedCart.push(localItem);
-                }
-            });
-
-            // Обновляем серверную корзину
-            await Promise.all(
-                mergedCart.map(item =>
-                    cartService.addToCart(item)
-                )
-            );
-
-            // Получаем обновленную корзину с сервера
-            const updatedCart = await cartService.getCart();
-            setCartItems(updatedCart);
-        } catch (error) {
-            console.error('Error syncing cart with server:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const addToCart = async (item) => {
-        if (user) {
-            try {
-                await cartService.addToCart(item);
-                const updatedCart = await cartService.getCart();
-                setCartItems(updatedCart);
-            } catch (error) {
-                console.error('Error adding to cart on server:', error);
-                // Локальное добавление при ошибке
-                const existingItem = cartItems.find(cartItem => cartItem.dishId === item.dishId);
-                if (existingItem) {
-                    setCartItems(cartItems.map(cartItem =>
-                        cartItem.dishId === item.dishId
-                            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                            : cartItem
-                    ));
-                } else {
-                    setCartItems([...cartItems, { ...item, quantity: 1 }]);
-                }
-            }
-        } else {
-            // Локальное добавление для неавторизованных пользователей
-            const existingItem = cartItems.find(cartItem => cartItem.dishId === item.dishId);
-            if (existingItem) {
-                setCartItems(cartItems.map(cartItem =>
-                    cartItem.dishId === item.dishId
-                        ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                        : cartItem
-                ));
+            const cartKey = getCartKey();
+            const localCart = localStorage.getItem(cartKey);
+            if (localCart) {
+                const items = JSON.parse(localCart);
+                console.log(`Loaded local cart for ${cartKey}:`, items);
+                setCartItems(items);
+                setCartCount(items.length);
             } else {
-                setCartItems([...cartItems, { ...item, quantity: 1 }]);
+                setCartItems([]);
+                setCartCount(0);
             }
+        } catch (error) {
+            console.error('Error loading local cart:', error);
+            setCartItems([]);
+            setCartCount(0);
         }
     };
 
-    const removeFromCart = async (dishId) => {
-        if (user) {
-            try {
-                await cartService.removeFromCart(dishId);
-                const updatedCart = await cartService.getCart();
-                setCartItems(updatedCart);
-            } catch (error) {
-                console.error('Error removing from cart on server:', error);
-                setCartItems(cartItems.filter(item => item.dishId !== dishId));
-            }
-        } else {
-            setCartItems(cartItems.filter(item => item.dishId !== dishId));
+    // Сохраняем корзину в localStorage
+    const saveLocalCart = (items) => {
+        try {
+            const cartKey = getCartKey();
+            console.log(`Saving local cart for ${cartKey}:`, items);
+            localStorage.setItem(cartKey, JSON.stringify(items));
+        } catch (error) {
+            console.error('Error saving local cart:', error);
         }
     };
 
-    const updateQuantity = async (dishId, quantity) => {
-        if (quantity < 1) {
-            removeFromCart(dishId);
+    // Получаем корзину с сервера
+    const fetchCart = async () => {
+        if (!isAuthenticated()) {
+            loadLocalCart();
             return;
         }
 
-        if (user) {
-            try {
-                await cartService.updateQuantity(dishId, quantity);
-                const updatedCart = await cartService.getCart();
-                setCartItems(updatedCart);
-            } catch (error) {
-                console.error('Error updating quantity on server:', error);
-                setCartItems(cartItems.map(item =>
-                    item.dishId === dishId ? { ...item, quantity } : item
-                ));
+        try {
+            console.log('Fetching cart from server for user:', currentUser.userId);
+            const response = await api.get('/api/cart');
+            console.log('Cart from server:', response.data);
+            const items = response.data || [];
+            setCartItems(items);
+            setCartCount(items.length);
+
+            // Также сохраняем в localStorage как backup
+            saveLocalCart(items);
+        } catch (error) {
+            console.warn('Failed to fetch cart from server, using localStorage:', error.message);
+            loadLocalCart();
+        }
+    };
+
+    // Добавляем в корзину
+    const addToCart = async (item) => {
+        console.log('Adding to cart for user:', currentUser?.userId);
+
+        if (!isAuthenticated()) {
+            // Для неавторизованных пользователей
+            const newItems = [...cartItems, item];
+            setCartItems(newItems);
+            setCartCount(newItems.length);
+            saveLocalCart(newItems);
+
+            if (window.confirm('You need to login to save your cart. Go to login page?')) {
+                navigate('/login');
             }
-        } else {
-            setCartItems(cartItems.map(item =>
+            return;
+        }
+
+        try {
+            // Для авторизованных пользователей пробуем сервер
+            console.log('Trying to add to server cart...');
+            await api.post('/api/cart/add', item);
+            console.log('Successfully added to server cart');
+
+            // Обновляем локальную корзину после успешного добавления на сервер
+            const newItems = [...cartItems, item];
+            setCartItems(newItems);
+            setCartCount(newItems.length);
+            saveLocalCart(newItems);
+        } catch (error) {
+            console.warn('Failed to add to server cart, using localStorage:', error.message);
+            // Fallback на localStorage
+            const newItems = [...cartItems, item];
+            setCartItems(newItems);
+            setCartCount(newItems.length);
+            saveLocalCart(newItems);
+        }
+    };
+
+    // Удаляем из корзины
+    const removeFromCart = async (dishId) => {
+        console.log('Removing from cart:', dishId);
+
+        if (!isAuthenticated()) {
+            const newItems = cartItems.filter(item => item.dishId !== dishId);
+            setCartItems(newItems);
+            setCartCount(newItems.length);
+            saveLocalCart(newItems);
+            return;
+        }
+
+        try {
+            // Пробуем удалить с сервера
+            await api.delete(`/api/cart/remove/${dishId}`);
+        } catch (error) {
+            console.warn('Failed to remove from server cart:', error.message);
+        }
+
+        // Всегда обновляем локально
+        const newItems = cartItems.filter(item => item.dishId !== dishId);
+        setCartItems(newItems);
+        setCartCount(newItems.length);
+        saveLocalCart(newItems);
+    };
+
+    // Обновляем количество
+    const updateQuantity = async (dishId, quantity) => {
+        console.log('Updating quantity:', dishId, quantity);
+
+        if (!isAuthenticated()) {
+            const newItems = cartItems.map(item =>
                 item.dishId === dishId ? { ...item, quantity } : item
-            ));
+            );
+            setCartItems(newItems);
+            setCartCount(newItems.length);
+            saveLocalCart(newItems);
+            return;
         }
+
+        try {
+            // Пробуем обновить на сервере
+            await api.put(`/api/cart/update/${dishId}?quantity=${quantity}`);
+        } catch (error) {
+            console.warn('Failed to update quantity on server:', error.message);
+        }
+
+        // Всегда обновляем локально
+        const newItems = cartItems.map(item =>
+            item.dishId === dishId ? { ...item, quantity } : item
+        );
+        setCartItems(newItems);
+        setCartCount(newItems.length);
+        saveLocalCart(newItems);
     };
 
+    // Очищаем корзину
     const clearCart = async () => {
-        if (user) {
-            try {
-                await cartService.clearCart();
-                setCartItems([]);
-            } catch (error) {
-                console.error('Error clearing cart on server:', error);
-                setCartItems([]);
-            }
-        } else {
+        console.log('Clearing cart for user:', currentUser?.userId);
+
+        if (!isAuthenticated()) {
             setCartItems([]);
+            setCartCount(0);
+            const cartKey = getCartKey();
+            localStorage.removeItem(cartKey);
+            return;
         }
+
+        try {
+            // Пробуем очистить на сервере
+            await api.delete('/api/cart/clear');
+        } catch (error) {
+            console.warn('Failed to clear server cart:', error.message);
+        }
+
+        // Всегда очищаем локально
+        setCartItems([]);
+        setCartCount(0);
+        const cartKey = getCartKey();
+        localStorage.removeItem(cartKey);
     };
 
-    const getTotalPrice = () => {
+    // Рассчитываем общую сумму
+    const getCartTotal = () => {
         return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    };
-
-    const getItemCount = () => {
-        return cartItems.reduce((total, item) => total + item.quantity, 0);
     };
 
     const value = {
         cartItems,
-        loading,
+        cartCount,
         addToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
-        getTotalPrice,
-        getItemCount,
-        syncCartWithServer,
+        getCartTotal,
+        refreshCart: fetchCart,
+        isAuthenticated
     };
 
     return (

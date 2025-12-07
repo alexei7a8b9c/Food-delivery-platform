@@ -1,14 +1,45 @@
 import React, { useState, useEffect } from 'react';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import { FaCheckCircle, FaClock, FaTruck, FaTimesCircle } from 'react-icons/fa';
 
-function Orders() {
+const Orders = () => {
+    const { currentUser } = useContext(AuthContext);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Пагинация
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(5); // Количество заказов на странице
+
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        if (currentUser) {
+            fetchOrders();
+        }
+    }, [currentUser]);
+
+    // Рассчитываем индексы для текущей страницы
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentOrders = orders.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(orders.length / itemsPerPage);
+
+    // Функции для смены страниц
+    const nextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const prevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const goToPage = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
 
     const fetchOrders = async () => {
         try {
@@ -21,67 +52,102 @@ function Orders() {
         }
     };
 
-    const getStatusIcon = (status) => {
-        switch(status) {
-            case 'DELIVERED': return <FaCheckCircle color="green" />;
-            case 'PREPARING': return <FaClock color="orange" />;
-            case 'OUT_FOR_DELIVERY': return <FaTruck color="blue" />;
-            case 'CANCELLED': return <FaTimesCircle color="red" />;
-            default: return <FaClock color="gray" />;
-        }
-    };
-
-    if (loading) {
-        return <div className="text-center mt-20">Loading orders...</div>;
+    if (!currentUser) {
+        return <div>Please login to view orders</div>;
     }
 
+    if (loading) return <div>Loading orders...</div>;
+
     return (
-        <div className="orders-page">
-            <h1>My Orders</h1>
+        <div>
+            <h2>My Orders ({orders.length} total)</h2>
+
+            {/* Пагинация сверху */}
+            {orders.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                    <button
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </button>
+                    <span style={{ margin: '0 10px' }}>
+            Page {currentPage} of {totalPages}
+                        {orders.length > 0 && ` (Showing ${currentOrders.length} of ${orders.length} orders)`}
+          </span>
+                    <button
+                        onClick={nextPage}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </button>
+
+                    {/* Номера страниц */}
+                    <div style={{ marginTop: '10px' }}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
+                            <button
+                                key={pageNumber}
+                                onClick={() => goToPage(pageNumber)}
+                                style={{
+                                    margin: '0 5px',
+                                    padding: '5px 10px',
+                                    backgroundColor: currentPage === pageNumber ? '#000' : 'white',
+                                    color: currentPage === pageNumber ? 'white' : 'black',
+                                    border: '1px solid black'
+                                }}
+                            >
+                                {pageNumber}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {orders.length === 0 ? (
-                <div className="text-center mt-20">
-                    <p>No orders yet. Start ordering delicious food!</p>
-                </div>
+                <p>No orders found</p>
             ) : (
-                <div className="orders-list mt-20">
-                    {orders.map(order => (
-                        <div key={order.id} className="order-card card">
-                            <div className="order-header flex-between">
-                                <div>
-                                    <h3>Order #{order.id}</h3>
-                                    <p className="order-date">
-                                        {new Date(order.orderDate).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <div className="order-status">
-                                    {getStatusIcon(order.status)}
-                                    <span>{order.status}</span>
-                                </div>
-                            </div>
+                currentOrders.map(order => (
+                    <div key={order.id} style={{ border: '1px solid black', margin: '10px', padding: '10px' }}>
+                        <h3>Order #{order.id}</h3>
+                        <p><strong>Status:</strong> {order.status}</p>
+                        <p><strong>Date:</strong> {new Date(order.orderDate).toLocaleString()}</p>
+                        <p><strong>Total:</strong> ${(order.totalPrice / 100).toFixed(2)}</p>
+                        <p><strong>Restaurant ID:</strong> {order.restaurantId}</p>
 
-                            <div className="order-details mt-20">
-                                <div className="order-items">
-                                    <h4>Items:</h4>
-                                    <ul>
-                                        {order.items?.map((item, index) => (
-                                            <li key={index}>
-                                                {item.dishName} x {item.quantity} - ${((item.price * item.quantity) / 100).toFixed(2)}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                        <h4>Items:</h4>
+                        <ul>
+                            {order.items && order.items.map((item, index) => (
+                                <li key={index}>
+                                    {item.quantity}x {item.dishName} - ${(item.price / 100).toFixed(2)} each
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))
+            )}
 
-                                <div className="order-total">
-                                    <strong>Total: ${(order.totalPrice / 100).toFixed(2)}</strong>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+            {/* Пагинация снизу */}
+            {orders.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                    <button
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </button>
+                    <span style={{ margin: '0 10px' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+                    <button
+                        onClick={nextPage}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </button>
                 </div>
             )}
         </div>
     );
-}
+};
 
 export default Orders;

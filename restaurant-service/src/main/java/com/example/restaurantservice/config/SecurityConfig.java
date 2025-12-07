@@ -17,15 +17,17 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         // Публичные endpoints (только GET)
-                        .requestMatchers("/api/restaurants/**").permitAll()  // Все GET разрешены
-                        .requestMatchers("/api/menu/**").permitAll()         // Все GET разрешены
+                        .requestMatchers("/api/restaurants/**").permitAll()
+                        .requestMatchers("/api/menu/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/images/**").permitAll()
 
-                        // Защищенные admin endpoints (POST, PUT, DELETE)
+                        // Защищенные admin endpoints
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
 
                         // Остальные запросы требуют аутентификации

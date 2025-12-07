@@ -1,519 +1,323 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { toast } from 'react-toastify';
-import { FaUser, FaEnvelope, FaLock, FaPhone, FaCheck } from 'react-icons/fa';
+import api from '../services/api';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        fullName: '',
         email: '',
         password: '',
-        confirmPassword: '',
-        telephone: '',
+        fullName: '',
+        telephone: ''
     });
-    const [errors, setErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
-
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [testRestaurants, setTestRestaurants] = useState([]);
+    const [testDishes, setTestDishes] = useState([]);
+    const [loadingData, setLoadingData] = useState(false);
     const { register } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    // Загружаем данные из базы через API при монтировании
+    useEffect(() => {
+        fetchDataFromAPI();
+    }, []);
+
+    const fetchDataFromAPI = async () => {
+        setLoadingData(true);
+        try {
+            // Получаем рестораны из restaurant-service
+            console.log('Fetching restaurants from API...');
+            const restaurantsResponse = await api.get('/api/restaurants');
+            console.log('Restaurants response:', restaurantsResponse.data);
+            setTestRestaurants(restaurantsResponse.data || []);
+
+            // Получаем блюда из restaurant-service
+            console.log('Fetching dishes from API...');
+            const dishesResponse = await api.get('/api/menu/dishes');
+            console.log('Dishes response:', dishesResponse.data);
+            setTestDishes(dishesResponse.data || []);
+
+        } catch (error) {
+            console.error('Error fetching data from API:', error);
+            // Если API не доступно, показываем сообщение
+            setError('Cannot fetch test data from server. Please check if backend services are running.');
+        } finally {
+            setLoadingData(false);
+        }
+    };
+
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
-
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Полное имя обязательно';
-        } else if (formData.fullName.length < 2) {
-            newErrors.fullName = 'Имя должно содержать минимум 2 символа';
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email обязателен';
-        } else if (!validateEmail(formData.email)) {
-            newErrors.email = 'Введите корректный email';
-        }
-
-        if (!formData.password) {
-            newErrors.password = 'Пароль обязателен';
-        } else if (formData.password.length < 6) {
-            newErrors.password = 'Пароль должен содержать минимум 6 символов';
-        }
-
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Подтверждение пароля обязательно';
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Пароли не совпадают';
-        }
-
-        if (formData.telephone && !validatePhone(formData.telephone)) {
-            newErrors.telephone = 'Введите корректный номер телефона';
-        }
-
-        return newErrors;
-    };
-
-    const validateEmail = (email) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    };
-
-    const validatePhone = (phone) => {
-        const re = /^[\+]?[0-9]{10,15}$/;
-        return re.test(phone.replace(/[-\s]/g, ''));
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
 
-        const validationErrors = validateForm();
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            toast.error('Пожалуйста, исправьте ошибки в форме');
+        // Валидация
+        if (formData.password !== confirmPassword) {
+            setError('Passwords do not match');
             return;
         }
 
-        setIsLoading(true);
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
+        if (!formData.email.includes('@')) {
+            setError('Invalid email format');
+            return;
+        }
+
+        if (!formData.fullName.trim()) {
+            setError('Full name is required');
+            return;
+        }
+
+        setLoading(true);
 
         try {
-            const userData = {
-                email: formData.email,
-                password: formData.password,
-                fullName: formData.fullName,
-                telephone: formData.telephone || null,
-            };
-
-            const result = await register(userData);
-
-            if (result.success) {
-                toast.success('Регистрация успешна!');
+            await register(formData);
+            setSuccess(true);
+            setTimeout(() => {
                 navigate('/');
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            toast.error('Ошибка регистрации. Попробуйте еще раз.');
+            }, 2000);
+        } catch (err) {
+            const errorMessage = err.response?.data?.message ||
+                err.response?.data?.error ||
+                'Registration failed. Please try again.';
+            setError(errorMessage);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
-    const passwordStrength = (password) => {
-        if (!password) return 0;
+    // Заполняем фору случайными данными из реальной базы
+    const fillWithRandomData = () => {
+        if (testRestaurants.length === 0 || testDishes.length === 0) {
+            setError('Please wait for test data to load from database');
+            return;
+        }
 
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
+        // Берем случайный ресторан
+        const randomRestaurant = testRestaurants[Math.floor(Math.random() * testRestaurants.length)];
+        // Берем случайное блюдо из этого ресторана
+        const restaurantDishes = testDishes.filter(dish => dish.restaurantId === randomRestaurant.id);
+        const randomDish = restaurantDishes.length > 0
+            ? restaurantDishes[Math.floor(Math.random() * restaurantDishes.length)]
+            : testDishes[Math.floor(Math.random() * testDishes.length)];
 
-        return strength;
+        // Генерируем случайные данные на основе реальных из базы
+        const randomId = Math.floor(Math.random() * 10000);
+        const domains = ['example.com', 'gmail.com', 'yahoo.com', 'hotmail.com'];
+        const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+
+        // Имя на основе ресторана или блюда
+        const nameParts = randomRestaurant.name.split(' ');
+        const firstName = nameParts[0] || 'User';
+        const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones'];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+
+        setFormData({
+            email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomId}@${randomDomain}`,
+            password: 'test123',
+            fullName: `${firstName} ${lastName}`,
+            telephone: `+1-${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`
+        });
+        setConfirmPassword('test123');
     };
 
-    const getPasswordStrengthColor = (strength) => {
-        if (strength === 0) return '#e74c3c';
-        if (strength === 1) return '#e74c3c';
-        if (strength === 2) return '#f39c12';
-        if (strength === 3) return '#2ecc71';
-        if (strength === 4) return '#27ae60';
+    // Заполняем тестовыми данными из базы (реальные рестораны)
+    const fillWithRealRestaurantData = (restaurantIndex = 0) => {
+        if (testRestaurants.length === 0) {
+            setError('No restaurants loaded from database');
+            return;
+        }
+
+        const restaurant = testRestaurants[restaurantIndex % testRestaurants.length];
+        const nameParts = restaurant.name.split(' ');
+        const firstName = nameParts[0] || 'Restaurant';
+
+        setFormData({
+            email: `${firstName.toLowerCase()}@restaurant.com`,
+            password: 'password123',
+            fullName: `${firstName} Owner`,
+            telephone: '+1-555-0100'
+        });
+        setConfirmPassword('password123');
     };
+
+    if (success) {
+        return (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+                <h2>Registration Successful!</h2>
+                <p>Your account has been created successfully.</p>
+                <p>Redirecting to home page...</p>
+            </div>
+        );
+    }
 
     return (
-        <div style={styles.container}>
-            <div style={styles.card}>
-                <div style={styles.header}>
-                    <h2 style={styles.title}>Создать аккаунт</h2>
-                    <p style={styles.subtitle}>Зарегистрируйтесь, чтобы начать пользоваться сервисом</p>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <h2>Register</h2>
+
+            {error && (
+                <div style={{
+                    border: '1px solid red',
+                    backgroundColor: '#ffebee',
+                    padding: '10px',
+                    margin: '10px 0'
+                }}>
+                    <strong>Error:</strong> {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Full Name:</label>
+                    <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Password (min 6 chars):</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        minLength="6"
+                        disabled={loading}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Confirm Password:</label>
+                    <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Telephone (optional):</label>
+                    <input
+                        type="tel"
+                        name="telephone"
+                        value={formData.telephone}
+                        onChange={handleChange}
+                        disabled={loading}
+                        style={{ width: '100%', padding: '8px' }}
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={loading || loadingData}
+                    style={{ width: '100%', padding: '10px' }}
+                >
+                    {loading ? 'Registering...' : 'Register'}
+                </button>
+            </form>
+
+            <div style={{ marginTop: '20px' }}>
+                <p>Already have an account? <Link to="/login">Login here</Link></p>
+
+                <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
+                    <h3>Test Data from Database</h3>
+
+                    {loadingData ? (
+                        <p>Loading data from database...</p>
+                    ) : (
+                        <>
+                            <p>
+                                <strong>Loaded from API:</strong> {testRestaurants.length} restaurants, {testDishes.length} dishes
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={fillWithRandomData}
+                                    disabled={testRestaurants.length === 0}
+                                    style={{ padding: '8px' }}
+                                >
+                                    Fill with Random Data
+                                </button>
+
+                                {testRestaurants.map((restaurant, index) => (
+                                    <button
+                                        key={restaurant.id}
+                                        type="button"
+                                        onClick={() => fillWithRealRestaurantData(index)}
+                                        style={{ padding: '8px', fontSize: '12px' }}
+                                        title={`Restaurant: ${restaurant.name}\nCuisine: ${restaurant.cuisine}`}
+                                    >
+                                        {restaurant.name.split(' ')[0]} Owner
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Показываем данные из базы */}
+                            {testRestaurants.length > 0 && (
+                                <div style={{ marginTop: '20px' }}>
+                                    <h4>Available Restaurants (from database):</h4>
+                                    <ul style={{ fontSize: '14px', marginLeft: '20px' }}>
+                                        {testRestaurants.slice(0, 5).map(restaurant => (
+                                            <li key={restaurant.id}>
+                                                <strong>{restaurant.name}</strong> - {restaurant.cuisine} cuisine
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {testRestaurants.length > 5 && (
+                                        <p>...and {testRestaurants.length - 5} more</p>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
-                <form onSubmit={handleSubmit} style={styles.form}>
-                    {/* Full Name */}
-                    <div style={styles.formGroup}>
-                        <label htmlFor="fullName" style={styles.label}>
-                            <FaUser style={styles.labelIcon} />
-                            Полное имя *
-                        </label>
-                        <input
-                            type="text"
-                            id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            placeholder="Введите ваше полное имя"
-                            style={{
-                                ...styles.input,
-                                ...(errors.fullName && styles.inputError)
-                            }}
-                            disabled={isLoading}
-                        />
-                        {errors.fullName && (
-                            <span style={styles.errorText}>{errors.fullName}</span>
-                        )}
-                    </div>
-
-                    {/* Email */}
-                    <div style={styles.formGroup}>
-                        <label htmlFor="email" style={styles.label}>
-                            <FaEnvelope style={styles.labelIcon} />
-                            Email адрес *
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Введите ваш email"
-                            style={{
-                                ...styles.input,
-                                ...(errors.email && styles.inputError)
-                            }}
-                            disabled={isLoading}
-                        />
-                        {errors.email && (
-                            <span style={styles.errorText}>{errors.email}</span>
-                        )}
-                    </div>
-
-                    {/* Telephone */}
-                    <div style={styles.formGroup}>
-                        <label htmlFor="telephone" style={styles.label}>
-                            <FaPhone style={styles.labelIcon} />
-                            Телефон (необязательно)
-                        </label>
-                        <input
-                            type="tel"
-                            id="telephone"
-                            name="telephone"
-                            value={formData.telephone}
-                            onChange={handleChange}
-                            placeholder="+7 (999) 123-45-67"
-                            style={{
-                                ...styles.input,
-                                ...(errors.telephone && styles.inputError)
-                            }}
-                            disabled={isLoading}
-                        />
-                        {errors.telephone && (
-                            <span style={styles.errorText}>{errors.telephone}</span>
-                        )}
-                    </div>
-
-                    {/* Password */}
-                    <div style={styles.formGroup}>
-                        <label htmlFor="password" style={styles.label}>
-                            <FaLock style={styles.labelIcon} />
-                            Пароль *
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Введите пароль (минимум 6 символов)"
-                            style={{
-                                ...styles.input,
-                                ...(errors.password && styles.inputError)
-                            }}
-                            disabled={isLoading}
-                        />
-                        {formData.password && (
-                            <div style={styles.passwordStrength}>
-                                <div style={styles.strengthMeter}>
-                                    <div
-                                        style={{
-                                            ...styles.strengthBar,
-                                            width: `${(passwordStrength(formData.password) / 4) * 100}%`,
-                                            backgroundColor: getPasswordStrengthColor(passwordStrength(formData.password))
-                                        }}
-                                    />
-                                </div>
-                                <div style={styles.strengthText}>
-                                    Сложность пароля:
-                                    <span style={{
-                                        color: getPasswordStrengthColor(passwordStrength(formData.password)),
-                                        fontWeight: 'bold',
-                                        marginLeft: '5px'
-                                    }}>
-                    {passwordStrength(formData.password) === 0 && 'Очень слабый'}
-                                        {passwordStrength(formData.password) === 1 && 'Слабый'}
-                                        {passwordStrength(formData.password) === 2 && 'Средний'}
-                                        {passwordStrength(formData.password) === 3 && 'Хороший'}
-                                        {passwordStrength(formData.password) === 4 && 'Отличный'}
-                  </span>
-                                </div>
-                            </div>
-                        )}
-                        {errors.password && (
-                            <span style={styles.errorText}>{errors.password}</span>
-                        )}
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div style={styles.formGroup}>
-                        <label htmlFor="confirmPassword" style={styles.label}>
-                            <FaLock style={styles.labelIcon} />
-                            Подтверждение пароля *
-                        </label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="Повторите пароль"
-                            style={{
-                                ...styles.input,
-                                ...(errors.confirmPassword && styles.inputError)
-                            }}
-                            disabled={isLoading}
-                        />
-                        {errors.confirmPassword && (
-                            <span style={styles.errorText}>{errors.confirmPassword}</span>
-                        )}
-                    </div>
-
-                    {/* Terms and Conditions */}
-                    <div style={styles.terms}>
-                        <input
-                            type="checkbox"
-                            id="terms"
-                            style={styles.checkbox}
-                            required
-                        />
-                        <label htmlFor="terms" style={styles.termsLabel}>
-                            Я соглашаюсь с{' '}
-                            <Link to="/terms" style={styles.termsLink}>условиями использования</Link>{' '}
-                            и{' '}
-                            <Link to="/privacy" style={styles.termsLink}>политикой конфиденциальности</Link>
-                        </label>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        style={styles.submitButton}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <div style={styles.spinnerContainer}>
-                                <div style={styles.spinner}></div>
-                                <span style={{ marginLeft: '10px' }}>Регистрация...</span>
-                            </div>
-                        ) : (
-                            <>
-                                <FaCheck style={{ marginRight: '10px' }} />
-                                Зарегистрироваться
-                            </>
-                        )}
-                    </button>
-
-                    {/* Login Link */}
-                    <div style={styles.loginLink}>
-                        <p style={styles.loginText}>
-                            Уже есть аккаунт?{' '}
-                            <Link to="/login" style={styles.loginLinkText}>
-                                Войдите здесь
-                            </Link>
-                        </p>
-                    </div>
-                </form>
+                <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
+                    <p style={{ fontSize: '12px', margin: 0 }}>
+                        <strong>Note:</strong> This form sends data to the backend API.
+                        Test buttons use real data loaded from the database via GET requests to:
+                        <br />
+                        • <code>GET /api/restaurants</code> - {testRestaurants.length} restaurants loaded
+                        <br />
+                        • <code>GET /api/menu/dishes</code> - {testDishes.length} dishes loaded
+                    </p>
+                </div>
             </div>
         </div>
     );
-};
-
-const styles = {
-    container: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 200px)',
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-    },
-    card: {
-        backgroundColor: 'white',
-        borderRadius: '15px',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-        padding: '40px',
-        width: '100%',
-        maxWidth: '500px',
-    },
-    header: {
-        textAlign: 'center',
-        marginBottom: '30px',
-    },
-    title: {
-        fontSize: '2rem',
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        marginBottom: '10px',
-    },
-    subtitle: {
-        color: '#7f8c8d',
-        fontSize: '0.95rem',
-    },
-    form: {
-        width: '100%',
-    },
-    formGroup: {
-        marginBottom: '20px',
-    },
-    label: {
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: '8px',
-        fontSize: '0.9rem',
-        fontWeight: '600',
-        color: '#2c3e50',
-    },
-    labelIcon: {
-        marginRight: '8px',
-        color: '#ff6b35',
-        fontSize: '0.9rem',
-    },
-    input: {
-        width: '100%',
-        padding: '12px 15px',
-        border: '2px solid #e9ecef',
-        borderRadius: '8px',
-        fontSize: '1rem',
-        transition: 'all 0.3s ease',
-        ':focus': {
-            outline: 'none',
-            borderColor: '#ff6b35',
-            boxShadow: '0 0 0 3px rgba(255, 107, 53, 0.1)',
-        },
-    },
-    inputError: {
-        borderColor: '#e74c3c',
-        ':focus': {
-            borderColor: '#e74c3c',
-            boxShadow: '0 0 0 3px rgba(231, 76, 60, 0.1)',
-        },
-    },
-    errorText: {
-        display: 'block',
-        color: '#e74c3c',
-        fontSize: '0.85rem',
-        marginTop: '5px',
-    },
-    passwordStrength: {
-        marginTop: '10px',
-    },
-    strengthMeter: {
-        height: '5px',
-        backgroundColor: '#e9ecef',
-        borderRadius: '3px',
-        overflow: 'hidden',
-        marginBottom: '5px',
-    },
-    strengthBar: {
-        height: '100%',
-        transition: 'all 0.3s ease',
-    },
-    strengthText: {
-        fontSize: '0.8rem',
-        color: '#7f8c8d',
-    },
-    terms: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        marginBottom: '25px',
-    },
-    checkbox: {
-        marginRight: '10px',
-        marginTop: '3px',
-        width: '18px',
-        height: '18px',
-        cursor: 'pointer',
-    },
-    termsLabel: {
-        fontSize: '0.9rem',
-        color: '#7f8c8d',
-        lineHeight: 1.4,
-        cursor: 'pointer',
-    },
-    termsLink: {
-        color: '#ff6b35',
-        textDecoration: 'none',
-        fontWeight: '600',
-        ':hover': {
-            textDecoration: 'underline',
-        },
-    },
-    submitButton: {
-        width: '100%',
-        backgroundColor: '#ff6b35',
-        color: 'white',
-        border: 'none',
-        padding: '15px',
-        borderRadius: '8px',
-        fontSize: '1rem',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        marginBottom: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        ':hover': {
-            backgroundColor: '#e55a2e',
-            transform: 'translateY(-2px)',
-            boxShadow: '0 5px 15px rgba(255, 107, 53, 0.3)',
-        },
-        ':disabled': {
-            backgroundColor: '#95a5a6',
-            cursor: 'not-allowed',
-            transform: 'none',
-            boxShadow: 'none',
-        },
-    },
-    spinnerContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    spinner: {
-        width: '20px',
-        height: '20px',
-        border: '2px solid rgba(255, 255, 255, 0.3)',
-        borderTop: '2px solid white',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-    },
-    loginLink: {
-        textAlign: 'center',
-        marginTop: '20px',
-    },
-    loginText: {
-        color: '#7f8c8d',
-        fontSize: '0.9rem',
-    },
-    loginLinkText: {
-        color: '#ff6b35',
-        textDecoration: 'none',
-        fontWeight: 'bold',
-        ':hover': {
-            textDecoration: 'underline',
-        },
-    },
 };
 
 export default Register;

@@ -18,10 +18,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   flyway:
-    enabled: false # откл
+    enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-  main:
+    validate-on-migrate: true
     allow-circular-references: true
 
 # JWT Configuration

@@ -1,79 +1,30 @@
-// Константы приложения
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-
-// Роли пользователей
 export const ROLES = {
-    USER: 'ROLE_USER',
-    MANAGER: 'ROLE_MANAGER',
-    ADMIN: 'ROLE_ADMIN'
+    USER: 'USER',
+    MANAGER: 'MANAGER',
+    ADMIN: 'ADMIN'
 };
 
-// Статусы заказов
-export const ORDER_STATUS = {
-    PENDING: 'PENDING',
-    CONFIRMED: 'CONFIRMED',
-    PREPARING: 'PREPARING',
-    OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
-    DELIVERED: 'DELIVERED',
-    CANCELLED: 'CANCELLED'
+// Функция для нормализации ролей (удаление префикса ROLE_)
+export const normalizeRole = (role) => {
+    if (!role) return '';
+    const roleStr = String(role).toUpperCase();
+    return roleStr.startsWith('ROLE_') ? roleStr.substring(5) : roleStr;
 };
 
-// Кухни ресторанов
-export const CUISINES = [
-    'All',
-    'Italian',
-    'Chinese',
-    'American',
-    'Japanese',
-    'Mexican',
-    'French',
-    'Indian',
-    'Thai',
-    'Mediterranean',
-    'Korean',
-    'Vietnamese'
-];
+// Функция для проверки роли с поддержкой префикса ROLE_
+export const hasRole = (userRoles, requiredRole) => {
+    if (!userRoles || !requiredRole) return false;
 
-// Методы оплаты
-export const PAYMENT_METHODS = [
-    { value: 'CREDIT_CARD', label: 'Банковская карта' },
-    { value: 'PAYPAL', label: 'PayPal' },
-    { value: 'CASH', label: 'Наличные' }
-];
+    const normalizedRequiredRole = normalizeRole(requiredRole);
 
-// Цвета для кухонь
-export const CUISINE_COLORS = {
-    'Italian': '#e74c3c',
-    'Chinese': '#3498db',
-    'American': '#2ecc71',
-    'Japanese': '#9b59b6',
-    'Mexican': '#e67e22',
-    'French': '#1abc9c',
-    'Indian': '#f1c40f',
-    'Thai': '#d35400',
-    'Mediterranean': '#16a085',
-    'Korean': '#8e44ad',
-    'Vietnamese': '#27ae60'
-};
+    // Преобразуем userRoles в массив строк
+    const rolesArray = Array.isArray(userRoles)
+        ? userRoles
+        : String(userRoles).split(',').map(r => r.trim());
 
-// Локализация
-export const LOCALIZATION = {
-    ru: {
-        currency: '₽',
-        currencyFormat: new Intl.NumberFormat('ru-RU'),
-        dateFormat: new Intl.DateTimeFormat('ru-RU')
-    }
-};
-
-// Цены доставки
-export const DELIVERY_FEES = {
-    standard: 150,
-    freeThreshold: 1000,
-    express: 300
-};
-
-// Время доставки
-export const DELIVERY_TIMES = {
-    standard: '30-45 мин',
-    express: '15-25 мин'
+    return rolesArray.some(role => {
+        const normalizedUserRole = normalizeRole(role);
+        return normalizedUserRole === normalizedRequiredRole;
+    });
 };

@@ -1,193 +1,113 @@
 import axios from 'axios';
+import authService from './auth';
+import { API_BASE_URL } from '../utils/constants';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-
-// Создаем основной экземпляр axios
 const api = axios.create({
     baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
     timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json'
+    }
 });
 
-// Интерцептор для добавления токена
+// Включить диагностику
+const ENABLE_API_DEBUG = true;
+
+const logApiRequest = (config) => {
+    if (ENABLE_API_DEBUG) {
+        console.group('🚀 API Request Debug');
+        console.log('📝 Method:', config.method?.toUpperCase());
+        console.log('🔗 URL:', config.baseURL + config.url);
+        console.log('📋 Headers:', config.headers);
+        console.log('📦 Data:', config.data);
+        console.groupEnd();
+    }
+};
+
+const logApiResponse = (response) => {
+    if (ENABLE_API_DEBUG) {
+        console.group('✅ API Response Debug');
+        console.log('📊 Status:', response.status);
+        console.log('🔗 URL:', response.config.url);
+        console.log('📦 Data:', response.data);
+        console.groupEnd();
+    }
+};
+
+const logApiError = (error) => {
+    if (ENABLE_API_DEBUG) {
+        console.group('❌ API Error Debug');
+        console.error('📊 Status:', error.response?.status);
+        console.error('📝 Status Text:', error.response?.statusText);
+        console.error('📦 Response Data:', error.response?.data);
+        console.error('🔗 Request URL:', error.config?.url);
+        console.error('📋 Request Headers:', error.config?.headers);
+        console.error('📦 Request Data:', error.config?.data);
+        console.groupEnd();
+    }
+};
+
+// Интерцептор запросов
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        const userStr = localStorage.getItem('user');
+        let user = null;
+
+        if (userStr) {
+            try {
+                user = JSON.parse(userStr);
+            } catch (e) {
+                console.error('Error parsing user from localStorage:', e);
+            }
         }
+
+        if (user && user.accessToken) {
+            config.headers.Authorization = `Bearer ${user.accessToken}`;
+            console.log('🔑 Added Authorization header');
+        }
+
+        // Добавляем X-User-Id если пользователь авторизован
+        if (user && user.userId) {
+            config.headers['X-User-Id'] = user.userId;
+            console.log('👤 Added X-User-Id:', user.userId);
+        }
+
+        // Добавляем роли если есть
+        if (user && user.roles) {
+            config.headers['X-User-Roles'] = Array.isArray(user.roles) ? user.roles.join(',') : user.roles;
+            console.log('🎭 Added X-User-Roles:', user.roles);
+        }
+
+        logApiRequest(config);
         return config;
     },
     (error) => {
+        logApiError(error);
         return Promise.reject(error);
     }
 );
 
-// Интерцептор для обработки ошибок
+// Интерцептор ответов
 api.interceptors.response.use(
     (response) => {
+        logApiResponse(response);
         return response;
     },
-    (error) => {
-        if (error.response) {
-            // Обработка специфических HTTP ошибок
-            switch (error.response.status) {
-                case 401:
-                    console.error('Unauthorized - redirecting to login');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '/login';
-                    break;
-                case 403:
-                    console.error('Forbidden - insufficient permissions');
-                    break;
-                case 404:
-                    console.error('Resource not found');
-                    break;
-                case 500:
-                    console.error('Server error');
-                    break;
-                default:
-                    console.error('Request failed with status:', error.response.status);
+    async (error) => {
+        logApiError(error);
+
+        // Если ошибка 401 (Unauthorized)
+        if (error.response?.status === 401) {
+            console.log('🔒 Unauthorized, logging out...');
+            authService.logout();
+
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
             }
-        } else if (error.request) {
-            console.error('No response received:', error.request);
-        } else {
-            console.error('Request setup error:', error.message);
         }
 
         return Promise.reject(error);
     }
 );
-
-// Auth endpoints
-export const authApi = {
-    login: (email, password) =>
-        api.post('/api/auth/login', { email, password }),
-
-    register: (userData) =>
-        api.post('/api/auth/register', userData),
-
-    validateToken: (token) =>
-        api.post('/api/auth/validate-token', {}, {
-            headers: { Authorization: `Bearer ${token}` }
-        }),
-
-    logout: () =>
-        api.post('/api/auth/logout'),
-
-    getProfile: () =>
-        api.get('/api/users/profile'),
-
-    updateProfile: (userId, profileData) =>
-        api.put(`/api/users/${userId}`, profileData),
-};
-
-// Restaurant endpoints
-export const restaurantApi = {
-    getAllRestaurants: () =>
-        api.get('/api/restaurants'),
-
-    getRestaurantById: (id) =>
-        api.get(`/api/restaurants/${id}`),
-
-    getRestaurantsByCuisine: (cuisine) =>
-        api.get(`/api/restaurants/cuisine/${cuisine}`),
-
-    getDishesByRestaurant: (restaurantId) =>
-        api.get(`/api/restaurants/${restaurantId}/dishes`),
-
-    getAllDishes: () =>
-        api.get('/api/menu/dishes'),
-
-    searchDishes: (query) =>
-        api.get(`/api/menu/search?query=${query}`),
-};
-
-// Cart endpoints
-export const cartApi = {
-    getCart: () =>
-        api.get('/api/cart'),
-
-    addToCart: (item) =>
-        api.post('/api/cart/add', item),
-
-    removeFromCart: (dishId) =>
-        api.delete(`/api/cart/remove/${dishId}`),
-
-    updateQuantity: (dishId, quantity) =>
-        api.put(`/api/cart/update/${dishId}?quantity=${quantity}`),
-
-    clearCart: () =>
-        api.delete('/api/cart/clear'),
-};
-
-// Order endpoints
-export const orderApi = {
-    placeOrder: (orderData) =>
-        api.post('/api/orders/place', orderData),
-
-    getUserOrders: () =>
-        api.get('/api/orders'),
-
-    getOrderById: (orderId) =>
-        api.get(`/api/orders/${orderId}`),
-
-    getAllOrders: () =>
-        api.get('/api/orders/all'),
-
-    updateOrderStatus: (orderId, status) =>
-        api.put(`/api/orders/${orderId}/status?status=${status}`),
-
-    cancelOrder: (orderId) =>
-        api.put(`/api/orders/${orderId}/cancel`),
-
-    getRestaurantOrders: (restaurantId) =>
-        api.get(`/api/orders/restaurant/${restaurantId}`),
-
-    getOrdersByStatus: (status) =>
-        api.get(`/api/orders/status/${status}`),
-
-    getStatistics: () =>
-        api.get('/api/orders/statistics'),
-};
-
-// Admin endpoints
-export const adminApi = {
-    // User management
-    getAllUsers: () =>
-        api.get('/api/users'),
-
-    getUserById: (userId) =>
-        api.get(`/api/users/${userId}`),
-
-    assignRole: (userId, roleName) =>
-        api.post(`/api/users/${userId}/roles/${roleName}`),
-
-    removeRole: (userId, roleName) =>
-        api.delete(`/api/users/${userId}/roles/${roleName}`),
-
-    // Restaurant management
-    createRestaurant: (restaurantData) =>
-        api.post('/api/admin/restaurants', restaurantData),
-
-    updateRestaurant: (id, restaurantData) =>
-        api.put(`/api/admin/restaurants/${id}`, restaurantData),
-
-    deleteRestaurant: (id) =>
-        api.delete(`/api/admin/restaurants/${id}`),
-
-    // Dish management
-    addDish: (restaurantId, dishData) =>
-        api.post(`/api/admin/restaurants/${restaurantId}/dishes`, dishData),
-
-    updateDish: (restaurantId, dishId, dishData) =>
-        api.put(`/api/admin/restaurants/${restaurantId}/dishes/${dishId}`, dishData),
-
-    deleteDish: (restaurantId, dishId) =>
-        api.delete(`/api/admin/restaurants/${restaurantId}/dishes/${dishId}`),
-};
 
 export default api;

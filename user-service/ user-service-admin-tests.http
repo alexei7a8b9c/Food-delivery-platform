@@ -12,9 +12,9 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "super.admin@example.com",
-  "password": "Admin123!",
-  "fullName": "Super Admin",
+  "email": "super1.admin@example.com",
+  "password": "Admin123!1",
+  "fullName": "Admin",
   "telephone": "+1-555-0001"
 }
 
