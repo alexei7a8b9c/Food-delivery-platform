@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Component
 public class JwtFilter implements GatewayFilter {
@@ -42,33 +43,48 @@ public class JwtFilter implements GatewayFilter {
             "/swagger-ui.html"
     );
 
+    private Predicate<ServerHttpRequest> isSecured = request -> {
+        String path = request.getURI().getPath();
+        System.out.println("Checking path: " + path);
+
+        // Разрешаем все GET запросы к ресторанам и меню
+        if (request.getMethod() != null && "GET".equals(request.getMethod().name())) {
+            if (path.startsWith("/api/restaurants") || path.startsWith("/api/menu")) {
+                System.out.println("Allowing GET request to: " + path);
+                return false;
+            }
+        }
+
+        // Проверяем открытые endpoints
+        boolean isOpen = openEndpoints.stream().anyMatch(uri ->
+                path.startsWith(uri) || path.equals(uri.replace("/", ""))
+        );
+
+        System.out.println("Path: " + path + ", isOpen: " + isOpen);
+        return !isOpen;
+    };
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
-        String method = request.getMethod() != null ? request.getMethod().name() : "";
 
-        System.out.println("JwtFilter - Checking path: " + path + ", method: " + method);
-
-        // Проверяем, является ли endpoint открытым
-        boolean isOpenEndpoint = isOpenEndpoint(path, method);
-
-        // Если endpoint открытый, пропускаем без проверки JWT
-        if (isOpenEndpoint) {
-            System.out.println("JwtFilter - Open endpoint accessed: " + path);
+        // Проверяем, является ли endpoint защищенным
+        if (!isSecured.test(request)) {
+            System.out.println("Open endpoint accessed: " + path);
             return chain.filter(exchange);
         }
 
         // Проверяем наличие заголовка Authorization
         if (!request.getHeaders().containsKey("Authorization")) {
-            System.out.println("JwtFilter - Missing Authorization header for: " + path);
+            System.out.println("Missing Authorization header for: " + path);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
 
         String authHeader = request.getHeaders().getFirst("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("JwtFilter - Invalid Authorization header for: " + path);
+            System.out.println("Invalid Authorization header for: " + path);
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
@@ -88,45 +104,21 @@ public class JwtFilter implements GatewayFilter {
             String roles = claims.get("roles", String.class);
             String authorities = claims.get("authorities", String.class);
 
-            // Логируем полученные данные из JWT
-            System.out.println("JwtFilter - JWT validated for user: " + username +
-                    ", userId: " + userId +
-                    ", roles: " + roles +
-                    ", authorities: " + authorities);
-
             // Добавляем информацию пользователя в заголовки для downstream сервисов
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Name", username)
                     .header("X-User-Id", userId != null ? userId.toString() : "")
                     .header("X-User-Roles", roles != null ? roles : "")
                     .header("X-User-Authorities", authorities != null ? authorities : "")
-                    .header("X-JWT-Validated", "true")
                     .build();
 
+            System.out.println("JWT validated for user: " + username + ", roles: " + roles + ", path: " + path);
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
         } catch (Exception e) {
-            System.out.println("JwtFilter - JWT validation failed for path: " + path + ", error: " + e.getMessage());
+            System.out.println("JWT validation failed for path: " + path + ", error: " + e.getMessage());
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
-    }
-
-    private boolean isOpenEndpoint(String path, String method) {
-        // Разрешаем все GET запросы к ресторанам и меню
-        if ("GET".equals(method)) {
-            if (path.startsWith("/api/restaurants") || path.startsWith("/api/menu")) {
-                return true;
-            }
-        }
-
-        // Проверяем список открытых endpoints
-        for (String endpoint : openEndpoints) {
-            if (path.startsWith(endpoint) || path.equals(endpoint.replace("/", ""))) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
