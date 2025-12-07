@@ -27,9 +27,8 @@ spring:
 # JWT Configuration
 jwt:
   secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
-  expiration:
-    access: 300 # 5 минут
-    refresh: 2592000 # 30 дней (в секундах)
+  expiration: 36000000 # 10 hours in milliseconds
+
 
 eureka:
   client:
