@@ -14,8 +14,6 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
-import java.util.List;
-import java.util.function.Predicate;
 
 @Component
 public class JwtFilter implements GatewayFilter {
@@ -23,68 +21,17 @@ public class JwtFilter implements GatewayFilter {
     @Value("${jwt.secret}")
     private String secret;
 
-    private final List<String> openEndpoints = List.of(
-            "/api/auth/register",
-            "/api/auth/login",
-            "/api/auth/validate",
-            "/api/health",
-            "/api/restaurants",
-            "/api/restaurants/",
-            "/api/menu",
-            "/api/menu/",
-            "/eureka",
-            "/eureka/",
-            "/actuator",
-            "/actuator/",
-            "/v3/api-docs",
-            "/v3/api-docs/",
-            "/swagger-ui",
-            "/swagger-ui/",
-            "/swagger-ui.html"
-    );
-
-    private Predicate<ServerHttpRequest> isSecured = request -> {
-        String path = request.getURI().getPath();
-        System.out.println("Checking path: " + path);
-
-        // Разрешаем все GET запросы к ресторанам и меню
-        if (request.getMethod() != null && "GET".equals(request.getMethod().name())) {
-            if (path.startsWith("/api/restaurants") || path.startsWith("/api/menu")) {
-                System.out.println("Allowing GET request to: " + path);
-                return false;
-            }
-        }
-
-        // Проверяем открытые endpoints
-        boolean isOpen = openEndpoints.stream().anyMatch(uri ->
-                path.startsWith(uri) || path.equals(uri.replace("/", ""))
-        );
-
-        System.out.println("Path: " + path + ", isOpen: " + isOpen);
-        return !isOpen;
-    };
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
-        // Проверяем, является ли endpoint защищенным
-        if (!isSecured.test(request)) {
-            System.out.println("Open endpoint accessed: " + path);
-            return chain.filter(exchange);
-        }
+        System.out.println("🔐 JWT Filter checking path: " + path);
 
         // Проверяем наличие заголовка Authorization
-        if (!request.getHeaders().containsKey("Authorization")) {
-            System.out.println("Missing Authorization header for: " + path);
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
-
         String authHeader = request.getHeaders().getFirst("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("Invalid Authorization header for: " + path);
+            System.out.println("❌ Missing or invalid Authorization header");
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }
@@ -102,21 +49,22 @@ public class JwtFilter implements GatewayFilter {
             String username = claims.getSubject();
             Long userId = claims.get("userId", Long.class);
             String roles = claims.get("roles", String.class);
-            String authorities = claims.get("authorities", String.class);
+
+            System.out.println("✅ JWT validated for user: " + username +
+                    ", userId: " + userId +
+                    ", roles: " + roles);
 
             // Добавляем информацию пользователя в заголовки для downstream сервисов
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                     .header("X-User-Name", username)
                     .header("X-User-Id", userId != null ? userId.toString() : "")
                     .header("X-User-Roles", roles != null ? roles : "")
-                    .header("X-User-Authorities", authorities != null ? authorities : "")
                     .build();
 
-            System.out.println("JWT validated for user: " + username + ", roles: " + roles + ", path: " + path);
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
         } catch (Exception e) {
-            System.out.println("JWT validation failed for path: " + path + ", error: " + e.getMessage());
+            System.out.println("❌ JWT validation failed: " + e.getMessage());
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
         }

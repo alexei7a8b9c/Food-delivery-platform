@@ -62,7 +62,7 @@
       <module name="eureka-server" options="" />
       <module name="food-delivery-platform" options="" />
       <module name="order-service" options="" />
-      <module name="restaurant-service" options="-parameters" />
+      <module name="restaurant-service" options="" />
       <module name="user-service" options="-parameters -parameters" />
     </option>
   </component>

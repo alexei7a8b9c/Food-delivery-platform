@@ -2,10 +2,6 @@ server:
   port: 8082
   servlet:
     context-path: /api
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
 
 spring:
   application:
@@ -16,37 +12,16 @@ spring:
     username: restaurant_db
     password: restaurant_db
     driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-timeout: 30000
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      connection-test-query: SELECT 1
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-    open-in-view: false
 
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
-      enabled: true
-
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
 
 app:
   images:
@@ -56,8 +31,8 @@ app:
     max-size-mb: 5
 
 jwt:
-  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
+  expiration: 86400000
 
 eureka:
   client:
@@ -71,70 +46,5 @@ eureka:
 
 logging:
   level:
-    com.example.restaurantservice: INFO
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
-    org.springframework.cloud.netflix.eureka: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/restaurant-service.log
-    max-size: 10MB
-    max-history: 30
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
-    metrics:
-      enabled: true
-  metrics:
-    enable:
-      http: true
-      jvm: true
-      process: true
-    tags:
-      application: ${spring.application.name}
-
-springdoc:
-  api-docs:
-    enabled: true
-    path: /api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    display-request-duration: true
-    doc-expansion: none
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      restaurantService:
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        permitted-number-of-calls-in-half-open-state: 3
-        automatic-transition-from-open-to-half-open-enabled: true
-        wait-duration-in-open-state: 5s
-        failure-rate-threshold: 50
-      dishService:
-        sliding-window-size: 10
-        minimum-number-of-calls: 5
-        permitted-number-of-calls-in-half-open-state: 3
-        automatic-transition-from-open-to-half-open-enabled: true
-        wait-duration-in-open-state: 5s
-        failure-rate-threshold: 50
-  retry:
-    instances:
-      externalService:
-        max-attempts: 3
-        wait-duration: 1s
+    com.example.restaurantservice: DEBUG
+    org.springframework.security: DEBUG
