@@ -2,9 +2,6 @@ server:
   port: 8080
 
 spring:
-  application:
-    name: api-gateway
-
   cloud:
     gateway:
       globalcors:
@@ -14,97 +11,6 @@ spring:
             allowed-methods: "*"
             allowed-headers: "*"
             allow-credentials: true
-      routes:
-        # User Service routes
-        - id: user-service-auth
-          uri: lb://user-service
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - RewritePath=/api/auth/(?<segment>.*), /api/auth/$\{segment}
-
-        - id: user-service-users
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
-          filters:
-            - name: JwtFilter  # Теперь это будет работать с JwtGatewayFilterFactory
-            - RewritePath=/api/users/(?<segment>.*), /api/users/$\{segment}
-
-        # Order Service routes
-        - id: order-service-orders
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/orders/(?<segment>.*), /api/orders/$\{segment}
-
-        - id: order-service-cart
-          uri: lb://order-service
-          predicates:
-            - Path=/api/cart/**
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/cart/(?<segment>.*), /api/cart/$\{segment}
-
-        # Restaurant Service - Public GET routes
-        - id: restaurant-service-restaurants-public
-          uri: lb://restaurant-service
-          predicates:
-            - Method=GET
-            - Path=/api/restaurants/**
-          filters:
-            - RewritePath=/api/restaurants/(?<segment>.*), /api/restaurants/$\{segment}
-
-        - id: restaurant-service-menu-public
-          uri: lb://restaurant-service
-          predicates:
-            - Method=GET
-            - Path=/api/menu/**
-          filters:
-            - RewritePath=/api/menu/(?<segment>.*), /api/menu/$\{segment}
-
-        # Restaurant Service - Admin routes
-        - id: restaurant-service-admin-restaurants
-          uri: lb://restaurant-service
-          predicates:
-            - Path=/api/admin/restaurants/**
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/admin/restaurants/(?<segment>.*), /api/admin/restaurants/$\{segment}
-
-        - id: restaurant-service-admin-dishes
-          uri: lb://restaurant-service
-          predicates:
-            - Path=/api/admin/dishes/**
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/admin/dishes/(?<segment>.*), /api/admin/dishes/$\{segment}
-
-        - id: restaurant-service-admin-restaurant-dishes
-          uri: lb://restaurant-service
-          predicates:
-            - Path=/api/admin/restaurants/{restaurantId}/dishes/**
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/admin/restaurants/(?<restaurantId>[^/]+)/dishes/(?<segment>.*), /api/admin/restaurants/$\{restaurantId}/dishes/$\{segment}
-
-        - id: restaurant-service-admin-restaurant-image
-          uri: lb://restaurant-service
-          predicates:
-            - Path=/api/admin/restaurants/{id}/image
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/admin/restaurants/(?<id>[^/]+)/image, /api/admin/restaurants/$\{id}/image
-
-        - id: restaurant-service-admin-dish-image
-          uri: lb://restaurant-service
-          predicates:
-            - Path=/api/admin/dishes/{id}/image
-          filters:
-            - name: JwtFilter
-            - RewritePath=/api/admin/dishes/(?<id>[^/]+)/image, /api/admin/dishes/$\{id}/image
 
 eureka:
   client:
@@ -122,11 +28,7 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     com.example.apigateway: DEBUG
-    org.springframework.cloud.netflix.eureka: INFO
-    org.springframework.web: DEBUG
-    reactor.netty: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    org.springframework.cloud.netflix.eureka: DEBUG
 
 management:
   endpoints:

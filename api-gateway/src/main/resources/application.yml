@@ -2,8 +2,15 @@ server:
   port: 8080
 
 spring:
-  application:
-    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "http://localhost:3000"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
 
 eureka:
   client:
@@ -21,6 +28,13 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     com.example.apigateway: DEBUG
-    org.springframework.cloud.netflix.eureka: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    org.springframework.cloud.netflix.eureka: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
