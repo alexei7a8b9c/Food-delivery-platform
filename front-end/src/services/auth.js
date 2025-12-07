@@ -5,21 +5,31 @@ const API_URL = `${API_BASE_URL}/api/auth`;
 
 class AuthService {
     async register(userData) {
-        const response = await axios.post(`${API_URL}/register`, userData);
-        if (response.data.accessToken) {
-            localStorage.setItem('user', JSON.stringify(response.data));
-            console.log('User registered and saved to localStorage:', response.data.userId);
+        try {
+            const response = await axios.post(`${API_URL}/register`, userData);
+            if (response.data.accessToken) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+                console.log('User registered and saved to localStorage:', response.data.userId);
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
         }
-        return response.data;
     }
 
     async login(credentials) {
-        const response = await axios.post(`${API_URL}/login`, credentials);
-        if (response.data.accessToken) {
-            localStorage.setItem('user', JSON.stringify(response.data));
-            console.log('User logged in and saved to localStorage:', response.data.userId);
+        try {
+            const response = await axios.post(`${API_URL}/login`, credentials);
+            if (response.data.accessToken) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+                console.log('User logged in and saved to localStorage:', response.data.userId);
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
         }
-        return response.data;
     }
 
     logout() {
@@ -42,7 +52,12 @@ class AuthService {
     getCurrentUser() {
         const userStr = localStorage.getItem('user');
         if (userStr) {
-            return JSON.parse(userStr);
+            try {
+                return JSON.parse(userStr);
+            } catch (e) {
+                console.error('Error parsing user from localStorage:', e);
+                return null;
+            }
         }
         return null;
     }
