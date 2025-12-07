@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import restaurantService from '../services/restaurantService';
 import api from '../services/api';
 
 const AdminDashboard = () => {
@@ -19,8 +20,7 @@ const AdminDashboard = () => {
         description: '',
         phoneNumber: '',
         email: '',
-        openingHours: '',
-        imageUrl: ''
+        openingHours: ''
     });
 
     // Формы для блюд
@@ -35,14 +35,14 @@ const AdminDashboard = () => {
     });
 
     // Состояние для загрузки изображений
-    const [imageFile, setImageFile] = useState(null);
-    const [uploadingImage, setUploadingImage] = useState(false);
+    const [restaurantImage, setRestaurantImage] = useState(null);
+    const [dishImage, setDishImage] = useState(null);
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
+    const [selectedDishId, setSelectedDishId] = useState('');
 
-    // Пагинация
-    const [restaurantPage, setRestaurantPage] = useState(0);
-    const [restaurantSize] = useState(10);
-    const [dishPage, setDishPage] = useState(0);
-    const [dishSize] = useState(10);
+    // Состояние для редактирования
+    const [editingRestaurant, setEditingRestaurant] = useState(null);
+    const [editingDish, setEditingDish] = useState(null);
 
     // Проверяем роли
     const hasAdminOrManagerRole = () => {
@@ -70,18 +70,18 @@ const AdminDashboard = () => {
     const fetchRestaurants = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/admin/restaurants', {
-                params: {
-                    page: restaurantPage,
-                    size: restaurantSize,
-                    sortBy: 'name',
-                    direction: 'asc'
-                }
-            });
-            setRestaurants(response.data.content || response.data);
+            setError('');
+            const data = await restaurantService.getAdminRestaurants();
+            console.log('Fetched restaurants:', data);
+            if (data.content) {
+                setRestaurants(data.content);
+            } else {
+                setRestaurants(data);
+            }
         } catch (error) {
             console.error('Error fetching restaurants:', error);
             setError('Failed to load restaurants');
+            setRestaurants([]);
         } finally {
             setLoading(false);
         }
@@ -91,18 +91,18 @@ const AdminDashboard = () => {
     const fetchDishes = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/admin/dishes', {
-                params: {
-                    page: dishPage,
-                    size: dishSize,
-                    sortBy: 'name',
-                    direction: 'asc'
-                }
-            });
-            setDishes(response.data.content || response.data);
+            setError('');
+            const data = await restaurantService.getAdminDishes();
+            console.log('Fetched dishes:', data);
+            if (data.content) {
+                setDishes(data.content);
+            } else {
+                setDishes(data);
+            }
         } catch (error) {
             console.error('Error fetching dishes:', error);
             setError('Failed to load dishes');
+            setDishes([]);
         } finally {
             setLoading(false);
         }
@@ -113,8 +113,9 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await api.post('/api/admin/restaurants', restaurantForm);
-            setSuccess(`Restaurant created with ID: ${response.data.id}`);
+            setError('');
+            await restaurantService.createRestaurant(restaurantForm);
+            setSuccess('Restaurant created successfully');
             setRestaurantForm({
                 name: '',
                 cuisine: '',
@@ -122,13 +123,12 @@ const AdminDashboard = () => {
                 description: '',
                 phoneNumber: '',
                 email: '',
-                openingHours: '',
-                imageUrl: ''
+                openingHours: ''
             });
             fetchRestaurants();
         } catch (error) {
             console.error('Error creating restaurant:', error);
-            setError('Failed to create restaurant');
+            setError('Failed to create restaurant: ' + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
@@ -138,12 +138,23 @@ const AdminDashboard = () => {
     const handleUpdateRestaurant = async (id) => {
         try {
             setLoading(true);
-            await api.put(`/api/admin/restaurants/${id}`, restaurantForm);
+            setError('');
+            await restaurantService.updateRestaurant(id, restaurantForm);
             setSuccess('Restaurant updated successfully');
+            setRestaurantForm({
+                name: '',
+                cuisine: '',
+                address: '',
+                description: '',
+                phoneNumber: '',
+                email: '',
+                openingHours: ''
+            });
+            setEditingRestaurant(null);
             fetchRestaurants();
         } catch (error) {
             console.error('Error updating restaurant:', error);
-            setError('Failed to update restaurant');
+            setError('Failed to update restaurant: ' + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
@@ -154,12 +165,13 @@ const AdminDashboard = () => {
         if (window.confirm('Are you sure you want to delete this restaurant?')) {
             try {
                 setLoading(true);
-                await api.delete(`/api/admin/restaurants/${id}`);
+                setError('');
+                await restaurantService.deleteRestaurant(id);
                 setSuccess('Restaurant deleted successfully');
                 fetchRestaurants();
             } catch (error) {
                 console.error('Error deleting restaurant:', error);
-                setError('Failed to delete restaurant');
+                setError('Failed to delete restaurant: ' + (error.response?.data?.message || error.message));
             } finally {
                 setLoading(false);
             }
@@ -171,12 +183,13 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await api.post(`/api/admin/restaurants/${dishForm.restaurantId}/dishes`, {
+            setError('');
+            await restaurantService.createDish(dishForm.restaurantId, {
                 ...dishForm,
                 price: parseInt(dishForm.price),
-                preparationTime: parseInt(dishForm.preparationTime)
+                preparationTime: parseInt(dishForm.preparationTime || 0)
             });
-            setSuccess(`Dish created with ID: ${response.data.id}`);
+            setSuccess('Dish created successfully');
             setDishForm({
                 name: '',
                 description: '',
@@ -189,7 +202,7 @@ const AdminDashboard = () => {
             fetchDishes();
         } catch (error) {
             console.error('Error creating dish:', error);
-            setError('Failed to create dish');
+            setError('Failed to create dish: ' + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
@@ -199,16 +212,27 @@ const AdminDashboard = () => {
     const handleUpdateDish = async (id) => {
         try {
             setLoading(true);
-            await api.put(`/api/admin/dishes/${id}`, {
+            setError('');
+            await restaurantService.updateDish(id, {
                 ...dishForm,
                 price: parseInt(dishForm.price),
-                preparationTime: parseInt(dishForm.preparationTime)
+                preparationTime: parseInt(dishForm.preparationTime || 0)
             });
             setSuccess('Dish updated successfully');
+            setDishForm({
+                name: '',
+                description: '',
+                price: '',
+                category: '',
+                preparationTime: '',
+                isAvailable: true,
+                restaurantId: ''
+            });
+            setEditingDish(null);
             fetchDishes();
         } catch (error) {
             console.error('Error updating dish:', error);
-            setError('Failed to update dish');
+            setError('Failed to update dish: ' + (error.response?.data?.message || error.message));
         } finally {
             setLoading(false);
         }
@@ -219,12 +243,13 @@ const AdminDashboard = () => {
         if (window.confirm('Are you sure you want to delete this dish?')) {
             try {
                 setLoading(true);
-                await api.delete(`/api/admin/dishes/${id}`);
+                setError('');
+                await restaurantService.deleteDish(id);
                 setSuccess('Dish deleted successfully');
                 fetchDishes();
             } catch (error) {
                 console.error('Error deleting dish:', error);
-                setError('Failed to delete dish');
+                setError('Failed to delete dish: ' + (error.response?.data?.message || error.message));
             } finally {
                 setLoading(false);
             }
@@ -232,61 +257,77 @@ const AdminDashboard = () => {
     };
 
     // Загрузка изображения для ресторана
-    const handleImageUpload = async (restaurantId) => {
-        if (!imageFile) {
-            setError('Please select an image file');
+    const handleRestaurantImageUpload = async () => {
+        if (!restaurantImage || !selectedRestaurantId) {
+            setError('Please select a restaurant and an image file');
             return;
         }
 
         try {
-            setUploadingImage(true);
-            const formData = new FormData();
-            formData.append('image', imageFile);
-
-            const response = await api.post(`/api/admin/restaurants/${restaurantId}/image`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            setSuccess('Image uploaded successfully');
-            setImageFile(null);
+            setLoading(true);
+            setError('');
+            await restaurantService.uploadRestaurantImage(selectedRestaurantId, restaurantImage);
+            setSuccess('Restaurant image uploaded successfully');
+            setRestaurantImage(null);
+            setSelectedRestaurantId('');
             fetchRestaurants();
         } catch (error) {
-            console.error('Error uploading image:', error);
-            setError('Failed to upload image');
+            console.error('Error uploading restaurant image:', error);
+            setError('Failed to upload restaurant image: ' + (error.response?.data?.message || error.message));
         } finally {
-            setUploadingImage(false);
+            setLoading(false);
         }
     };
 
     // Загрузка изображения для блюда
-    const handleDishImageUpload = async (dishId) => {
-        if (!imageFile) {
-            setError('Please select an image file');
+    const handleDishImageUpload = async () => {
+        if (!dishImage || !selectedDishId) {
+            setError('Please select a dish and an image file');
             return;
         }
 
         try {
-            setUploadingImage(true);
-            const formData = new FormData();
-            formData.append('image', imageFile);
-
-            const response = await api.post(`/api/admin/dishes/${dishId}/image`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
+            setLoading(true);
+            setError('');
+            await restaurantService.uploadDishImage(selectedDishId, dishImage);
             setSuccess('Dish image uploaded successfully');
-            setImageFile(null);
+            setDishImage(null);
+            setSelectedDishId('');
             fetchDishes();
         } catch (error) {
             console.error('Error uploading dish image:', error);
-            setError('Failed to upload dish image');
+            setError('Failed to upload dish image: ' + (error.response?.data?.message || error.message));
         } finally {
-            setUploadingImage(false);
+            setLoading(false);
         }
+    };
+
+    // Заполнение формы для редактирования ресторана
+    const handleEditRestaurant = (restaurant) => {
+        setEditingRestaurant(restaurant);
+        setRestaurantForm({
+            name: restaurant.name || '',
+            cuisine: restaurant.cuisine || '',
+            address: restaurant.address || '',
+            description: restaurant.description || '',
+            phoneNumber: restaurant.phoneNumber || '',
+            email: restaurant.email || '',
+            openingHours: restaurant.openingHours || ''
+        });
+    };
+
+    // Заполнение формы для редактирования блюда
+    const handleEditDish = (dish) => {
+        setEditingDish(dish);
+        setDishForm({
+            name: dish.name || '',
+            description: dish.description || '',
+            price: dish.price?.toString() || '',
+            category: dish.category || '',
+            preparationTime: dish.preparationTime?.toString() || '',
+            isAvailable: dish.isAvailable || true,
+            restaurantId: dish.restaurantId?.toString() || ''
+        });
     };
 
     useEffect(() => {
@@ -297,13 +338,15 @@ const AdminDashboard = () => {
                 fetchDishes();
             }
         }
-    }, [activeTab, restaurantPage, dishPage]);
+    }, [activeTab]);
 
     if (!hasAdminOrManagerRole()) {
         return (
             <div>
                 <h2>Access Denied</h2>
                 <p>You need ADMIN or MANAGER role to access this page.</p>
+                <p>Current user: {currentUser?.email || 'Not logged in'}</p>
+                <p>User roles: {JSON.stringify(currentUser?.roles)}</p>
             </div>
         );
     }
@@ -311,6 +354,7 @@ const AdminDashboard = () => {
     return (
         <div>
             <h2>Admin Dashboard</h2>
+            <p>Welcome, {currentUser?.email}</p>
 
             {error && (
                 <div style={{ border: '1px solid black', padding: '10px', margin: '10px 0', backgroundColor: '#ffebee' }}>
@@ -325,20 +369,30 @@ const AdminDashboard = () => {
             )}
 
             <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setActiveTab('restaurants')}>Restaurants</button>
-                <button onClick={() => setActiveTab('dishes')}>Dishes</button>
+                <button
+                    onClick={() => setActiveTab('restaurants')}
+                    style={{ marginRight: '10px', fontWeight: activeTab === 'restaurants' ? 'bold' : 'normal' }}
+                >
+                    Restaurants
+                </button>
+                <button
+                    onClick={() => setActiveTab('dishes')}
+                    style={{ fontWeight: activeTab === 'dishes' ? 'bold' : 'normal' }}
+                >
+                    Dishes
+                </button>
             </div>
 
             {activeTab === 'restaurants' && (
                 <div>
                     <h3>Restaurant Management</h3>
 
-                    {/* Форма создания ресторана */}
+                    {/* Форма создания/редактирования ресторана */}
                     <div style={{ border: '1px solid black', padding: '20px', margin: '20px 0' }}>
-                        <h4>Create New Restaurant</h4>
-                        <form onSubmit={handleCreateRestaurant}>
+                        <h4>{editingRestaurant ? 'Edit Restaurant' : 'Create New Restaurant'}</h4>
+                        <form onSubmit={editingRestaurant ? (e) => { e.preventDefault(); handleUpdateRestaurant(editingRestaurant.id); } : handleCreateRestaurant}>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Name:</label><br />
+                                <label>Name: *</label><br />
                                 <input
                                     type="text"
                                     value={restaurantForm.name}
@@ -348,7 +402,7 @@ const AdminDashboard = () => {
                                 />
                             </div>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Cuisine:</label><br />
+                                <label>Cuisine: *</label><br />
                                 <input
                                     type="text"
                                     value={restaurantForm.cuisine}
@@ -358,12 +412,13 @@ const AdminDashboard = () => {
                                 />
                             </div>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Address:</label><br />
+                                <label>Address: *</label><br />
                                 <textarea
                                     value={restaurantForm.address}
                                     onChange={(e) => setRestaurantForm({...restaurantForm, address: e.target.value})}
                                     required
                                     style={{ width: '300px', padding: '5px' }}
+                                    rows="3"
                                 />
                             </div>
                             <div style={{ marginBottom: '10px' }}>
@@ -372,6 +427,7 @@ const AdminDashboard = () => {
                                     value={restaurantForm.description}
                                     onChange={(e) => setRestaurantForm({...restaurantForm, description: e.target.value})}
                                     style={{ width: '300px', padding: '5px' }}
+                                    rows="3"
                                 />
                             </div>
                             <div style={{ marginBottom: '10px' }}>
@@ -402,8 +458,28 @@ const AdminDashboard = () => {
                                 />
                             </div>
                             <button type="submit" disabled={loading}>
-                                {loading ? 'Creating...' : 'Create Restaurant'}
+                                {loading ? 'Saving...' : (editingRestaurant ? 'Update Restaurant' : 'Create Restaurant')}
                             </button>
+                            {editingRestaurant && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingRestaurant(null);
+                                        setRestaurantForm({
+                                            name: '',
+                                            cuisine: '',
+                                            address: '',
+                                            description: '',
+                                            phoneNumber: '',
+                                            email: '',
+                                            openingHours: ''
+                                        });
+                                    }}
+                                    style={{ marginLeft: '10px' }}
+                                >
+                                    Cancel
+                                </button>
+                            )}
                         </form>
                     </div>
 
@@ -411,10 +487,11 @@ const AdminDashboard = () => {
                     <div style={{ border: '1px solid black', padding: '20px', margin: '20px 0' }}>
                         <h4>Upload Restaurant Image</h4>
                         <div style={{ marginBottom: '10px' }}>
-                            <label>Select Restaurant ID:</label><br />
+                            <label>Select Restaurant:</label><br />
                             <select
-                                onChange={(e) => setRestaurantForm({...restaurantForm, id: e.target.value})}
-                                style={{ padding: '5px' }}
+                                value={selectedRestaurantId}
+                                onChange={(e) => setSelectedRestaurantId(e.target.value)}
+                                style={{ padding: '5px', width: '300px' }}
                             >
                                 <option value="">Select Restaurant</option>
                                 {restaurants.map(restaurant => (
@@ -425,18 +502,19 @@ const AdminDashboard = () => {
                             </select>
                         </div>
                         <div style={{ marginBottom: '10px' }}>
-                            <label>Select Image:</label><br />
+                            <label>Select Image (jpg, jpeg, png, gif, webp, max 5MB):</label><br />
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setImageFile(e.target.files[0])}
+                                onChange={(e) => setRestaurantImage(e.target.files[0])}
+                                style={{ padding: '5px' }}
                             />
                         </div>
                         <button
-                            onClick={() => handleImageUpload(restaurantForm.id)}
-                            disabled={!imageFile || uploadingImage || !restaurantForm.id}
+                            onClick={handleRestaurantImageUpload}
+                            disabled={!restaurantImage || !selectedRestaurantId || loading}
                         >
-                            {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                            {loading ? 'Uploading...' : 'Upload Image'}
                         </button>
                     </div>
 
@@ -451,14 +529,17 @@ const AdminDashboard = () => {
                             <div>
                                 {restaurants.map(restaurant => (
                                     <div key={restaurant.id} style={{ border: '1px solid black', padding: '15px', margin: '10px 0' }}>
-                                        <h5>{restaurant.name}</h5>
+                                        <h5>{restaurant.name} {editingRestaurant?.id === restaurant.id && '(Editing)'}</h5>
+                                        <p><strong>ID:</strong> {restaurant.id}</p>
                                         <p><strong>Cuisine:</strong> {restaurant.cuisine}</p>
                                         <p><strong>Address:</strong> {restaurant.address}</p>
+                                        <p><strong>Description:</strong> {restaurant.description || 'N/A'}</p>
                                         <p><strong>Phone:</strong> {restaurant.phoneNumber || 'N/A'}</p>
                                         <p><strong>Email:</strong> {restaurant.email || 'N/A'}</p>
                                         <p><strong>Opening Hours:</strong> {restaurant.openingHours || 'N/A'}</p>
                                         {restaurant.imageUrl && (
                                             <div>
+                                                <p><strong>Image:</strong></p>
                                                 <img
                                                     src={`http://localhost:8080${restaurant.imageUrl}`}
                                                     alt={restaurant.name}
@@ -467,7 +548,8 @@ const AdminDashboard = () => {
                                             </div>
                                         )}
                                         <div style={{ marginTop: '10px' }}>
-                                            <button onClick={() => handleDeleteRestaurant(restaurant.id)}>Delete</button>
+                                            <button onClick={() => handleEditRestaurant(restaurant)}>Edit</button>
+                                            <button onClick={() => handleDeleteRestaurant(restaurant.id)} style={{ marginLeft: '10px' }}>Delete</button>
                                         </div>
                                     </div>
                                 ))}
@@ -481,17 +563,17 @@ const AdminDashboard = () => {
                 <div>
                     <h3>Dish Management</h3>
 
-                    {/* Форма создания блюда */}
+                    {/* Форма создания/редактирования блюда */}
                     <div style={{ border: '1px solid black', padding: '20px', margin: '20px 0' }}>
-                        <h4>Create New Dish</h4>
-                        <form onSubmit={handleCreateDish}>
+                        <h4>{editingDish ? 'Edit Dish' : 'Create New Dish'}</h4>
+                        <form onSubmit={editingDish ? (e) => { e.preventDefault(); handleUpdateDish(editingDish.id); } : handleCreateDish}>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Restaurant ID:</label><br />
+                                <label>Restaurant: *</label><br />
                                 <select
                                     value={dishForm.restaurantId}
                                     onChange={(e) => setDishForm({...dishForm, restaurantId: e.target.value})}
                                     required
-                                    style={{ padding: '5px' }}
+                                    style={{ padding: '5px', width: '300px' }}
                                 >
                                     <option value="">Select Restaurant</option>
                                     {restaurants.map(restaurant => (
@@ -502,7 +584,7 @@ const AdminDashboard = () => {
                                 </select>
                             </div>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Dish Name:</label><br />
+                                <label>Dish Name: *</label><br />
                                 <input
                                     type="text"
                                     value={dishForm.name}
@@ -517,10 +599,11 @@ const AdminDashboard = () => {
                                     value={dishForm.description}
                                     onChange={(e) => setDishForm({...dishForm, description: e.target.value})}
                                     style={{ width: '300px', padding: '5px' }}
+                                    rows="3"
                                 />
                             </div>
                             <div style={{ marginBottom: '10px' }}>
-                                <label>Price (in cents):</label><br />
+                                <label>Price (in cents): *</label><br />
                                 <input
                                     type="number"
                                     value={dishForm.price}
@@ -545,7 +628,7 @@ const AdminDashboard = () => {
                                     type="number"
                                     value={dishForm.preparationTime}
                                     onChange={(e) => setDishForm({...dishForm, preparationTime: e.target.value})}
-                                    min="1"
+                                    min="0"
                                     style={{ width: '300px', padding: '5px' }}
                                 />
                             </div>
@@ -560,8 +643,28 @@ const AdminDashboard = () => {
                                 </label>
                             </div>
                             <button type="submit" disabled={loading}>
-                                {loading ? 'Creating...' : 'Create Dish'}
+                                {loading ? 'Saving...' : (editingDish ? 'Update Dish' : 'Create Dish')}
                             </button>
+                            {editingDish && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingDish(null);
+                                        setDishForm({
+                                            name: '',
+                                            description: '',
+                                            price: '',
+                                            category: '',
+                                            preparationTime: '',
+                                            isAvailable: true,
+                                            restaurantId: ''
+                                        });
+                                    }}
+                                    style={{ marginLeft: '10px' }}
+                                >
+                                    Cancel
+                                </button>
+                            )}
                         </form>
                     </div>
 
@@ -569,10 +672,11 @@ const AdminDashboard = () => {
                     <div style={{ border: '1px solid black', padding: '20px', margin: '20px 0' }}>
                         <h4>Upload Dish Image</h4>
                         <div style={{ marginBottom: '10px' }}>
-                            <label>Select Dish ID:</label><br />
+                            <label>Select Dish:</label><br />
                             <select
-                                onChange={(e) => setDishForm({...dishForm, id: e.target.value})}
-                                style={{ padding: '5px' }}
+                                value={selectedDishId}
+                                onChange={(e) => setSelectedDishId(e.target.value)}
+                                style={{ padding: '5px', width: '300px' }}
                             >
                                 <option value="">Select Dish</option>
                                 {dishes.map(dish => (
@@ -583,18 +687,19 @@ const AdminDashboard = () => {
                             </select>
                         </div>
                         <div style={{ marginBottom: '10px' }}>
-                            <label>Select Image:</label><br />
+                            <label>Select Image (jpg, jpeg, png, gif, webp, max 5MB):</label><br />
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setImageFile(e.target.files[0])}
+                                onChange={(e) => setDishImage(e.target.files[0])}
+                                style={{ padding: '5px' }}
                             />
                         </div>
                         <button
-                            onClick={() => handleDishImageUpload(dishForm.id)}
-                            disabled={!imageFile || uploadingImage || !dishForm.id}
+                            onClick={handleDishImageUpload}
+                            disabled={!dishImage || !selectedDishId || loading}
                         >
-                            {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                            {loading ? 'Uploading...' : 'Upload Image'}
                         </button>
                     </div>
 
@@ -609,15 +714,17 @@ const AdminDashboard = () => {
                             <div>
                                 {dishes.map(dish => (
                                     <div key={dish.id} style={{ border: '1px solid black', padding: '15px', margin: '10px 0' }}>
-                                        <h5>{dish.name}</h5>
+                                        <h5>{dish.name} {editingDish?.id === dish.id && '(Editing)'}</h5>
+                                        <p><strong>ID:</strong> {dish.id}</p>
                                         <p><strong>Description:</strong> {dish.description || 'N/A'}</p>
-                                        <p><strong>Price:</strong> ${(dish.price / 100).toFixed(2)}</p>
+                                        <p><strong>Price:</strong> ${(dish.price / 100).toFixed(2)} ({dish.price} cents)</p>
                                         <p><strong>Category:</strong> {dish.category || 'N/A'}</p>
                                         <p><strong>Preparation Time:</strong> {dish.preparationTime || 'N/A'} minutes</p>
                                         <p><strong>Available:</strong> {dish.isAvailable ? 'Yes' : 'No'}</p>
                                         <p><strong>Restaurant:</strong> {dish.restaurantName} (ID: {dish.restaurantId})</p>
                                         {dish.imageUrl && (
                                             <div>
+                                                <p><strong>Image:</strong></p>
                                                 <img
                                                     src={`http://localhost:8080${dish.imageUrl}`}
                                                     alt={dish.name}
@@ -626,7 +733,8 @@ const AdminDashboard = () => {
                                             </div>
                                         )}
                                         <div style={{ marginTop: '10px' }}>
-                                            <button onClick={() => handleDeleteDish(dish.id)}>Delete</button>
+                                            <button onClick={() => handleEditDish(dish)}>Edit</button>
+                                            <button onClick={() => handleDeleteDish(dish.id)} style={{ marginLeft: '10px' }}>Delete</button>
                                         </div>
                                     </div>
                                 ))}
