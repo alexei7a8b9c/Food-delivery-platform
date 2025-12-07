@@ -25,7 +25,7 @@ public class LocalImageStorageService implements ImageStorageService {
     @Value("${app.images.base-url:/images}")
     private String baseUrl;
 
-    @Value("${app.images.allowed-formats:jpg,jpeg,png,gif}")
+    @Value("${app.images.allowed-formats:jpg,jpeg,png,gif,webp}")
     private String allowedFormats;
 
     @Value("${app.images.max-size-mb:5}")

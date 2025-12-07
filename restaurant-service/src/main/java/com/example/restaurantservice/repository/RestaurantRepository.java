@@ -22,9 +22,18 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     @Query("SELECT r FROM Restaurant r WHERE r.deleted = false AND r.id = :id")
     Optional<Restaurant> findById(@Param("id") Long id);
 
-    @Query("SELECT r FROM Restaurant r WHERE r.deleted = false AND (LOWER(r.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(r.cuisine) LIKE LOWER(CONCAT('%', :query, '%')))")
+    @Query("SELECT r FROM Restaurant r WHERE r.deleted = false AND " +
+            "(LOWER(r.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(r.cuisine) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(r.description) LIKE LOWER(CONCAT('%', :query, '%')))")
     List<Restaurant> searchByNameOrCuisine(@Param("query") String query);
 
     @Query("SELECT COUNT(r) > 0 FROM Restaurant r WHERE r.deleted = false AND r.id = :id")
     boolean existsById(@Param("id") Long id);
+
+    @Query("SELECT r FROM Restaurant r WHERE r.deleted = false AND r.name = :name")
+    Optional<Restaurant> findByName(@Param("name") String name);
+
+    @Query("SELECT r FROM Restaurant r WHERE r.deleted = false AND r.email = :email")
+    Optional<Restaurant> findByEmail(@Param("email") String email);
 }
