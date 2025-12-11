@@ -39,22 +39,21 @@ public class GatewayConfig {
                         .uri("lb://order-service"))
 
                 // Restaurant Service routes - публичные для GET, защищенные для остальных
-                // Убедитесь, что есть эти маршруты:
-                .route("restaurant-service-restaurants-get", r ->
-                        r.method("GET").and().path("/api/restaurants/**")
-                                .filters(f -> f.rewritePath("/api/restaurants/(?<segment>.*)", "/api/restaurants/${segment}"))
-                                .uri("lb://restaurant-service"))
+                .route("restaurant-service-restaurants-get", r -> r.method("GET").and().path("/api/restaurants/**")
+                        .filters(f -> f.rewritePath("/api/restaurants/(?<segment>.*)", "/api/restaurants/${segment}"))
+                        .uri("lb://restaurant-service"))
+                .route("restaurant-service-restaurants-other", r -> r.path("/api/restaurants/**")
+                        .filters(f -> f.filter(jwtFilter)
+                                .rewritePath("/api/restaurants/(?<segment>.*)", "/api/restaurants/${segment}"))
+                        .uri("lb://restaurant-service"))
 
-                .route("restaurant-service-restaurants-other", r ->
-                        r.path("/api/restaurants/**")
-                                .filters(f -> f.filter(jwtFilter)
-                                        .rewritePath("/api/restaurants/(?<segment>.*)", "/api/restaurants/${segment}"))
-                                .uri("lb://restaurant-service"))
-
-                .route("restaurant-service-menu-get", r ->
-                        r.method("GET").and().path("/api/menu/**")
-                                .filters(f -> f.rewritePath("/api/menu/(?<segment>.*)", "/api/menu/${segment}"))
-                                .uri("lb://restaurant-service"))
+                .route("restaurant-service-menu-get", r -> r.method("GET").and().path("/api/menu/**")
+                        .filters(f -> f.rewritePath("/api/menu/(?<segment>.*)", "/api/menu/${segment}"))
+                        .uri("lb://restaurant-service"))
+                .route("restaurant-service-menu-other", r -> r.path("/api/menu/**")
+                        .filters(f -> f.filter(jwtFilter)
+                                .rewritePath("/api/menu/(?<segment>.*)", "/api/menu/${segment}"))
+                        .uri("lb://restaurant-service"))
 
                 // Admin routes
                 .route("restaurant-service-admin", r -> r.path("/api/admin/**")

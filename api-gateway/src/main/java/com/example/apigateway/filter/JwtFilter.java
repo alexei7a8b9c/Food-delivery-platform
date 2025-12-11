@@ -28,13 +28,10 @@ public class JwtFilter implements GatewayFilter {
             "/api/auth/login",
             "/api/auth/validate",
             "/api/health",
-
-            // ДОБАВЬТЕ публичные endpoints из restaurant-service:
-            "/api/restaurants",      // GET запросы должны быть публичными
-            "/api/restaurants/",     // для просмотра ресторанов
-            "/api/menu",             // GET запросы к меню
+            "/api/restaurants",
+            "/api/restaurants/",
+            "/api/menu",
             "/api/menu/",
-
             "/eureka",
             "/eureka/",
             "/actuator",
