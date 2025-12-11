@@ -1,0 +1,175 @@
+### Админские тесты Restaurant Service
+@baseUrl = http://localhost:8082
+
+### Авторизация админа
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@fooddelivery.com",
+  "password": "admin123"
+}
+
+> {%
+    client.global.set("admin_token", response.body.accessToken);
+    client.log("Admin Token: " + client.global.get("admin_token"));
+%}
+
+### 1. Создать ресторан через админ endpoint
+# @name createAdminRestaurant
+POST {{baseUrl}}/api/admin/restaurants
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Elite Restaurant",
+  "description": "Exclusive restaurant for VIP clients",
+  "address": "1 Premium Street, Manhattan",
+  "phoneNumber": "+1 (212) 999-0000",
+  "cuisineType": "FUSION",
+  "openingHours": "18:00-02:00",
+  "isActive": true,
+  "premium": true,
+  "rating": 4.8
+}
+
+> {%
+    client.test("Admin restaurant created", function() {
+        client.assert(response.status === 200 || response.status === 201, "Expected success status");
+        client.global.set("admin_restaurant_id", response.body.id);
+        client.log("Admin restaurant ID: " + client.global.get("admin_restaurant_id"));
+    });
+%}
+
+### 2. Получить все рестораны (админский вид)
+GET {{baseUrl}}/api/admin/restaurants
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 3. Получить детали ресторана (админский вид)
+GET {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 4. Обновить ресторан через админ endpoint
+PUT {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Elite Restaurant",
+  "description": "Updated description for VIP clients",
+  "address": "2 Premium Street, Manhattan",
+  "phoneNumber": "+1 (212) 999-1111",
+  "cuisineType": "FUSION",
+  "openingHours": "19:00-03:00",
+  "isActive": true,
+  "premium": true,
+  "rating": 4.9
+}
+
+### 5. Добавить блюдо через админ endpoint
+POST {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/dishes
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Truffle Pasta",
+  "description": "Pasta with black truffle",
+  "price": 49.99,
+  "category": "PASTA",
+  "isAvailable": true,
+  "premium": true,
+  "calories": 650
+}
+
+> {%
+    client.test("Premium dish created", function() {
+        client.assert(response.status === 200 || response.status === 201, "Expected success status");
+        client.global.set("premium_dish_id", response.body.id);
+        client.log("Premium dish ID: " + client.global.get("premium_dish_id"));
+    });
+%}
+
+### 6. Получить все блюда ресторана (админский вид)
+GET {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/dishes
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 7. Обновить блюдо через админ endpoint
+PUT {{baseUrl}}/api/admin/menu/{{premium_dish_id}}
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "Premium Truffle Pasta",
+  "description": "Pasta with white and black truffle",
+  "price": 59.99,
+  "category": "PASTA",
+  "isAvailable": true,
+  "premium": true,
+  "calories": 700
+}
+
+### 8. Удалить блюдо через админ endpoint
+DELETE {{baseUrl}}/api/admin/menu/{{premium_dish_id}}
+Authorization: Bearer {{admin_token}}
+
+### 9. Активировать ресторан
+PUT {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/activate
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "active": true
+}
+
+### 10. Деактивировать ресторан
+PUT {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/deactivate
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "active": false
+}
+
+### 11. Получить статистику ресторана
+GET {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/statistics
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 12. Поиск ресторанов с фильтрами (админ)
+GET {{baseUrl}}/api/admin/restaurants/search?active=true&premium=true
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 13. Экспорт данных ресторана
+GET {{baseUrl}}/api/admin/restaurants/{{admin_restaurant_id}}/export
+Authorization: Bearer {{admin_token}}
+Accept: application/json
+
+### 14. Массовое обновление статуса ресторанов
+POST {{baseUrl}}/api/admin/restaurants/batch-update
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "restaurantIds": [1, 2, 3],
+  "active": true
+}
+
+### 15. Проверить менеджерский доступ к админ endpoint (должен получить 403)
+POST {{baseUrl}}/api/admin/restaurants
+Authorization: Bearer {{manager_token}}
+Content-Type: application/json
+
+{
+  "name": "Should Fail",
+  "description": "Manager cannot access admin endpoint",
+  "address": "Test",
+  "phoneNumber": "+1 (000) 000-0000",
+  "cuisineType": "ITALIAN",
+  "openingHours": "10:00-22:00",
+  "isActive": true
+}

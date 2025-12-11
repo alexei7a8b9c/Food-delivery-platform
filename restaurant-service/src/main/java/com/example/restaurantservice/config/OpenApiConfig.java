@@ -14,6 +14,6 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Restaurant Service API")
                         .version("1.0")
-                        .description("API for restaurant and menu management"));
+                        .description("API для управления ресторанами и блюдами"));
     }
 }
