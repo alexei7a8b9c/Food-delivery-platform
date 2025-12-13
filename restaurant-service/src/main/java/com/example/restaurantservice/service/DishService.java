@@ -26,6 +26,7 @@ public class DishService {
     private final DishRepository dishRepository;
     private final RestaurantRepository restaurantRepository;
 
+    // Метод для преобразования Dish в DishDTO
     private DishDTO toDTO(Dish dish) {
         return DishDTO.builder()
                 .id(dish.getId())
@@ -35,11 +36,13 @@ public class DishService {
                 .imageUrl(dish.getImageUrl())
                 .restaurantId(dish.getRestaurant().getId())
                 .restaurantName(dish.getRestaurant().getName())
+                .deleted(dish.isDeleted())
                 .createdAt(dish.getCreatedAt())
                 .updatedAt(dish.getUpdatedAt())
                 .build();
     }
 
+    // Метод для преобразования DishDTO в Dish
     private Dish toEntity(DishDTO dto, Restaurant restaurant) {
         return Dish.builder()
                 .name(dto.getName())
@@ -70,13 +73,19 @@ public class DishService {
 
     @Transactional(readOnly = true)
     public Page<DishDTO> getDishesByRestaurant(Long restaurantId, SearchCriteria criteria) {
+        // Проверяем существование ресторана
+        if (!restaurantRepository.existsByIdAndDeletedFalse(restaurantId)) {
+            throw new ResourceNotFoundException("Ресторан не найден с id: " + restaurantId);
+        }
+
         Pageable pageable = createPageable(criteria);
         Page<Dish> dishesPage = dishRepository.findByRestaurantIdAndFilters(
                 restaurantId,
                 criteria.getSearchTerm(),
                 criteria.getMinPrice(),
                 criteria.getMaxPrice(),
-                pageable);
+                pageable
+        );
 
         return dishesPage.map(this::toDTO);
     }
@@ -95,15 +104,19 @@ public class DishService {
 
     @Transactional
     public DishDTO createDish(DishDTO dishDTO) {
+        // Проверяем, что блюдо с таким названием уже не существует в ресторане
         if (dishRepository.existsByNameAndRestaurantIdAndDeletedFalse(dishDTO.getName(), dishDTO.getRestaurantId())) {
             throw new ValidationException("Блюдо с названием '" + dishDTO.getName() + "' уже существует в этом ресторане");
         }
 
+        // Находим ресторан
         Restaurant restaurant = restaurantRepository.findById(dishDTO.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ресторан не найден с id: " + dishDTO.getRestaurantId()));
 
+        // Создаем блюдо
         Dish dish = toEntity(dishDTO, restaurant);
         Dish saved = dishRepository.save(dish);
+
         log.info("Создано блюдо с id: {}", saved.getId());
         return toDTO(saved);
     }
@@ -117,15 +130,18 @@ public class DishService {
             throw new ResourceNotFoundException("Блюдо было удалено с id: " + id);
         }
 
+        // Проверяем уникальность названия (если изменилось)
         if ((!existing.getName().equals(dishDTO.getName()) ||
                 !existing.getRestaurant().getId().equals(dishDTO.getRestaurantId())) &&
                 dishRepository.existsByNameAndRestaurantIdAndDeletedFalse(dishDTO.getName(), dishDTO.getRestaurantId())) {
             throw new ValidationException("Блюдо с названием '" + dishDTO.getName() + "' уже существует в этом ресторане");
         }
 
+        // Находим ресторан
         Restaurant restaurant = restaurantRepository.findById(dishDTO.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ресторан не найден с id: " + dishDTO.getRestaurantId()));
 
+        // Обновляем данные
         existing.setName(dishDTO.getName());
         existing.setDescription(dishDTO.getDescription());
         existing.setPrice(dishDTO.getPrice());
@@ -181,6 +197,18 @@ public class DishService {
     public Page<DishDTO> searchDishes(String searchTerm, Pageable pageable) {
         Page<Dish> dishesPage = dishRepository.search(searchTerm, pageable);
         return dishesPage.map(this::toDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DishDTO> getDishesByRestaurantId(Long restaurantId) {
+        return dishRepository.findAllByRestaurantId(restaurantId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Long countDishesByRestaurantId(Long restaurantId) {
+        return dishRepository.countByRestaurantId(restaurantId);
     }
 
     private Pageable createPageable(SearchCriteria criteria) {

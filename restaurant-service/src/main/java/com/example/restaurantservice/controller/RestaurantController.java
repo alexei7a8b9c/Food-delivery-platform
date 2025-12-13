@@ -29,12 +29,12 @@ public class RestaurantController {
     @GetMapping
     @Operation(summary = "Получить все рестораны с пагинацией и фильтрацией")
     public ResponseEntity<Page<RestaurantDTO>> getAllRestaurants(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String cuisine,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "cuisine", required = false) String cuisine,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
 
         SearchCriteria criteria = new SearchCriteria();
         criteria.setSearchTerm(search);
@@ -50,7 +50,7 @@ public class RestaurantController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить ресторан по ID")
-    public ResponseEntity<RestaurantDTO> getRestaurantById(@PathVariable Long id) {
+    public ResponseEntity<RestaurantDTO> getRestaurantById(@PathVariable(name = "id") Long id) {
         RestaurantDTO restaurant = restaurantService.getRestaurantById(id);
         return ResponseEntity.ok(restaurant);
     }
@@ -58,14 +58,14 @@ public class RestaurantController {
     @GetMapping("/{restaurantId}/dishes")
     @Operation(summary = "Получить блюда ресторана")
     public ResponseEntity<Page<DishDTO>> getRestaurantDishes(
-            @PathVariable Long restaurantId,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @PathVariable(name = "restaurantId") Long restaurantId,
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
 
         SearchCriteria criteria = new SearchCriteria();
         criteria.setSearchTerm(search);
@@ -83,10 +83,10 @@ public class RestaurantController {
     @GetMapping("/with-dishes")
     @Operation(summary = "Получить рестораны с их блюдами")
     public ResponseEntity<List<RestaurantDTO>> getRestaurantsWithDishes(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
 
         SearchCriteria criteria = new SearchCriteria();
         criteria.setPage(page);
@@ -108,7 +108,7 @@ public class RestaurantController {
     @PutMapping("/{id}")
     @Operation(summary = "Обновить ресторан")
     public ResponseEntity<RestaurantDTO> updateRestaurant(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody RestaurantDTO restaurantDTO) {
         RestaurantDTO updated = restaurantService.updateRestaurant(id, restaurantDTO);
         return ResponseEntity.ok(updated);
@@ -116,14 +116,14 @@ public class RestaurantController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить ресторан (soft delete)")
-    public ResponseEntity<Void> deleteRestaurant(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRestaurant(@PathVariable(name = "id") Long id) {
         restaurantService.deleteRestaurant(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/restore")
     @Operation(summary = "Восстановить удаленный ресторан")
-    public ResponseEntity<Void> restoreRestaurant(@PathVariable Long id) {
+    public ResponseEntity<Void> restoreRestaurant(@PathVariable(name = "id") Long id) {
         restaurantService.restoreRestaurant(id);
         return ResponseEntity.ok().build();
     }

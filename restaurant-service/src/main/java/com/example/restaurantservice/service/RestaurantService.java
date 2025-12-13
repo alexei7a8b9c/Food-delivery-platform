@@ -25,6 +25,7 @@ public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final DishRepository dishRepository;
+    private final DishService dishService;
 
     private RestaurantDTO toDTO(Restaurant restaurant) {
         return RestaurantDTO.builder()
@@ -43,21 +44,6 @@ public class RestaurantService {
                 .name(dto.getName())
                 .cuisine(dto.getCuisine())
                 .address(dto.getAddress())
-                .build();
-    }
-
-    private DishDTO dishToDTO(Dish dish) {
-        return DishDTO.builder()
-                .id(dish.getId())
-                .name(dish.getName())
-                .description(dish.getDescription())
-                .price(dish.getPrice())
-                .imageUrl(dish.getImageUrl())
-                .restaurantId(dish.getRestaurant().getId())
-                .restaurantName(dish.getRestaurant().getName())
-                .deleted(dish.isDeleted())
-                .createdAt(dish.getCreatedAt())
-                .updatedAt(dish.getUpdatedAt())
                 .build();
     }
 
@@ -91,19 +77,7 @@ public class RestaurantService {
 
     @Transactional(readOnly = true)
     public Page<DishDTO> getRestaurantDishes(Long restaurantId, SearchCriteria criteria) {
-        if (!restaurantRepository.existsByIdAndDeletedFalse(restaurantId)) {
-            throw new ResourceNotFoundException("Ресторан не найден с id: " + restaurantId);
-        }
-
-        Pageable pageable = createPageable(criteria);
-        Page<Dish> dishesPage = dishRepository.findByRestaurantIdAndFilters(
-                restaurantId,
-                criteria.getSearchTerm(),
-                criteria.getMinPrice(),
-                criteria.getMaxPrice(),
-                pageable);
-
-        return dishesPage.map(this::dishToDTO);
+        return dishService.getDishesByRestaurant(restaurantId, criteria);
     }
 
     @Transactional
@@ -184,10 +158,8 @@ public class RestaurantService {
         return restaurantsPage.getContent().stream()
                 .map(restaurant -> {
                     RestaurantDTO dto = toDTO(restaurant);
-                    List<DishDTO> dishes = dishRepository.findByRestaurantId(restaurant.getId(), pageable)
-                            .stream()
-                            .map(this::dishToDTO)
-                            .collect(Collectors.toList());
+                    // Получаем блюда для ресторана
+                    List<DishDTO> dishes = dishService.getDishesByRestaurantId(restaurant.getId());
                     dto.setDishes(dishes);
                     return dto;
                 })

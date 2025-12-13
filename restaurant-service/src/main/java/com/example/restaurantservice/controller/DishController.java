@@ -26,13 +26,13 @@ public class DishController {
     @GetMapping
     @Operation(summary = "Получить все блюда с пагинацией и фильтрацией")
     public ResponseEntity<Page<DishDTO>> getAllDishes(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
 
         SearchCriteria criteria = new SearchCriteria();
         criteria.setSearchTerm(search);
@@ -50,14 +50,14 @@ public class DishController {
     @GetMapping("/restaurant/{restaurantId}")
     @Operation(summary = "Получить блюда ресторана")
     public ResponseEntity<Page<DishDTO>> getDishesByRestaurant(
-            @PathVariable Long restaurantId,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDirection) {
+            @PathVariable(name = "restaurantId") Long restaurantId,
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(name = "sortDirection", defaultValue = "asc") String sortDirection) {
 
         SearchCriteria criteria = new SearchCriteria();
         criteria.setSearchTerm(search);
@@ -74,7 +74,7 @@ public class DishController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить блюдо по ID")
-    public ResponseEntity<DishDTO> getDishById(@PathVariable Long id) {
+    public ResponseEntity<DishDTO> getDishById(@PathVariable(name = "id") Long id) {
         DishDTO dish = dishService.getDishById(id);
         return ResponseEntity.ok(dish);
     }
@@ -89,7 +89,7 @@ public class DishController {
     @PutMapping("/{id}")
     @Operation(summary = "Обновить блюдо")
     public ResponseEntity<DishDTO> updateDish(
-            @PathVariable Long id,
+            @PathVariable(name = "id") Long id,
             @Valid @RequestBody DishDTO dishDTO) {
         DishDTO updated = dishService.updateDish(id, dishDTO);
         return ResponseEntity.ok(updated);
@@ -97,14 +97,14 @@ public class DishController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить блюдо (soft delete)")
-    public ResponseEntity<Void> deleteDish(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDish(@PathVariable(name = "id") Long id) {
         dishService.deleteDish(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/restore")
     @Operation(summary = "Восстановить удаленное блюдо")
-    public ResponseEntity<Void> restoreDish(@PathVariable Long id) {
+    public ResponseEntity<Void> restoreDish(@PathVariable(name = "id") Long id) {
         dishService.restoreDish(id);
         return ResponseEntity.ok().build();
     }
@@ -121,19 +121,5 @@ public class DishController {
     public ResponseEntity<Object[]> getPriceStatistics() {
         Object[] statistics = dishService.getPriceStatistics();
         return ResponseEntity.ok(statistics);
-    }
-
-    @GetMapping("/search")
-    @Operation(summary = "Поиск блюд по названию или описанию")
-    public ResponseEntity<Page<DishDTO>> searchDishes(
-            @RequestParam String searchTerm,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Page<DishDTO> dishes = dishService.searchDishes(
-                searchTerm,
-                org.springframework.data.domain.PageRequest.of(page, size)
-        );
-        return ResponseEntity.ok(dishes);
     }
 }

@@ -55,6 +55,12 @@ public class GatewayConfig {
                                 .rewritePath("/api/menu/(?<segment>.*)", "/api/menu/${segment}"))
                         .uri("lb://restaurant-service"))
 
+                // Dishes Service routes
+                .route("restaurant-service-dishes", r -> r.path("/api/dishes/**")
+                        .filters(f -> f.filter(jwtFilter)
+                                .rewritePath("/api/dishes/(?<segment>.*)", "/api/dishes/${segment}"))
+                        .uri("lb://restaurant-service"))
+
                 // Admin routes
                 .route("restaurant-service-admin", r -> r.path("/api/admin/**")
                         .filters(f -> f.filter(jwtFilter)
