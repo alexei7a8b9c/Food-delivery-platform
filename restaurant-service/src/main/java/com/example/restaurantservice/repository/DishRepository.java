@@ -25,7 +25,6 @@ public interface DishRepository extends JpaRepository<Dish, Long> {
             "d.deleted = false")
     Page<Dish> search(@Param("searchTerm") String searchTerm, Pageable pageable);
 
-
     @Query("SELECT d FROM Dish d WHERE " +
             "d.restaurant.id = :restaurantId AND " +
             "(:name IS NULL OR :name = '' OR d.name LIKE CONCAT('%', :name, '%')) AND " +
@@ -59,5 +58,7 @@ public interface DishRepository extends JpaRepository<Dish, Long> {
     @Query("SELECT COUNT(d) FROM Dish d WHERE d.restaurant.id = :restaurantId AND d.deleted = false")
     Long countByRestaurantId(@Param("restaurantId") Long restaurantId);
 
-
+    // Новый метод для поиска по ID и проверки удаления
+    @Query("SELECT d FROM Dish d WHERE d.id = :id AND d.deleted = false")
+    Optional<Dish> findActiveById(@Param("id") Long id);
 }

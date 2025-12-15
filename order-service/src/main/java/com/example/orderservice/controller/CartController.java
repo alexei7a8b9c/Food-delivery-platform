@@ -1,53 +1,40 @@
 package com.example.orderservice.controller;
 
-import com.example.orderservice.dto.CartItemDto;
-import com.example.orderservice.service.CartService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/cart")
-@RequiredArgsConstructor
 public class CartController {
-    private final CartService cartService;
 
     @GetMapping
-    public ResponseEntity<List<CartItemDto>> getCart(@RequestHeader("X-User-Id") Long userId) {
-        List<CartItemDto> cartItems = cartService.getCart(userId);
-        return ResponseEntity.ok(cartItems);
+    public ResponseEntity<Map<String, Object>> getCart(@RequestHeader(value = "X-User-Id", required = false) String userId) {
+        System.out.println("GET /api/cart called, userId: " + userId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Cart endpoint is working!");
+        response.put("userId", userId);
+        response.put("timestamp", new Date());
+
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<Void> addToCart(
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestBody CartItemDto cartItemDto) {
-        cartService.addToCart(userId, cartItemDto);
-        return ResponseEntity.ok().build();
-    }
+    @PostMapping("/items")
+    public ResponseEntity<Map<String, Object>> addToCart(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestBody Map<String, Object> item) {
 
-    @DeleteMapping("/remove/{dishId}")
-    public ResponseEntity<Void> removeFromCart(
-            @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long dishId) {
-        cartService.removeFromCart(userId, dishId);
-        return ResponseEntity.ok().build();
-    }
+        System.out.println("POST /api/cart/items called, userId: " + userId);
+        System.out.println("Item: " + item);
 
-    @PutMapping("/update/{dishId}")
-    public ResponseEntity<Void> updateQuantity(
-            @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long dishId,
-            @RequestParam Integer quantity) {
-        cartService.updateQuantity(userId, dishId, quantity);
-        return ResponseEntity.ok().build();
-    }
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Item added to cart");
+        response.put("userId", userId);
+        response.put("item", item);
 
-    @DeleteMapping("/clear")
-    public ResponseEntity<Void> clearCart(@RequestHeader("X-User-Id") Long userId) {
-        cartService.clearCart(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,229 +1,258 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import authService from '../services/auth';
-import { hasRole } from '../utils/constants';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authApi } from '../services/auth';
+import { jwtDecode } from 'jwt-decode'; // Установите: npm install jwt-decode
 
 const AuthContext = createContext();
 
+export const useAuth = () => useContext(AuthContext);
+
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(null);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     // Функция для декодирования JWT токена
-    const decodeJWT = (token) => {
+    const decodeToken = (token) => {
         try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            return JSON.parse(jsonPayload);
+            const decoded = jwtDecode(token);
+            console.log('Decoded JWT:', decoded);
+            return decoded;
         } catch (error) {
-            console.error('Error decoding JWT:', error);
+            console.error('Error decoding token:', error);
             return null;
         }
     };
 
-    // Функция для извлечения ролей из JWT
-    const extractRolesFromJWT = (decodedToken) => {
-        if (!decodedToken) return [];
-
-        // Проверяем разные возможные места, где могут быть роли в JWT
-        const roles = [];
-
-        // 1. Проверяем поле 'roles'
-        if (decodedToken.roles) {
-            if (Array.isArray(decodedToken.roles)) {
-                roles.push(...decodedToken.roles);
-            } else if (typeof decodedToken.roles === 'string') {
-                roles.push(...decodedToken.roles.split(',').map(r => r.trim()));
-            }
-        }
-
-        // 2. Проверяем поле 'authorities' (Spring Security)
-        if (decodedToken.authorities) {
-            if (Array.isArray(decodedToken.authorities)) {
-                decodedToken.authorities.forEach(auth => {
-                    if (typeof auth === 'string') {
-                        roles.push(auth);
-                    } else if (auth.authority) {
-                        roles.push(auth.authority);
-                    }
-                });
-            } else if (typeof decodedToken.authorities === 'string') {
-                roles.push(...decodedToken.authorities.split(',').map(r => r.trim()));
-            }
-        }
-
-        // 3. Проверяем поле 'scope' (OAuth2)
-        if (decodedToken.scope) {
-            const scopes = decodedToken.scope.split(' ');
-            scopes.forEach(scope => {
-                if (scope.includes('ROLE_') || scope.includes('ADMIN') || scope.includes('MANAGER') || scope.includes('USER')) {
-                    roles.push(scope);
-                }
-            });
-        }
-
-        return [...new Set(roles.filter(role => role))];
-    };
-
     useEffect(() => {
-        const initAuth = async () => {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem('user');
+
+        if (token) {
             try {
-                const user = authService.getCurrentUser();
-                if (user && user.accessToken) {
-                    // Декодируем JWT чтобы получить роли
-                    const decodedToken = decodeJWT(user.accessToken);
-                    console.log('Decoded JWT:', decodedToken);
+                // Декодируем токен для получения ролей
+                const decodedToken = decodeToken(token);
 
-                    if (decodedToken) {
-                        // Извлекаем роли из JWT
-                        const roles = extractRolesFromJWT(decodedToken);
-                        console.log('Extracted roles from JWT:', roles);
+                // Пробуем получить роли из разных мест
+                let roles = ['USER'];
 
-                        // Обновляем пользователя с ролями
-                        const updatedUser = {
-                            ...user,
-                            userId: user.userId || user.id || decodedToken.userId || decodedToken.sub,
-                            roles: roles.length > 0 ? roles : user.roles
-                        };
+                if (decodedToken) {
+                    // Пробуем разные поля, где могут быть роли
+                    roles = decodedToken.roles ||
+                        decodedToken.authorities ||
+                        decodedToken.scope ||
+                        ['USER'];
 
-                        setCurrentUser(updatedUser);
-
-                        // Сохраняем обновлённого пользователя в localStorage
-                        localStorage.setItem('user', JSON.stringify(updatedUser));
-                    } else {
-                        // Если не удалось декодировать, используем существующего пользователя
-                        if (!user.userId && user.id) {
-                            user.userId = user.id;
-                        }
-                        setCurrentUser(user);
+                    // Если roles строка, преобразуем в массив
+                    if (typeof roles === 'string') {
+                        roles = roles.split(',').map(r => r.trim());
                     }
                 }
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
 
-        initAuth();
+                // Сохраняем или обновляем пользователя
+                const userObj = userData ? JSON.parse(userData) : {};
+                const updatedUser = {
+                    ...userObj,
+                    token,
+                    email: decodedToken?.sub || userObj.email || 'unknown',
+                    roles: roles,
+                    decoded: decodedToken // Для отладки
+                };
+
+                console.log('Final user object:', updatedUser);
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            } catch (e) {
+                console.error('Error processing auth data:', e);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
+        }
+        setLoading(false);
     }, []);
 
     const login = async (email, password) => {
         try {
-            const response = await authService.login({ email, password });
+            console.log('Logging in with:', email);
+            const response = await authApi.login({
+                email: email.trim(),
+                password: password.trim()
+            });
 
-            // Декодируем JWT чтобы получить роли
-            const decodedToken = decodeJWT(response.accessToken);
-            console.log('Login decoded JWT:', decodedToken);
+            console.log('Login response:', response.data);
 
-            if (decodedToken) {
-                // Извлекаем роли из JWT
-                const roles = extractRolesFromJWT(decodedToken);
-                console.log('Login extracted roles:', roles);
+            if (response.data.accessToken) {
+                const token = response.data.accessToken;
+                const decoded = decodeToken(token);
 
-                // Создаём полного пользователя
-                const fullUser = {
-                    ...response,
-                    userId: response.userId || response.id || decodedToken.userId || decodedToken.sub,
-                    roles: roles.length > 0 ? roles : response.roles
+                // Извлекаем роли из токена
+                let roles = ['USER'];
+                if (decoded) {
+                    roles = decoded.roles ||
+                        decoded.authorities ||
+                        decoded.scope ||
+                        ['USER'];
+
+                    if (typeof roles === 'string') {
+                        roles = roles.split(',').map(r => r.trim());
+                    }
+                }
+
+                const userData = {
+                    email: response.data.email || email,
+                    token: token,
+                    roles: roles,
+                    ...response.data,
+                    decoded: decoded
                 };
 
-                setCurrentUser(fullUser);
+                console.log('User data after login:', userData);
 
-                // Сохраняем в localStorage
-                localStorage.setItem('user', JSON.stringify(fullUser));
-
-                return fullUser;
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(userData));
+                setUser(userData);
+                return { success: true, data: userData };
             }
 
-            // Fallback если не удалось декодировать
-            const userWithId = {
-                ...response,
-                userId: response.userId || response.id
-            };
-
-            setCurrentUser(userWithId);
-            return userWithId;
+            return { success: false, error: 'No token received' };
         } catch (error) {
-            throw error;
+            console.error('Login error details:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+            return { success: false, error: errorMessage };
         }
     };
 
     const register = async (userData) => {
         try {
-            const response = await authService.register(userData);
-            if (response.accessToken) {
-                const decodedToken = decodeJWT(response.accessToken);
+            const response = await authApi.register(userData);
 
-                if (decodedToken) {
-                    const roles = extractRolesFromJWT(decodedToken);
-                    const fullUser = {
-                        ...response,
-                        userId: response.userId || response.id || decodedToken.userId || decodedToken.sub,
-                        roles: roles.length > 0 ? roles : response.roles
-                    };
+            if (response.data.accessToken) {
+                const token = response.data.accessToken;
+                const decoded = decodeToken(token);
 
-                    setCurrentUser(fullUser);
-                    localStorage.setItem('user', JSON.stringify(fullUser));
-                } else {
-                    const userWithId = {
-                        ...response,
-                        userId: response.userId || response.id
-                    };
-                    setCurrentUser(userWithId);
+                let roles = ['USER'];
+                if (decoded) {
+                    roles = decoded.roles || decoded.authorities || ['USER'];
+                    if (typeof roles === 'string') {
+                        roles = roles.split(',').map(r => r.trim());
+                    }
                 }
+
+                const newUserData = {
+                    email: response.data.email,
+                    token: token,
+                    roles: roles,
+                    decoded: decoded
+                };
+
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(newUserData));
+                setUser(newUserData);
+                return { success: true, data: newUserData };
             }
-            return response;
+
+            return { success: false, error: 'No token received' };
         } catch (error) {
-            throw error;
+            const errorMessage = error.response?.data?.message || 'Registration failed';
+            return { success: false, error: errorMessage };
         }
     };
 
     const logout = () => {
-        authService.logout();
-        setCurrentUser(null);
-        navigate('/login');
+        console.log('Logging out');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
     };
 
     const isAuthenticated = () => {
-        return !!currentUser && !!currentUser.accessToken;
+        const token = localStorage.getItem('token');
+        const hasToken = !!token && !!user;
+        console.log('isAuthenticated check - Token exists:', !!token, 'User:', user);
+        return hasToken;
     };
 
-    const getUserRoles = () => {
-        if (!currentUser) return [];
-
-        let roles = [];
-        if (currentUser.roles) {
-            if (Array.isArray(currentUser.roles)) {
-                roles = currentUser.roles;
-            } else if (typeof currentUser.roles === 'string') {
-                roles = currentUser.roles.split(',').map(r => r.trim());
-            }
+    const hasRole = (role) => {
+        if (!user || !user.roles) {
+            console.log('hasRole: No user or roles', { user });
+            return false;
         }
 
-        return [...new Set(roles.filter(role => role))];
+        const userRoles = user.roles;
+        console.log('hasRole check:', {
+            requestedRole: role,
+            userRoles,
+            userEmail: user.email
+        });
+
+        // Проверяем разные форматы
+        if (Array.isArray(userRoles)) {
+            const result = userRoles.some(r => {
+                const roleMatch =
+                    r === role ||
+                    r === `ROLE_${role}` ||
+                    r === role.toUpperCase() ||
+                    r === `ROLE_${role.toUpperCase()}` ||
+                    r.toLowerCase() === role.toLowerCase() ||
+                    r.toLowerCase().includes(role.toLowerCase());
+
+                console.log(`Role comparison: ${r} vs ${role} = ${roleMatch}`);
+                return roleMatch;
+            });
+            console.log('Final hasRole result:', result);
+            return result;
+        }
+
+        if (typeof userRoles === 'string') {
+            const rolesArray = userRoles.split(',').map(r => r.trim());
+            return rolesArray.some(r =>
+                r === role ||
+                r === `ROLE_${role}` ||
+                r.toLowerCase().includes(role.toLowerCase())
+            );
+        }
+
+        return false;
     };
 
-    // Проверяем, есть ли у пользователя роль
-    const hasUserRole = (role) => {
-        const userRoles = getUserRoles();
-        return hasRole(userRoles, role);
+    const isAdmin = () => {
+        const result = hasRole('ADMIN') || hasRole('ROLE_ADMIN');
+        console.log('isAdmin check result:', result);
+        return result;
+    };
+
+    const refreshUserData = () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decoded = decodeToken(token);
+            if (decoded) {
+                let roles = decoded.roles || decoded.authorities || ['USER'];
+                if (typeof roles === 'string') {
+                    roles = roles.split(',').map(r => r.trim());
+                }
+
+                const updatedUser = {
+                    ...user,
+                    roles: roles,
+                    decoded: decoded
+                };
+
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
+        }
     };
 
     const value = {
-        currentUser,
-        isAuthenticated,
+        user,
+        loading,
         login,
         register,
         logout,
-        loading,
-        getUserRoles,
-        hasUserRole
+        isAuthenticated,
+        hasRole,
+        isAdmin,
+        refreshUserData,
+        decodeToken
     };
 
     return (
@@ -232,5 +261,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
-export { AuthContext };

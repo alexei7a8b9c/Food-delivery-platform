@@ -1,12 +1,12 @@
 package com.example.restaurantservice.exception;
 
-import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +28,24 @@ public class GlobalExceptionHandler {
         Map<String, String> response = new HashMap<>();
         response.put("error", "Ошибка валидации");
         response.put("message", ex.getMessage());
+        response.put("status", HttpStatus.BAD_REQUEST.toString());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<Map<String, String>> handleFileStorageException(FileStorageException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Ошибка загрузки файла");
+        response.put("message", ex.getMessage());
+        response.put("status", HttpStatus.BAD_REQUEST.toString());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Превышен размер файла");
+        response.put("message", "Максимальный размер файла: 10MB");
         response.put("status", HttpStatus.BAD_REQUEST.toString());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }

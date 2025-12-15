@@ -1,135 +1,128 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [email, setEmail] = useState('admin@fooddelivery.com');
+    const [password, setPassword] = useState('admin123');
     const [loading, setLoading] = useState(false);
-    const { login, currentUser } = useContext(AuthContext);
+    const [error, setError] = useState('');
+    const { login } = useAuth();
     const navigate = useNavigate();
-    const location = useLocation();
-
-    // Получаем redirect URL из query параметров
-    const queryParams = new URLSearchParams(location.search);
-    const redirectUrl = queryParams.get('redirect') || '/';
-
-    // Если пользователь уже авторизован, редиректим
-    useEffect(() => {
-        if (currentUser) {
-            navigate(redirectUrl);
-        }
-    }, [currentUser, navigate, redirectUrl]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        try {
-            await login(email, password);
-            navigate(redirectUrl);
-        } catch (err) {
-            const errorMessage = err.response?.data?.message ||
-                err.message ||
-                'Login failed. Please check your credentials.';
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
+        console.log('Login attempt with:', { email, password });
+
+        const result = await login(email, password);
+
+        console.log('Login result:', result);
+
+        if (result.success) {
+            console.log('Login successful, navigating to /');
+            navigate('/');
+        } else {
+            setError(result.error || 'Ошибка входа');
+            console.error('Login failed:', result.error);
+        }
+
+        setLoading(false);
+    };
+
+    const useTestAccount = (type) => {
+        switch(type) {
+            case 'admin':
+                setEmail('admin@fooddelivery.com');
+                setPassword('admin123');
+                break;
+            case 'user':
+                setEmail('user@example.com');
+                setPassword('user123');
+                break;
         }
     };
 
-    // Функции для тестовых учетных данных (вынесены из колбэков)
-    const useAdminAccount = () => {
-        setEmail('admin@fooddelivery.com');
-        setPassword('admin123');
-    };
-
-    const useUserAccount = () => {
-        setEmail('user@example.com');
-        setPassword('user123');
-    };
-
-    const useManagerAccount = () => {
-        setEmail('manager@example.com');
-        setPassword('manager123');
-    };
-
     return (
-        <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <h2>Login</h2>
+        <div className="auth-page">
+            <div className="container">
+                <div className="auth-card">
+                    <h2 className="auth-title">Вход в систему (Debug Mode)</h2>
 
-            {error && (
-                <div style={{
-                    border: '1px solid red',
-                    backgroundColor: '#ffebee',
-                    padding: '10px',
-                    margin: '10px 0'
-                }}>
-                    <strong>Error:</strong> {error}
-                </div>
-            )}
+                    {error && (
+                        <div className="error-message">
+                            <strong>Ошибка:</strong> {error}
+                        </div>
+                    )}
 
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={loading}
-                        style={{ width: '100%', padding: '8px' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={loading}
-                        style={{ width: '100%', padding: '8px' }}
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{ width: '100%', padding: '10px' }}
-                >
-                    {loading ? 'Logging in...' : 'Login'}
-                </button>
-            </form>
+                    <form onSubmit={handleSubmit} className="auth-form">
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="Введите email"
+                                disabled={loading}
+                            />
+                        </div>
 
-            <div style={{ marginTop: '20px' }}>
-                <p>Don't have an account? <Link to="/register">Register here</Link></p>
+                        <div className="form-group">
+                            <label>Пароль</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="Введите пароль"
+                                disabled={loading}
+                            />
+                        </div>
 
-                <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
-                    <p><strong>Test Accounts:</strong></p>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         <button
-                            type="button"
-                            onClick={useAdminAccount}
-                            style={{ fontSize: '12px', padding: '5px' }}
+                            type="submit"
+                            className="btn btn-submit"
+                            disabled={loading}
                         >
-                            Use Admin Account
+                            {loading ? 'Вход...' : 'Войти (с отладкой)'}
                         </button>
-                        <button
-                            type="button"
-                            onClick={useUserAccount}
-                            style={{ fontSize: '12px', padding: '5px' }}
-                        >
-                            Use User Account
-                        </button>
-                        <button
-                            type="button"
-                            onClick={useManagerAccount}
-                            style={{ fontSize: '12px', padding: '5px' }}
-                        >
-                            Use Manager Account
-                        </button>
+                    </form>
+
+                    <div className="test-accounts">
+                        <h4>Тестовые аккаунты:</h4>
+                        <div className="test-buttons">
+                            <button
+                                type="button"
+                                onClick={() => useTestAccount('admin')}
+                                className="btn btn-test"
+                            >
+                                Администратор
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => useTestAccount('user')}
+                                className="btn btn-test"
+                            >
+                                Пользователь
+                            </button>
+                        </div>
+                        <p className="test-credentials">
+                            <strong>Админ:</strong> admin@fooddelivery.com / admin123<br/>
+                            <strong>Пользователь:</strong> user@example.com / user123
+                        </p>
+                    </div>
+
+                    <div className="debug-tips">
+                        <h4>Если не работает:</h4>
+                        <ol>
+                            <li>Откройте консоль браузера (F12)</li>
+                            <li>Посмотрите Network → login запрос</li>
+                            <li>Проверьте Response от сервера</li>
+                            <li>Скопируйте токен и проверьте на <a href="https://jwt.io" target="_blank" rel="noreferrer">jwt.io</a></li>
+                        </ol>
                     </div>
                 </div>
             </div>

@@ -9,8 +9,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -121,5 +123,49 @@ public class DishController {
     public ResponseEntity<Object[]> getPriceStatistics() {
         Object[] statistics = dishService.getPriceStatistics();
         return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Поиск блюд по названию или описанию")
+    public ResponseEntity<Page<DishDTO>> searchDishes(
+            @RequestParam(name = "searchTerm") String searchTerm,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+
+        Page<DishDTO> dishes = dishService.searchDishes(
+                searchTerm,
+                org.springframework.data.domain.PageRequest.of(page, size)
+        );
+        return ResponseEntity.ok(dishes);
+    }
+
+    // === НОВЫЕ МЕТОДЫ ДЛЯ РАБОТЫ С ИЗОБРАЖЕНИЯМИ ===
+
+    @PostMapping(value = "/{id}/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Загрузить изображение для блюда")
+    public ResponseEntity<DishDTO> uploadDishImage(
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "image") MultipartFile image) {
+
+        DishDTO updated = dishService.uploadDishImage(id, image);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}/image")
+    @Operation(summary = "Удалить изображение блюда")
+    public ResponseEntity<DishDTO> deleteDishImage(@PathVariable(name = "id") Long id) {
+        DishDTO updated = dishService.deleteDishImage(id);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping(value = "/{id}/update-with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Обновить блюдо с изображением")
+    public ResponseEntity<DishDTO> updateDishWithImage(
+            @PathVariable(name = "id") Long id,
+            @RequestPart(name = "dish") @Valid DishDTO dishDTO,
+            @RequestPart(name = "image", required = false) MultipartFile image) {
+
+        DishDTO updated = dishService.updateDishWithImage(id, dishDTO, image);
+        return ResponseEntity.ok(updated);
     }
 }

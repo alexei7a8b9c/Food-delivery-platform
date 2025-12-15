@@ -17,6 +17,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+      file-size-threshold: 0
+      location: ./temp
+
+# File upload configuration
+file:
+  upload-dir: ./uploads
+  max-size: 10MB
+  allowed-extensions: jpg,jpeg,png,gif,webp,bmp,svg
 
 # JWT Configuration (должен совпадать с user-service)
 jwt:
@@ -42,6 +55,6 @@ management:
     web:
       exposure:
         include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+    endpoint:
+      health:
+        show-details: always

@@ -51,10 +51,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 if (rolesString != null && !rolesString.isEmpty()) {
                     // Преобразуем строку ролей в authorities
-                    List<SimpleGrantedAuthority> authorities = Stream.of(rolesString.split(","))
-                            .map(String::trim)
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+                    List<SimpleGrantedAuthority> authorities =
+                            Stream.of(rolesString.split(","))
+                                    .map(String::trim)
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList());
 
                     // Создаем аутентификацию
                     UsernamePasswordAuthenticationToken authentication =
@@ -119,7 +120,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/actuator/health") ||
-                (method.equals("GET") &&
+                (method != null && method.equals("GET") &&
                         (path.startsWith("/api/restaurants") ||
                                 path.startsWith("/api/dishes") ||
                                 path.startsWith("/api/menu")));

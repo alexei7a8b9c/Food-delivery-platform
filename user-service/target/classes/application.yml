@@ -24,13 +24,10 @@ spring:
     validate-on-migrate: true
     allow-circular-references: true
 
-# JWT Configuration
 jwt:
   secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
-  expiration:
-    access: 300 # 5 минут
-    refresh: 2592000 # 30 дней (в секундах)
-
+  expiration: 86400000  # 24 часа в миллисекундах
+  refresh: 2592000      # 30 дней (в секундах)
 eureka:
   client:
     service-url:

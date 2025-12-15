@@ -2,15 +2,26 @@ server:
   port: 8080
 
 spring:
+  application:
+    name: api-gateway
   cloud:
     gateway:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowed-origins: "http://localhost:3000"
-            allowed-methods: "*"
+            allowed-origins: "http://localhost:3000, http://localhost:3001, http://localhost:5173"
+            allowed-methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
             allowed-headers: "*"
             allow-credentials: true
+            max-age: 3600
+      httpclient:
+        connect-timeout: 10000
+        response-timeout: 30000
+  # Конфигурация для обработки больших файлов
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 eureka:
   client:
@@ -21,20 +32,22 @@ eureka:
   instance:
     prefer-ip-address: true
 
+# В api-gateway application.yml должно быть:
 jwt:
   secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
 
+# И добавьте logging для debug
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: TRACE
     com.example.apigateway: DEBUG
-    org.springframework.cloud.netflix.eureka: DEBUG
+    org.springframework.security: DEBUG
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
+    endpoint:
+      health:
+        show-details: always

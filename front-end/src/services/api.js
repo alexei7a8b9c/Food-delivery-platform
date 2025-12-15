@@ -1,113 +1,152 @@
 import axios from 'axios';
-import authService from './auth';
-import { API_BASE_URL } from '../utils/constants';
 
-const api = axios.create({
+const API_BASE_URL = '/api';
+
+const apiClient = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000,
+    timeout: 30000,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
 });
 
-// Включить диагностику
-const ENABLE_API_DEBUG = true;
-
-const logApiRequest = (config) => {
-    if (ENABLE_API_DEBUG) {
-        console.group('🚀 API Request Debug');
-        console.log('📝 Method:', config.method?.toUpperCase());
-        console.log('🔗 URL:', config.baseURL + config.url);
-        console.log('📋 Headers:', config.headers);
-        console.log('📦 Data:', config.data);
-        console.groupEnd();
-    }
-};
-
-const logApiResponse = (response) => {
-    if (ENABLE_API_DEBUG) {
-        console.group('✅ API Response Debug');
-        console.log('📊 Status:', response.status);
-        console.log('🔗 URL:', response.config.url);
-        console.log('📦 Data:', response.data);
-        console.groupEnd();
-    }
-};
-
-const logApiError = (error) => {
-    if (ENABLE_API_DEBUG) {
-        console.group('❌ API Error Debug');
-        console.error('📊 Status:', error.response?.status);
-        console.error('📝 Status Text:', error.response?.statusText);
-        console.error('📦 Response Data:', error.response?.data);
-        console.error('🔗 Request URL:', error.config?.url);
-        console.error('📋 Request Headers:', error.config?.headers);
-        console.error('📦 Request Data:', error.config?.data);
-        console.groupEnd();
-    }
-};
-
-// Интерцептор запросов
-api.interceptors.request.use(
-    (config) => {
-        const userStr = localStorage.getItem('user');
-        let user = null;
-
-        if (userStr) {
-            try {
-                user = JSON.parse(userStr);
-            } catch (e) {
-                console.error('Error parsing user from localStorage:', e);
-            }
+// Перехватчик для логирования запросов
+apiClient.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
 
-        if (user && user.accessToken) {
-            config.headers.Authorization = `Bearer ${user.accessToken}`;
-            console.log('🔑 Added Authorization header');
-        }
+        // Логируем запросы для отладки
+        console.log('📤 API Request:', {
+            method: config.method,
+            url: config.url,
+            data: config.data,
+            headers: config.headers
+        });
 
-        // Добавляем X-User-Id если пользователь авторизован
-        if (user && user.userId) {
-            config.headers['X-User-Id'] = user.userId;
-            console.log('👤 Added X-User-Id:', user.userId);
-        }
-
-        // Добавляем роли если есть
-        if (user && user.roles) {
-            config.headers['X-User-Roles'] = Array.isArray(user.roles) ? user.roles.join(',') : user.roles;
-            console.log('🎭 Added X-User-Roles:', user.roles);
-        }
-
-        logApiRequest(config);
         return config;
     },
-    (error) => {
-        logApiError(error);
+    error => {
+        console.error('❌ Request error:', error);
         return Promise.reject(error);
     }
 );
 
-// Интерцептор ответов
-api.interceptors.response.use(
-    (response) => {
-        logApiResponse(response);
+// Перехватчик для логирования ответов
+apiClient.interceptors.response.use(
+    response => {
+        console.log('📥 API Response:', {
+            status: response.status,
+            url: response.config.url,
+            data: response.data
+        });
         return response;
     },
-    async (error) => {
-        logApiError(error);
-
-        // Если ошибка 401 (Unauthorized)
-        if (error.response?.status === 401) {
-            console.log('🔒 Unauthorized, logging out...');
-            authService.logout();
-
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-            }
-        }
-
+    error => {
+        console.error('❌ Response error:', {
+            status: error.response?.status,
+            message: error.response?.data?.message,
+            data: error.response?.data,
+            url: error.config?.url,
+            method: error.config?.method
+        });
         return Promise.reject(error);
     }
 );
 
-export default api;
+// Функция форматирования ошибок
+export const formatErrorMessage = (error) => {
+    if (error.response) {
+        const { status, data } = error.response;
+
+        console.log('Error details:', { status, data });
+
+        if (status === 401) {
+            return 'Ошибка авторизации. Пожалуйста, войдите снова.';
+        }
+
+        if (status === 403) {
+            return 'У вас нет прав для выполнения этого действия.';
+        }
+
+        if (status === 404) {
+            return 'Ресурс не найден.';
+        }
+
+        if (status === 400) {
+            if (data && data.message) {
+                return data.message;
+            }
+            if (data && data.error) {
+                return data.error;
+            }
+            return 'Некорректный запрос. Проверьте введенные данные.';
+        }
+
+        if (status === 422) {
+            return 'Ошибка валидации данных. Проверьте правильность введенных данных.';
+        }
+
+        if (status >= 500) {
+            return 'Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.';
+        }
+
+        if (data && data.error) {
+            return data.error;
+        }
+
+        return `Ошибка сервера (${status})`;
+    }
+
+    if (error.request) {
+        return 'Ошибка сети. Проверьте подключение к серверу.';
+    }
+
+    if (error.message) {
+        return error.message;
+    }
+
+    return 'Неизвестная ошибка';
+};
+
+// API для ресторанов
+export const restaurantApi = {
+    getAll: (params) => apiClient.get('/restaurants', { params }),
+    getById: (id) => apiClient.get(`/restaurants/${id}`),
+    create: (data) => apiClient.post('/restaurants', data),
+    update: (id, data) => apiClient.put(`/restaurants/${id}`, data),
+    delete: (id) => apiClient.delete(`/restaurants/${id}`),
+};
+
+// API для блюд (упрощенная версия без updateWithImage)
+export const dishApi = {
+    getAll: (params) => apiClient.get('/dishes', { params }),
+    getById: (id) => apiClient.get(`/dishes/${id}`),
+    getByRestaurant: (restaurantId, params) =>
+        apiClient.get(`/dishes/restaurant/${restaurantId}`, { params }),
+    create: (data) => {
+        console.log('Creating dish with data:', data);
+        return apiClient.post('/dishes', data);
+    },
+    update: (id, data) => {
+        console.log('Updating dish:', id, data);
+        return apiClient.put(`/dishes/${id}`, data);
+    },
+    delete: (id) => apiClient.delete(`/dishes/${id}`),
+    uploadImage: (id, imageFile) => {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        return apiClient.post(`/dishes/${id}/upload-image`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+    deleteImage: (id) => apiClient.delete(`/dishes/${id}/image`),
+    // Убрали updateWithImage, будем делать отдельные запросы
+};
+
+export default apiClient;

@@ -36,8 +36,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/uploads/**").permitAll() // Разрешаем доступ к загруженным файлам
 
-                        // Публичные GET запросы
+                        // Публичные GET запросы (должны быть перед защищенными)
                         .requestMatchers("GET", "/api/restaurants/**").permitAll()
                         .requestMatchers("GET", "/api/dishes/**").permitAll()
                         .requestMatchers("GET", "/api/menu/**").permitAll()
@@ -55,6 +56,13 @@ public class SecurityConfig {
                         .requestMatchers("POST", "/api/dishes/*/restore").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("GET", "/api/dishes/deleted").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("GET", "/api/dishes/statistics/**").hasAnyRole("ADMIN", "MANAGER")
+
+                        // Защищенные endpoints для загрузки файлов
+                        .requestMatchers("POST", "/api/files/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("DELETE", "/api/files/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("POST", "/api/dishes/*/upload-image").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("DELETE", "/api/dishes/*/image").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("POST", "/api/dishes/*/update-with-image").hasAnyRole("ADMIN", "MANAGER")
 
                         // Admin only endpoints
                         .requestMatchers("GET", "/api/restaurants/deleted").hasRole("ADMIN")

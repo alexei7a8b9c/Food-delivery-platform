@@ -26,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final GatewayHeaderFilter gatewayHeaderFilter; // Добавьте
     private final TokenBlacklistService tokenBlacklistService;
     private final CustomLogoutHandler customLogoutHandler;
     private final UserDetailsServiceImpl userDetailsService;
@@ -63,6 +64,7 @@ public class SecurityConfig {
 
                         // User endpoints - доступны аутентифицированным пользователям
                         .requestMatchers("/api/users/profile").authenticated()
+                        .requestMatchers("/api/users/me").authenticated()
 
                         // Admin endpoints - только для администраторов
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
@@ -70,6 +72,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                // Сначала Gateway фильтр, потом JWT фильтр
+                .addFilterBefore(gatewayHeaderFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")

@@ -31,7 +31,9 @@ spring:
     port: 5672
     username: admin
     password: admin123
-
+jwt:
+  secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
+  expiration: 86400000
 eureka:
   client:
     service-url:
