@@ -3,7 +3,7 @@
 ### 1. Публичные эндпоинты
 GET http://localhost:8080/api/restaurants
 
-###
+### 
 GET http://localhost:8080/api/dishes
 
 ### 2. Корзина покупок

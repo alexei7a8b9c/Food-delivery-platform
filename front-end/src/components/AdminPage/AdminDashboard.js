@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { restaurantApi, dishApi, formatErrorMessage } from '../../services/api';
+import { restaurantApi, dishApi, orderApi, formatErrorMessage } from '../../services/api';
 import SearchBar from '../common/SearchBar';
 import Pagination from '../common/Pagination';
 import Modal from '../common/Modal';
@@ -22,11 +22,21 @@ const AdminDashboard = () => {
     const [dishesTotalElements, setDishesTotalElements] = useState(0);
     const [dishesSearchTerm, setDishesSearchTerm] = useState('');
 
+    // Состояния для заказов
+    const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
+    const [ordersCurrentPage, setOrdersCurrentPage] = useState(0);
+    const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+    const [ordersTotalElements, setOrdersTotalElements] = useState(0);
+    const [ordersSearchTerm, setOrdersSearchTerm] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState(null);
+
     // Общие состояния
     const [activeTab, setActiveTab] = useState('restaurants');
     const [selectedRestaurant, setSelectedRestaurant] = useState(null);
     const [isRestaurantModalOpen, setIsRestaurantModalOpen] = useState(false);
     const [isDishModalOpen, setIsDishModalOpen] = useState(false);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [editingRestaurant, setEditingRestaurant] = useState(null);
     const [editingDish, setEditingDish] = useState(null);
     const [error, setError] = useState('');
@@ -48,6 +58,10 @@ const AdminDashboard = () => {
         restaurantId: ''
     });
 
+    const [orderFormData, setOrderFormData] = useState({
+        status: ''
+    });
+
     // Загрузка ресторанов
     useEffect(() => {
         loadRestaurants();
@@ -63,6 +77,13 @@ const AdminDashboard = () => {
             }
         }
     }, [dishesCurrentPage, dishesSearchTerm, selectedRestaurant, activeTab]);
+
+    // Загрузка заказов
+    useEffect(() => {
+        if (activeTab === 'orders') {
+            loadOrders();
+        }
+    }, [ordersCurrentPage, ordersSearchTerm, activeTab]);
 
     // Функции загрузки данных
     const loadRestaurants = async () => {
@@ -139,6 +160,36 @@ const AdminDashboard = () => {
         }
     };
 
+    const loadOrders = async () => {
+        setOrdersLoading(true);
+        setError('');
+        try {
+            // Используем временный заголовок для тестирования
+            const config = {
+                headers: {
+                    'X-User-Id': '16',
+                    'X-User-Name': 'test@test.com'
+                }
+            };
+
+            // Для простоты получаем все заказы без пагинации
+            const response = await orderApi.getAll(config);
+            console.log('Orders response:', response.data);
+
+            // Преобразуем данные для отображения
+            const ordersData = Array.isArray(response.data) ? response.data : [];
+            setOrders(ordersData);
+            setOrdersTotalPages(1);
+            setOrdersTotalElements(ordersData.length);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            const errorMessage = formatErrorMessage(error);
+            setError(`Не удалось загрузить заказы: ${errorMessage}`);
+        } finally {
+            setOrdersLoading(false);
+        }
+    };
+
     // Поиск
     const handleRestaurantSearch = (term) => {
         setRestaurantsSearchTerm(term);
@@ -148,6 +199,23 @@ const AdminDashboard = () => {
     const handleDishSearch = (term) => {
         setDishesSearchTerm(term);
         setDishesCurrentPage(0);
+    };
+
+    const handleOrderSearch = (term) => {
+        setOrdersSearchTerm(term);
+        setOrdersCurrentPage(0);
+        // Фильтруем заказы на клиенте
+        if (orders.length > 0) {
+            const filtered = orders.filter(order =>
+                (order.id && order.id.toString().includes(term)) ||
+                (order.status && order.status.toLowerCase().includes(term.toLowerCase())) ||
+                (order.userId && order.userId.toString().includes(term))
+            );
+            setOrders(filtered);
+            setOrdersTotalElements(filtered.length);
+        } else {
+            loadOrders();
+        }
     };
 
     // Рестораны CRUD
@@ -231,6 +299,53 @@ const AdminDashboard = () => {
                 console.error('Error deleting dish:', error);
                 const errorMessage = formatErrorMessage(error);
                 alert(`Не удалось удалить блюдо: ${errorMessage}`);
+            }
+        }
+    };
+
+    // Заказы CRUD
+    const handleViewOrderDetails = (order) => {
+        setSelectedOrder(order);
+        setIsOrderModalOpen(true);
+    };
+
+    const handleUpdateOrderStatus = async (orderId, newStatus) => {
+        try {
+            const config = {
+                headers: {
+                    'X-User-Id': '16',
+                    'X-User-Name': 'test@test.com'
+                }
+            };
+
+            await orderApi.updateStatus(orderId, newStatus, config);
+            alert(`Статус заказа #${orderId} изменен на: ${newStatus}`);
+            loadOrders();
+            setIsOrderModalOpen(false);
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            const errorMessage = formatErrorMessage(error);
+            alert(`Не удалось обновить статус заказа: ${errorMessage}`);
+        }
+    };
+
+    const handleCancelOrder = async (orderId) => {
+        if (window.confirm(`Вы уверены, что хотите отменить заказ #${orderId}?`)) {
+            try {
+                const config = {
+                    headers: {
+                        'X-User-Id': '16',
+                        'X-User-Name': 'test@test.com'
+                    }
+                };
+
+                await orderApi.cancel(orderId, config);
+                alert(`Заказ #${orderId} отменен`);
+                loadOrders();
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                const errorMessage = formatErrorMessage(error);
+                alert(`Не удалось отменить заказ: ${errorMessage}`);
             }
         }
     };
@@ -455,6 +570,22 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleOrderStatusSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        try {
+            if (!selectedOrder || !orderFormData.status) {
+                throw new Error('Выберите новый статус');
+            }
+
+            await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            setError(error.message || formatErrorMessage(error));
+        }
+    };
+
     // Обработчики изменений форм
     const handleRestaurantFormChange = (e) => {
         const { name, value } = e.target;
@@ -467,6 +598,14 @@ const AdminDashboard = () => {
     const handleDishFormChange = (e) => {
         const { name, value } = e.target;
         setDishFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleOrderFormChange = (e) => {
+        const { name, value } = e.target;
+        setOrderFormData(prev => ({
             ...prev,
             [name]: value
         }));
@@ -485,15 +624,59 @@ const AdminDashboard = () => {
         setDishesSearchTerm('');
     };
 
+    // Статусы заказов
+    const orderStatuses = [
+        'PENDING',
+        'CONFIRMED',
+        'PREPARING',
+        'OUT_FOR_DELIVERY',
+        'DELIVERED',
+        'CANCELLED'
+    ];
+
+    const getStatusBadge = (status) => {
+        const statusColors = {
+            'PENDING': '#ffc107',
+            'CONFIRMED': '#17a2b8',
+            'PREPARING': '#007bff',
+            'OUT_FOR_DELIVERY': '#6f42c1',
+            'DELIVERED': '#28a745',
+            'CANCELLED': '#dc3545'
+        };
+
+        const color = statusColors[status] || '#6c757d';
+        return (
+            <span
+                className="status-badge"
+                style={{
+                    backgroundColor: color,
+                    color: '#ffffff',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.85rem',
+                    fontWeight: '500'
+                }}
+            >
+                {status}
+            </span>
+        );
+    };
+
     // Статистика
     const getStats = () => {
         const totalRestaurants = restaurantsTotalElements;
         const totalDishes = dishesTotalElements;
+        const totalOrders = ordersTotalElements;
         const selectedRestaurantDishCount = selectedRestaurant
             ? dishes.length
             : null;
 
-        return { totalRestaurants, totalDishes, selectedRestaurantDishCount };
+        return {
+            totalRestaurants,
+            totalDishes,
+            totalOrders,
+            selectedRestaurantDishCount
+        };
     };
 
     const stats = getStats();
@@ -511,6 +694,10 @@ const AdminDashboard = () => {
                         <span className="stat-label">Блюда:</span>
                         <span className="stat-value">{stats.totalDishes}</span>
                     </div>
+                    <div className="stat-item">
+                        <span className="stat-label">Заказы:</span>
+                        <span className="stat-value">{stats.totalOrders}</span>
+                    </div>
                     {selectedRestaurant && (
                         <div className="stat-item">
                             <span className="stat-label">Выбранный ресторан:</span>
@@ -520,7 +707,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {error && activeTab !== 'dishes' && (
+            {error && (
                 <div className="alert alert-error">
                     <strong>Ошибка:</strong> {error}
                 </div>
@@ -539,6 +726,12 @@ const AdminDashboard = () => {
                     onClick={() => setActiveTab('dishes')}
                 >
                     🍽️ Блюда
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('orders')}
+                >
+                    📋 Заказы
                 </button>
             </div>
 
@@ -804,6 +997,119 @@ const AdminDashboard = () => {
                 </div>
             )}
 
+            {/* Вкладка заказов */}
+            {activeTab === 'orders' && (
+                <div className="tab-content">
+                    <div className="section-header">
+                        <div className="section-actions">
+                            <SearchBar
+                                onSearch={handleOrderSearch}
+                                placeholder="Поиск заказов по ID, статусу или пользователю..."
+                            />
+                            <button
+                                onClick={loadOrders}
+                                className="btn btn-refresh"
+                            >
+                                🔄 Обновить
+                            </button>
+                        </div>
+                    </div>
+
+                    {ordersLoading ? (
+                        <div className="loading">
+                            <div className="spinner"></div>
+                            <p>Загрузка заказов...</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="table-container">
+                                <table className="admin-table">
+                                    <thead>
+                                    <tr>
+                                        <th>ID заказа</th>
+                                        <th>Пользователь</th>
+                                        <th>Ресторан</th>
+                                        <th>Статус</th>
+                                        <th>Общая сумма</th>
+                                        <th>Дата заказа</th>
+                                        <th style={{ width: '220px' }}>Действия</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {orders.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" className="empty-cell">
+                                                <div className="empty-state">
+                                                    <div className="empty-icon">📋</div>
+                                                    <h3>Заказы не найдены</h3>
+                                                    <p>Пока нет заказов или возникла ошибка при загрузке</p>
+                                                    <button
+                                                        onClick={loadOrders}
+                                                        className="btn btn-retry"
+                                                        style={{ marginTop: '15px' }}
+                                                    >
+                                                        Попробовать снова
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        orders.map(order => (
+                                            <tr key={order.id}>
+                                                <td className="id-cell">#{order.id}</td>
+                                                <td>
+                                                    <strong>ID: {order.userId || 'N/A'}</strong>
+                                                </td>
+                                                <td>
+                                                    ID: {order.restaurantId || 'N/A'}
+                                                </td>
+                                                <td>
+                                                    {getStatusBadge(order.status)}
+                                                </td>
+                                                <td className="price">
+                                                    ${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}
+                                                </td>
+                                                <td>
+                                                    {order.orderDate ? new Date(order.orderDate).toLocaleString() : 'N/A'}
+                                                </td>
+                                                <td>
+                                                    <div className="action-buttons">
+                                                        <button
+                                                            onClick={() => handleViewOrderDetails(order)}
+                                                            className="btn-action btn-view"
+                                                            style={{ borderColor: '#17a2b8', color: '#17a2b8' }}
+                                                        >
+                                                            👁️ Подробнее
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCancelOrder(order.id)}
+                                                            className="btn-action btn-delete"
+                                                            disabled={order.status === 'CANCELLED' || order.status === 'DELIVERED'}
+                                                        >
+                                                            🗑️ Отменить
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {orders.length > 0 && (
+                                <Pagination
+                                    currentPage={ordersCurrentPage}
+                                    totalPages={ordersTotalPages}
+                                    totalElements={ordersTotalElements}
+                                    onPageChange={setOrdersCurrentPage}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
+
             {/* Модальное окно ресторана */}
             <Modal
                 isOpen={isRestaurantModalOpen}
@@ -852,12 +1158,6 @@ const AdminDashboard = () => {
                             placeholder="Полный адрес ресторана"
                         />
                     </div>
-
-                    {error && activeTab === 'restaurants' && (
-                        <div className="alert alert-error">
-                            <strong>Ошибка:</strong> {error}
-                        </div>
-                    )}
 
                     <div className="form-actions">
                         <button type="submit" className="btn btn-submit">
@@ -1007,6 +1307,241 @@ const AdminDashboard = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Модальное окно заказа */}
+            <Modal
+                isOpen={isOrderModalOpen}
+                onClose={() => {
+                    setIsOrderModalOpen(false);
+                    setSelectedOrder(null);
+                    setOrderFormData({ status: '' });
+                }}
+                title={`Заказ #${selectedOrder?.id}`}
+                size="lg"
+            >
+                {selectedOrder && (
+                    <div className="order-details">
+                        <div className="order-summary">
+                            <div className="summary-row">
+                                <span className="summary-label">Статус:</span>
+                                <span className="summary-value">{getStatusBadge(selectedOrder.status)}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">ID пользователя:</span>
+                                <span className="summary-value">{selectedOrder.userId}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">ID ресторана:</span>
+                                <span className="summary-value">{selectedOrder.restaurantId}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">Общая сумма:</span>
+                                <span className="summary-value">${selectedOrder.totalPrice?.toFixed(2) || '0.00'}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">Дата заказа:</span>
+                                <span className="summary-value">
+                                    {selectedOrder.orderDate ? new Date(selectedOrder.orderDate).toLocaleString() : 'N/A'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {selectedOrder.items && selectedOrder.items.length > 0 && (
+                            <div className="order-items">
+                                <h4>Состав заказа:</h4>
+                                <table className="items-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Блюдо</th>
+                                        <th>Количество</th>
+                                        <th>Цена</th>
+                                        <th>Сумма</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {selectedOrder.items.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.dishName || `Блюдо #${item.dishId}`}</td>
+                                            <td>{item.quantity}</td>
+                                            <td>${item.price?.toFixed(2) || '0.00'}</td>
+                                            <td>${((item.price || 0) * item.quantity).toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleOrderStatusSubmit} className="status-form">
+                            <div className="form-group">
+                                <label>Изменить статус:</label>
+                                <select
+                                    name="status"
+                                    value={orderFormData.status}
+                                    onChange={handleOrderFormChange}
+                                    className="status-select"
+                                >
+                                    <option value="">Выберите новый статус</option>
+                                    {orderStatuses.map(status => (
+                                        <option
+                                            key={status}
+                                            value={status}
+                                            disabled={status === selectedOrder.status}
+                                        >
+                                            {status} {status === selectedOrder.status ? '(текущий)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {error && (
+                                <div className="alert alert-error">
+                                    <strong>Ошибка:</strong> {error}
+                                </div>
+                            )}
+
+                            <div className="form-actions">
+                                <button
+                                    type="submit"
+                                    className="btn btn-submit"
+                                    disabled={!orderFormData.status || orderFormData.status === selectedOrder.status}
+                                >
+                                    Обновить статус
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsOrderModalOpen(false);
+                                        setSelectedOrder(null);
+                                        setOrderFormData({ status: '' });
+                                    }}
+                                    className="btn btn-cancel"
+                                >
+                                    Закрыть
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+            </Modal>
+
+            <style jsx>{`
+                .order-details {
+                    max-height: 70vh;
+                    overflow-y: auto;
+                }
+                
+                .order-summary {
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                
+                .summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #dee2e6;
+                }
+                
+                .summary-row:last-child {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+                
+                .summary-label {
+                    font-weight: 600;
+                    color: #495057;
+                }
+                
+                .summary-value {
+                    color: #000000;
+                }
+                
+                .order-items {
+                    margin-bottom: 20px;
+                }
+                
+                .order-items h4 {
+                    margin-bottom: 15px;
+                    color: #000000;
+                }
+                
+                .items-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    background-color: #ffffff;
+                    border: 2px solid #000000;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                
+                .items-table th {
+                    background-color: #000000;
+                    color: #ffffff;
+                    padding: 12px 15px;
+                    text-align: left;
+                    font-weight: 600;
+                }
+                
+                .items-table td {
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                
+                .items-table tr:last-child td {
+                    border-bottom: none;
+                }
+                
+                .items-table tr:hover {
+                    background-color: #f5f5f5;
+                }
+                
+                .status-form {
+                    border-top: 2px solid #000000;
+                    padding-top: 20px;
+                }
+                
+                .status-select {
+                    width: 100%;
+                    padding: 12px 15px;
+                    border: 2px solid #000000;
+                    border-radius: 8px;
+                    font-size: 1rem;
+                    background-color: #ffffff;
+                    color: #000000;
+                }
+                
+                .btn-refresh {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                
+                .btn-refresh:hover {
+                    background-color: #333333;
+                }
+                
+                .btn-retry {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                
+                .btn-retry:hover {
+                    background-color: #333333;
+                }
+                
+                .btn-view {
+                    background-color: #ffffff;
+                }
+                
+                .btn-view:hover {
+                    background-color: #17a2b8;
+                    color: #ffffff;
+                }
+            `}</style>
         </div>
     );
 };

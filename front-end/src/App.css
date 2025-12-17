@@ -1693,3 +1693,177 @@ body {
         min-width: 100%;
     }
 }
+/* Добавьте в конец файла App.css */
+
+/* Стили для вкладки заказов */
+.btn-refresh {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-refresh:hover {
+    background-color: #333333;
+}
+
+.btn-retry {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 8px 16px;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.btn-retry:hover {
+    background-color: #333333;
+}
+
+/* Стили для бейджей статусов заказов */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Стили для деталей заказа */
+.order-details {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.order-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #000000;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.summary-label {
+    font-weight: 600;
+    color: #000000;
+    min-width: 150px;
+}
+
+.summary-value {
+    color: #000000;
+    text-align: right;
+    flex: 1;
+}
+
+.order-items {
+    margin-bottom: 20px;
+}
+
+.order-items h4 {
+    margin-bottom: 15px;
+    color: #000000;
+    font-size: 1.1rem;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.items-table th {
+    background-color: #000000;
+    color: #ffffff;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.items-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.9rem;
+}
+
+.items-table tr:last-child td {
+    border-bottom: none;
+}
+
+.items-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.status-form {
+    border-top: 2px solid #000000;
+    padding-top: 20px;
+}
+
+.status-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #000000;
+    margin-bottom: 15px;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #000000;
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .summary-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .summary-label,
+    .summary-value {
+        width: 100%;
+        text-align: left;
+    }
+
+    .items-table {
+        font-size: 0.8rem;
+    }
+
+    .items-table th,
+    .items-table td {
+        padding: 8px 10px;
+    }
+}

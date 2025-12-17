@@ -11,7 +11,7 @@ const apiClient = axios.create({
     },
 });
 
-// Перехватчик для логирования запросов
+// Перехватчик для автоматического добавления заголовков
 apiClient.interceptors.request.use(
     config => {
         const token = localStorage.getItem('token');
@@ -19,12 +19,22 @@ apiClient.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Логируем запросы для отладки
+        // Для API Gateway добавляем заголовки пользователя
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user && user.email) {
+            config.headers['X-User-Id'] = user.id || '16';
+            config.headers['X-User-Name'] = user.email;
+        } else {
+            // Значения по умолчанию для тестирования
+            config.headers['X-User-Id'] = '16';
+            config.headers['X-User-Name'] = 'admin@fooddelivery.com';
+        }
+
         console.log('📤 API Request:', {
             method: config.method,
             url: config.url,
-            data: config.data,
-            headers: config.headers
+            headers: config.headers,
+            data: config.data
         });
 
         return config;
@@ -51,7 +61,8 @@ apiClient.interceptors.response.use(
             message: error.response?.data?.message,
             data: error.response?.data,
             url: error.config?.url,
-            method: error.config?.method
+            method: error.config?.method,
+            headers: error.config?.headers
         });
         return Promise.reject(error);
     }
@@ -121,7 +132,7 @@ export const restaurantApi = {
     delete: (id) => apiClient.delete(`/restaurants/${id}`),
 };
 
-// API для блюд (упрощенная версия без updateWithImage)
+// API для блюд
 export const dishApi = {
     getAll: (params) => apiClient.get('/dishes', { params }),
     getById: (id) => apiClient.get(`/dishes/${id}`),
@@ -146,7 +157,52 @@ export const dishApi = {
         });
     },
     deleteImage: (id) => apiClient.delete(`/dishes/${id}/image`),
-    // Убрали updateWithImage, будем делать отдельные запросы
+};
+
+// API для заказов (упрощенный для тестирования)
+export const orderApi = {
+    // Тестовые методы для проверки соединения
+    testConnection: () => apiClient.get('/orders/test'),
+
+    // Получить все заказы
+    getAll: () => apiClient.get('/orders'),
+
+    // Создать тестовый заказ
+    createTestOrder: () => {
+        const testOrder = {
+            restaurantId: 1,
+            items: [
+                {
+                    dishId: 1,
+                    quantity: 2,
+                    price: 1899,
+                    dishName: "Margherita Pizza",
+                    dishDescription: "Classic pizza with tomato sauce"
+                }
+            ],
+            paymentMethod: "CREDIT_CARD",
+            deliveryAddress: "123 Test Street"
+        };
+        return apiClient.post('/orders', testOrder);
+    },
+
+    // Получить заказ по ID
+    getById: (id) => apiClient.get(`/orders/${id}`),
+
+    // Обновить статус заказа
+    updateStatus: (id, status) =>
+        apiClient.put(`/orders/${id}/status`, { status }),
+
+    // Отменить заказ
+    cancel: (id) => apiClient.delete(`/orders/${id}`),
+
+    // Получить заказы ресторана
+    getRestaurantOrders: (restaurantId) =>
+        apiClient.get(`/orders/restaurant/${restaurantId}`),
+
+    // Получить заказы пользователя
+    getUserOrders: (userId) =>
+        apiClient.get(`/orders/user/${userId}`)
 };
 
 export default apiClient;
