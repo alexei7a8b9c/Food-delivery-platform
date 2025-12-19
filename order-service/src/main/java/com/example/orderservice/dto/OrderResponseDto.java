@@ -19,6 +19,12 @@ public class OrderResponseDto {
     private Integer totalPrice;
     private List<OrderItemDto> items;
 
+    // НОВЫЕ ПОЛЯ для контактной информации
+    private String customerEmail;
+    private String customerFullName;
+    private String customerTelephone;
+    private String deliveryAddress;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

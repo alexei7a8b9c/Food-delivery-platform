@@ -21,6 +21,7 @@ public class GatewayConfig {
                                 .addRequestHeader("X-User-Name", "test@test.com"))
                         .uri("lb://ORDER-SERVICE"))
 
+
                 // Restaurant Service
                 .route("restaurant-service", r -> r.path("/api/restaurants/**", "/api/dishes/**", "/api/menu/**", "/api/health/restaurant/**")
                         .uri("lb://RESTAURANT-SERVICE"))

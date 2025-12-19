@@ -1,7 +1,5 @@
-FROM eclipse-temurin:21-jre-jammy
-
-VOLUME /tmp
-
-COPY target/*.jar app.jar
-
-ENTRYPOINT ["java","-jar","/app.jar"]
+FROM openjdk:21-jdk-slim
+WORKDIR /app
+COPY target/order-service-1.0.0.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]

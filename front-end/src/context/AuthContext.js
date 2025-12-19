@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { authApi } from '../services/auth';
-import { jwtDecode } from 'jwt-decode'; // Установите: npm install jwt-decode
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
@@ -33,8 +33,14 @@ export const AuthProvider = ({ children }) => {
 
                 // Пробуем получить роли из разных мест
                 let roles = ['USER'];
+                let userEmail = '';
+                let userId = null;
 
                 if (decodedToken) {
+                    // Извлекаем email и ID
+                    userEmail = decodedToken.sub || userData?.email || 'unknown';
+                    userId = decodedToken.userId || decodedToken.id;
+
                     // Пробуем разные поля, где могут быть роли
                     roles = decodedToken.roles ||
                         decodedToken.authorities ||
@@ -52,7 +58,10 @@ export const AuthProvider = ({ children }) => {
                 const updatedUser = {
                     ...userObj,
                     token,
-                    email: decodedToken?.sub || userObj.email || 'unknown',
+                    id: userId || userObj.id,
+                    email: userEmail,
+                    fullName: userObj.fullName || '',
+                    telephone: userObj.telephone || '',
                     roles: roles,
                     decoded: decodedToken // Для отладки
                 };
@@ -84,7 +93,7 @@ export const AuthProvider = ({ children }) => {
                 const token = response.data.accessToken;
                 const decoded = decodeToken(token);
 
-                // Извлекаем роли из токена
+                // Извлекаем данные из ответа
                 let roles = ['USER'];
                 if (decoded) {
                     roles = decoded.roles ||
@@ -97,8 +106,12 @@ export const AuthProvider = ({ children }) => {
                     }
                 }
 
+                // Сохраняем полные данные пользователя
                 const userData = {
                     email: response.data.email || email,
+                    id: response.data.userId || decoded?.userId || decoded?.id,
+                    fullName: response.data.fullName || '',
+                    telephone: response.data.telephone || '',
                     token: token,
                     roles: roles,
                     ...response.data,
@@ -139,6 +152,9 @@ export const AuthProvider = ({ children }) => {
 
                 const newUserData = {
                     email: response.data.email,
+                    id: response.data.userId,
+                    fullName: response.data.fullName,
+                    telephone: response.data.telephone || '',
                     token: token,
                     roles: roles,
                     decoded: decoded

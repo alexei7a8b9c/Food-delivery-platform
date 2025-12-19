@@ -13,6 +13,12 @@ public class CreateOrderRequest {
     private Long restaurantId;
     private List<OrderItemDto> items;
     private String paymentMethod;
+    private String deliveryAddress;
+
+    // НОВЫЕ ПОЛЯ для контактной информации
+    private String customerEmail;
+    private String customerFullName;
+    private String customerTelephone;
 
     @Data
     @NoArgsConstructor

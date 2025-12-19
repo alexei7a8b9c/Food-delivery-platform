@@ -19,6 +19,12 @@ public class OrderDto {
     private Integer totalPrice;
     private List<OrderItemDto> items;
 
+    // НОВЫЕ ПОЛЯ для контактной информации
+    private String customerEmail;
+    private String customerFullName;
+    private String customerTelephone;
+    private String deliveryAddress;
+
     // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -40,4 +46,16 @@ public class OrderDto {
 
     public List<OrderItemDto> getItems() { return items; }
     public void setItems(List<OrderItemDto> items) { this.items = items; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
+    public String getCustomerFullName() { return customerFullName; }
+    public void setCustomerFullName(String customerFullName) { this.customerFullName = customerFullName; }
+
+    public String getCustomerTelephone() { return customerTelephone; }
+    public void setCustomerTelephone(String customerTelephone) { this.customerTelephone = customerTelephone; }
+
+    public String getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
 }

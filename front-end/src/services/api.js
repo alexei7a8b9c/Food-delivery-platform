@@ -159,15 +159,61 @@ export const dishApi = {
     deleteImage: (id) => apiClient.delete(`/dishes/${id}/image`),
 };
 
-// API для заказов (упрощенный для тестирования)
+// API для корзины
+export const cartApi = {
+    getCart: () => apiClient.get('/cart'),
+    addToCart: (item) => apiClient.post('/cart/items', item),
+    updateQuantity: (dishId, quantity) =>
+        apiClient.put(`/cart/items/${dishId}`, { quantity }),
+    removeFromCart: (dishId) => apiClient.delete(`/cart/items/${dishId}`),
+    clearCart: () => apiClient.delete('/cart')
+};
+
+// API для заказов
 export const orderApi = {
+    // НОВЫЙ МЕТОД: Получить данные пользователя
+    getUserDetails: (userId) => {
+        return apiClient.get(`/orders/user/${userId}/details`);
+    },
+
     // Тестовые методы для проверки соединения
     testConnection: () => apiClient.get('/orders/test'),
 
     // Получить все заказы
     getAll: () => apiClient.get('/orders'),
 
-    // Создать тестовый заказ
+    // Создать заказ
+    createOrder: (orderData) => {
+        console.log('Creating order:', orderData);
+        return apiClient.post('/orders', orderData);
+    },
+
+    // Получить заказы пользователя
+    getUserOrders: (userId) => {
+        return apiClient.get(`/orders/user/${userId}`);
+    },
+
+    // Получить заказ по ID
+    getOrderById: (orderId) => {
+        return apiClient.get(`/orders/${orderId}`);
+    },
+
+    // Обновить статус заказа
+    updateOrderStatus: (orderId, status) => {
+        return apiClient.put(`/orders/${orderId}/status`, { status });
+    },
+
+    // Отменить заказ
+    cancelOrder: (orderId) => {
+        return apiClient.delete(`/orders/${orderId}`);
+    },
+
+    // Получить заказы ресторана
+    getRestaurantOrders: (restaurantId) => {
+        return apiClient.get(`/orders/restaurant/${restaurantId}`);
+    },
+
+    // Демо метод для создания тестового заказа
     createTestOrder: () => {
         const testOrder = {
             restaurantId: 1,
@@ -181,28 +227,13 @@ export const orderApi = {
                 }
             ],
             paymentMethod: "CREDIT_CARD",
-            deliveryAddress: "123 Test Street"
+            deliveryAddress: "123 Test Street",
+            customerEmail: "test@example.com",
+            customerFullName: "Test User",
+            customerTelephone: "+1234567890"
         };
         return apiClient.post('/orders', testOrder);
-    },
-
-    // Получить заказ по ID
-    getById: (id) => apiClient.get(`/orders/${id}`),
-
-    // Обновить статус заказа
-    updateStatus: (id, status) =>
-        apiClient.put(`/orders/${id}/status`, { status }),
-
-    // Отменить заказ
-    cancel: (id) => apiClient.delete(`/orders/${id}`),
-
-    // Получить заказы ресторана
-    getRestaurantOrders: (restaurantId) =>
-        apiClient.get(`/orders/restaurant/${restaurantId}`),
-
-    // Получить заказы пользователя
-    getUserOrders: (userId) =>
-        apiClient.get(`/orders/user/${userId}`)
+    }
 };
 
 export default apiClient;

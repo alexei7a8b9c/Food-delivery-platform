@@ -12,6 +12,7 @@ import java.util.List;
 @Table(name = "orders")
 @Data
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,10 +34,23 @@ public class Order {
     @Column(nullable = false)
     private Integer totalPrice;
 
+    // НОВЫЕ ПОЛЯ для контактной информации
+    @Column(name = "customer_email", length = 255)
+    private String customerEmail;
+
+    @Column(name = "customer_full_name", length = 255)
+    private String customerFullName;
+
+    @Column(name = "customer_telephone", length = 20)
+    private String customerTelephone;
+
+    @Column(name = "delivery_address", columnDefinition = "TEXT")
+    private String deliveryAddress;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    // ✅ ДОБАВЬТЕ этот вложенный enum
+    // Статусы заказа
     public enum OrderStatus {
         PENDING,
         CONFIRMED,
