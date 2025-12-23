@@ -163,7 +163,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // ФУНКЦИЯ ЗАГРУЗКИ ЗАКАЗОВ
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ ЗАКАЗОВ
     const loadOrders = async () => {
         setOrdersLoading(true);
         setOrdersError('');
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
                 ordersData = ordersData.filter(order =>
                     (order.id && order.id.toString().includes(term)) ||
                     (order.status && order.status.toLowerCase().includes(term)) ||
-                    (order.customerTelephone && order.customerTelephone.includes(term)) ||
+                    (order.customerTelephone && order.customerTelephone.includes(term)) || // Поиск по телефону
                     (order.customerFullName && order.customerFullName.toLowerCase().includes(term))
                 );
             }
@@ -221,73 +221,48 @@ const AdminDashboard = () => {
         }
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
     const handleViewOrderDetails = async (order) => {
         try {
             // Загружаем полные данные заказа из сервера
-            console.log(`🔍 Загрузка деталей заказа #${order.id}...`);
             const response = await orderApi.getOrderById(order.id);
-            console.log('✅ Детали заказа загружены:', response.data);
-
-            if (response.data) {
-                setSelectedOrder(response.data);
-                setOrderFormData({ status: response.data.status || '' });
-                setIsOrderModalOpen(true);
-            } else {
-                setSelectedOrder(order);
-                setOrderFormData({ status: order.status || '' });
-                setIsOrderModalOpen(true);
-                setError('Не удалось загрузить полные данные заказа');
-            }
+            console.log('Детали заказа:', response.data);
+            setSelectedOrder(response.data);
+            setIsOrderModalOpen(true);
         } catch (error) {
-            console.error('❌ Ошибка загрузки деталей заказа:', error);
+            console.error('Ошибка загрузки деталей заказа:', error);
             // Если не удалось загрузить, показываем то, что есть
             setSelectedOrder(order);
-            setOrderFormData({ status: order.status || '' });
             setIsOrderModalOpen(true);
             setError('Не удалось загрузить полные данные заказа');
         }
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
-    const handleUpdateOrderStatus = async (orderId, status) => {
+    // ОБНОВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
+    const handleUpdateOrderStatus = async (orderId, newStatus) => {
         try {
-            console.log(`🔄 Обновление статуса заказа #${orderId} на ${status}`);
-
             // Отправляем запрос на сервер
-            const response = await orderApi.updateOrderStatus(orderId, status);
-            console.log('✅ Ответ сервера при обновлении статуса:', response.data);
+            const response = await orderApi.updateOrderStatus(orderId, newStatus);
+            console.log('Статус обновлен:', response.data);
+            alert(`✅ Статус заказа #${orderId} изменен на: ${newStatus}`);
 
-            return response.data;
+            // Обновляем локальное состояние
+            setOrders(prevOrders =>
+                prevOrders.map(order =>
+                    order.id === orderId ? { ...order, status: newStatus } : order
+                )
+            );
 
-        } catch (error) {
-            console.error('❌ Ошибка обновления статуса:', error);
-            console.error('Детали ошибки:', {
-                status: error.response?.status,
-                data: error.response?.data,
-                config: error.config
-            });
-
-            let errorMessage = formatErrorMessage(error);
-
-            // Добавляем детали ошибки из ответа сервера
-            if (error.response?.data) {
-                if (typeof error.response.data === 'object') {
-                    if (error.response.data.error) {
-                        errorMessage = error.response.data.error;
-                    }
-                    if (error.response.data.message) {
-                        errorMessage = error.response.data.message;
-                    }
-                    if (error.response.data.details) {
-                        errorMessage += `\nДетали: ${error.response.data.details}`;
-                    }
-                } else if (typeof error.response.data === 'string') {
-                    errorMessage = error.response.data;
-                }
+            // Обновляем выбранный заказ в модальном окне
+            if (selectedOrder && selectedOrder.id === orderId) {
+                setSelectedOrder(prev => ({ ...prev, status: newStatus }));
             }
 
-            throw new Error(errorMessage);
+            setIsOrderModalOpen(false);
+        } catch (error) {
+            console.error('Ошибка обновления статуса:', error);
+            const errorMessage = formatErrorMessage(error);
+            alert(`❌ Не удалось обновить статус заказа: ${errorMessage}`);
         }
     };
 
@@ -302,11 +277,7 @@ const AdminDashboard = () => {
             const testResponse = await orderApi.testConnection();
             console.log('✅ Тестовый ответ:', testResponse.data);
 
-            // Тест 2: Проверка авторизации
-            const authResponse = await orderApi.testAuth();
-            console.log('✅ Ответ авторизации:', authResponse.data);
-
-            // Тест 3: Попытка получить реальные данные
+            // Тест 2: Попытка получить реальные данные
             const ordersResponse = await orderApi.getAllOrders();
             console.log('✅ Ответ с заказами:', ordersResponse.data);
 
@@ -441,13 +412,19 @@ const AdminDashboard = () => {
     const handleCancelOrder = async (orderId) => {
         if (window.confirm(`Вы уверены, что хотите отменить заказ #${orderId}?`)) {
             try {
-                // Используем функцию обновления статуса для отмены
-                await handleUpdateOrderStatus(orderId, 'CANCELLED');
-                alert(`Заказ #${orderId} успешно отменен`);
-                loadOrders();
+                await orderApi.cancelOrder(orderId);
+                alert(`Заказ #${orderId} отменен`);
+
+                // Обновляем статус в локальном состоянии
+                setOrders(prevOrders =>
+                    prevOrders.map(order =>
+                        order.id === orderId ? { ...order, status: 'CANCELLED' } : order
+                    )
+                );
             } catch (error) {
                 console.error('Error cancelling order:', error);
-                alert(`Не удалось отменить заказ: ${error.message}`);
+                const errorMessage = formatErrorMessage(error);
+                alert(`Не удалось отменить заказ: ${errorMessage}`);
             }
         }
     };
@@ -672,7 +649,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
     const handleOrderStatusSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -682,44 +658,7 @@ const AdminDashboard = () => {
                 throw new Error('Выберите новый статус');
             }
 
-            // Проверяем, что статус изменился
-            if (orderFormData.status === selectedOrder.status) {
-                setError('Статус уже установлен на это значение');
-                return;
-            }
-
-            console.log(`Отправка обновления статуса для заказа #${selectedOrder.id}: ${orderFormData.status}`);
-
-            // Обновляем статус на сервере
-            const updatedOrder = await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
-
-            // Обновляем локальное состояние
-            setOrders(prevOrders =>
-                prevOrders.map(order =>
-                    order.id === selectedOrder.id ? {
-                        ...order,
-                        status: orderFormData.status
-                    } : order
-                )
-            );
-
-            // Обновляем выбранный заказ
-            setSelectedOrder(prev => ({
-                ...prev,
-                status: orderFormData.status
-            }));
-
-            alert(`✅ Статус заказа #${selectedOrder.id} успешно изменен на: ${orderFormData.status}`);
-
-            // Закрываем модальное окно
-            setIsOrderModalOpen(false);
-            setOrderFormData({ status: '' });
-
-            // Перезагружаем заказы для обновления данных
-            setTimeout(() => {
-                loadOrders();
-            }, 500);
-
+            await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
         } catch (error) {
             console.error('Error updating order status:', error);
             setError(error.message || formatErrorMessage(error));
@@ -797,8 +736,8 @@ const AdminDashboard = () => {
                     fontWeight: '500'
                 }}
             >
-                {status}
-            </span>
+        {status}
+      </span>
         );
     };
 
@@ -1517,8 +1456,8 @@ const AdminDashboard = () => {
                             <div className="summary-row">
                                 <span className="summary-label">Телефон:</span>
                                 <span className="summary-value">
-                                    <strong>{selectedOrder.customerTelephone || 'Не указан'}</strong>
-                                </span>
+                  <strong>{selectedOrder.customerTelephone || 'Не указан'}</strong>
+                </span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Email:</span>
@@ -1539,8 +1478,8 @@ const AdminDashboard = () => {
                             <div className="summary-row">
                                 <span className="summary-label">Дата заказа:</span>
                                 <span className="summary-value">
-                                    {selectedOrder.orderDate ? new Date(selectedOrder.orderDate).toLocaleString() : 'N/A'}
-                                </span>
+                  {selectedOrder.orderDate ? new Date(selectedOrder.orderDate).toLocaleString() : 'N/A'}
+                </span>
                             </div>
                         </div>
 
@@ -1586,23 +1525,6 @@ const AdminDashboard = () => {
                                 </table>
                             </div>
                         )}
-
-                        {/* Отладочная информация */}
-                        <div className="debug-info" style={{
-                            marginTop: '20px',
-                            padding: '15px',
-                            backgroundColor: '#f8f9fa',
-                            border: '1px solid #dee2e6',
-                            borderRadius: '8px',
-                            fontSize: '0.85rem'
-                        }}>
-                            <h4 style={{ marginBottom: '10px' }}>Отладочная информация:</h4>
-                            <p><strong>ID заказа:</strong> {selectedOrder?.id}</p>
-                            <p><strong>Текущий статус:</strong> {selectedOrder?.status}</p>
-                            <p><strong>Выбранный статус:</strong> {orderFormData.status}</p>
-                            <p><strong>API Endpoint:</strong> PUT /api/orders/{selectedOrder?.id}/status</p>
-                            <p><strong>Request Data:</strong> {JSON.stringify({ status: orderFormData.status })}</p>
-                        </div>
 
                         <form onSubmit={handleOrderStatusSubmit} className="status-form">
                             <div className="form-group">
@@ -1651,26 +1573,6 @@ const AdminDashboard = () => {
                                 >
                                     Закрыть
                                 </button>
-
-                                {/* Тестовая кнопка для отладки */}
-                                <button
-                                    type="button"
-                                    onClick={async () => {
-                                        console.log('Тестовый вызов updateOrderStatus...');
-                                        try {
-                                            await handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED');
-                                            alert('✅ Тестовый статус установлен');
-                                            loadOrders();
-                                            setIsOrderModalOpen(false);
-                                        } catch (error) {
-                                            alert(`❌ Ошибка: ${error.message}`);
-                                        }
-                                    }}
-                                    className="btn"
-                                    style={{ backgroundColor: '#6c757d', color: 'white' }}
-                                >
-                                    Тест (DELIVERED)
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -1678,182 +1580,182 @@ const AdminDashboard = () => {
             </Modal>
 
             <style jsx>{`
-                .order-details {
-                    max-height: 70vh;
-                    overflow-y: auto;
-                }
+        .order-details {
+          max-height: 70vh;
+          overflow-y: auto;
+        }
 
-                .order-summary {
-                    background-color: #f8f9fa;
-                    border-radius: 8px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    border: 2px solid #000000;
-                }
+        .order-summary {
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 20px;
+          border: 2px solid #000000;
+        }
 
-                .summary-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 10px;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid #dee2e6;
-                }
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #dee2e6;
+        }
 
-                .summary-row:last-child {
-                    border-bottom: none;
-                    margin-bottom: 0;
-                    padding-bottom: 0;
-                }
+        .summary-row:last-child {
+          border-bottom: none;
+          margin-bottom: 0;
+          padding-bottom: 0;
+        }
 
-                .summary-label {
-                    font-weight: 600;
-                    color: #000000;
-                    min-width: 150px;
-                }
+        .summary-label {
+          font-weight: 600;
+          color: #000000;
+          min-width: 150px;
+        }
 
-                .summary-value {
-                    color: #000000;
-                    text-align: right;
-                    flex: 1;
-                }
+        .summary-value {
+          color: #000000;
+          text-align: right;
+          flex: 1;
+        }
 
-                .order-items {
-                    margin-bottom: 20px;
-                }
+        .order-items {
+          margin-bottom: 20px;
+        }
 
-                .order-items h4 {
-                    margin-bottom: 15px;
-                    color: #000000;
-                }
+        .order-items h4 {
+          margin-bottom: 15px;
+          color: #000000;
+        }
 
-                .items-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    background-color: #ffffff;
-                    border: 2px solid #000000;
-                    border-radius: 8px;
-                    overflow: hidden;
-                }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: #ffffff;
+          border: 2px solid #000000;
+          border-radius: 8px;
+          overflow: hidden;
+        }
 
-                .items-table th {
-                    background-color: #000000;
-                    color: #ffffff;
-                    padding: 12px 15px;
-                    text-align: left;
-                    font-weight: 600;
-                }
+        .items-table th {
+          background-color: #000000;
+          color: #ffffff;
+          padding: 12px 15px;
+          text-align: left;
+          font-weight: 600;
+        }
 
-                .items-table td {
-                    padding: 12px 15px;
-                    border-bottom: 1px solid #e0e0e0;
-                }
+        .items-table td {
+          padding: 12px 15px;
+          border-bottom: 1px solid #e0e0e0;
+        }
 
-                .items-table tr:last-child td {
-                    border-bottom: none;
-                }
+        .items-table tr:last-child td {
+          border-bottom: none;
+        }
 
-                .items-table tr:hover {
-                    background-color: #f5f5f5;
-                }
+        .items-table tr:hover {
+          background-color: #f5f5f5;
+        }
 
-                .items-table tfoot {
-                    background-color: #f8f9fa;
-                    font-weight: bold;
-                }
+        .items-table tfoot {
+          background-color: #f8f9fa;
+          font-weight: bold;
+        }
 
-                .status-form {
-                    border-top: 2px solid #000000;
-                    padding-top: 20px;
-                }
+        .status-form {
+          border-top: 2px solid #000000;
+          padding-top: 20px;
+        }
 
-                .status-select {
-                    width: 100%;
-                    padding: 12px 15px;
-                    border: 2px solid #000000;
-                    border-radius: 8px;
-                    font-size: 1rem;
-                    background-color: #ffffff;
-                    color: #000000;
-                }
+        .status-select {
+          width: 100%;
+          padding: 12px 15px;
+          border: 2px solid #000000;
+          border-radius: 8px;
+          font-size: 1rem;
+          background-color: #ffffff;
+          color: #000000;
+        }
 
-                .btn-refresh {
-                    background-color: #000000;
-                    color: #ffffff;
-                }
+        .btn-refresh {
+          background-color: #000000;
+          color: #ffffff;
+        }
 
-                .btn-refresh:hover {
-                    background-color: #333333;
-                }
+        .btn-refresh:hover {
+          background-color: #333333;
+        }
 
-                .btn-retry {
-                    background-color: #000000;
-                    color: #ffffff;
-                }
+        .btn-retry {
+          background-color: #000000;
+          color: #ffffff;
+        }
 
-                .btn-retry:hover {
-                    background-color: #333333;
-                }
+        .btn-retry:hover {
+          background-color: #333333;
+        }
 
-                .btn-view {
-                    background-color: #ffffff;
-                }
+        .btn-view {
+          background-color: #ffffff;
+        }
 
-                .btn-view:hover {
-                    background-color: #17a2b8;
-                    color: #ffffff;
-                }
+        .btn-view:hover {
+          background-color: #17a2b8;
+          color: #ffffff;
+        }
 
-                .api-status {
-                    padding: 10px 15px;
-                    border-radius: 8px;
-                    margin-bottom: 15px;
-                    font-weight: 500;
-                }
+        .api-status {
+          padding: 10px 15px;
+          border-radius: 8px;
+          margin-bottom: 15px;
+          font-weight: 500;
+        }
 
-                .api-status.success {
-                    background-color: #d4edda;
-                    color: #155724;
-                    border: 1px solid #c3e6cb;
-                }
+        .api-status.success {
+          background-color: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
 
-                .api-status.error {
-                    background-color: #f8d7da;
-                    color: #721c24;
-                    border: 1px solid #f5c6cb;
-                }
+        .api-status.error {
+          background-color: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+        }
 
-                .api-status.info {
-                    background-color: #d1ecf1;
-                    color: #0c5460;
-                    border: 1px solid #bee5eb;
-                }
+        .api-status.info {
+          background-color: #d1ecf1;
+          color: #0c5460;
+          border: 1px solid #bee5eb;
+        }
 
-                .alert-warning {
-                    background-color: #fff3cd;
-                    color: #856404;
-                    border: 1px solid #ffeaa7;
-                    padding: 15px;
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                }
+        .alert-warning {
+          background-color: #fff3cd;
+          color: #856404;
+          border: 1px solid #ffeaa7;
+          padding: 15px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
 
-                .phone-column {
-                    font-family: monospace;
-                    color: #000000;
-                    font-weight: 500;
-                }
+        .phone-column {
+          font-family: monospace;
+          color: #000000;
+          font-weight: 500;
+        }
 
-                .customer-phone {
-                    background-color: #f8f9fa;
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    border: 1px solid #000000;
-                    font-weight: 600;
-                    font-size: 1.1rem;
-                    display: inline-block;
-                    margin: 5px 0;
-                }
-            `}</style>
+        .customer-phone {
+          background-color: #f8f9fa;
+          padding: 8px 12px;
+          border-radius: 6px;
+          border: 1px solid #000000;
+          font-weight: 600;
+          font-size: 1.1rem;
+          display: inline-block;
+          margin: 5px 0;
+        }
+      `}</style>
         </div>
     );
 };

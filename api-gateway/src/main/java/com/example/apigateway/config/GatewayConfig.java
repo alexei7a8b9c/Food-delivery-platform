@@ -15,7 +15,7 @@ public class GatewayConfig {
                 .route("user-service", r -> r.path("/api/auth/**", "/api/users/**", "/api/health/user/**")
                         .uri("lb://USER-SERVICE"))
 
-                // Order Service - ИСПРАВЛЕННЫЕ МАРШРУТЫ
+                // Order Service
                 .route("order-service", r -> r.path(
                                 "/api/orders/**",
                                 "/api/cart/**",
@@ -24,9 +24,7 @@ public class GatewayConfig {
                         .filters(f -> f
                                 .addRequestHeader("X-User-Id", "16") // Временный заголовок
                                 .addRequestHeader("X-User-Name", "admin@fooddelivery.com")
-                                .addRequestHeader("X-User-Roles", "ROLE_ADMIN,ROLE_MANAGER,ROLE_USER")
-                                .rewritePath("/api/orders/(?<segment>.*)", "/orders/${segment}")
-                                .rewritePath("/api/cart/(?<segment>.*)", "/cart/${segment}")
+                                .addRequestHeader("X-User-Roles", "ROLE_ADMIN,ROLE_MANAGER,ROLE_USER") // Добавьте роли
                         )
                         .uri("lb://ORDER-SERVICE"))
 
