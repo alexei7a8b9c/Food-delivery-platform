@@ -2038,3 +2038,21 @@ body {
         font-size: 0.95rem;
     }
 }
+/* Стили для отображения телефона в таблице */
+.phone-column {
+    font-family: monospace;
+    color: #000000;
+    font-weight: 500;
+}
+
+/* Выделение телефона в деталях заказа */
+.customer-phone {
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #000000;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: inline-block;
+    margin: 5px 0;
+}

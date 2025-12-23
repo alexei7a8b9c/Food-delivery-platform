@@ -30,6 +30,9 @@ apiClient.interceptors.request.use(
             config.headers['X-User-Name'] = 'admin@fooddelivery.com';
         }
 
+        // ДОБАВЛЕНО: Роли для доступа к админским эндпоинтам
+        config.headers['X-User-Roles'] = 'ROLE_ADMIN,ROLE_MANAGER,ROLE_USER';
+
         console.log('📤 API Request:', {
             method: config.method,
             url: config.url,
@@ -169,51 +172,40 @@ export const cartApi = {
     clearCart: () => apiClient.delete('/cart')
 };
 
-// API для заказов
+// API для заказов - ОБНОВЛЕННЫЙ
 export const orderApi = {
-    // НОВЫЙ МЕТОД: Получить данные пользователя
-    getUserDetails: (userId) => {
-        return apiClient.get(`/orders/user/${userId}/details`);
+    // Получить все заказы (для администратора)
+    getAllOrders: () => {
+        console.log('📤 Получение всех заказов...');
+        return apiClient.get('/orders/admin/all');
     },
 
-    // Тестовые методы для проверки соединения
+    // Получить заказ по ID с деталями
+    getOrderById: (orderId) => {
+        console.log(`📤 Получение заказа #${orderId}...`);
+        return apiClient.get(`/orders/${orderId}`);
+    },
+
+    // ОБНОВИТЬ СТАТУС ЗАКАЗА - ИСПРАВЛЕННЫЙ МЕТОД
+    updateOrderStatus: (orderId, status) => {
+        console.log(`📤 Обновление статуса заказа #${orderId} -> ${status}`);
+        const data = { status: status };
+        return apiClient.put(`/orders/${orderId}/status`, data);
+    },
+
+    // Тестовые методы
     testConnection: () => apiClient.get('/orders/test'),
+    testAuth: () => apiClient.get('/orders/test/auth'),
 
-    // Получить все заказы
-    getAll: () => apiClient.get('/orders'),
-
-    // Создать заказ
+    // Другие методы
+    getUserDetails: (userId) => apiClient.get(`/orders/user/${userId}/details`),
     createOrder: (orderData) => {
         console.log('Creating order:', orderData);
         return apiClient.post('/orders', orderData);
     },
-
-    // Получить заказы пользователя
-    getUserOrders: (userId) => {
-        return apiClient.get(`/orders/user/${userId}`);
-    },
-
-    // Получить заказ по ID
-    getOrderById: (orderId) => {
-        return apiClient.get(`/orders/${orderId}`);
-    },
-
-    // Обновить статус заказа
-    updateOrderStatus: (orderId, status) => {
-        return apiClient.put(`/orders/${orderId}/status`, { status });
-    },
-
-    // Отменить заказ
-    cancelOrder: (orderId) => {
-        return apiClient.delete(`/orders/${orderId}`);
-    },
-
-    // Получить заказы ресторана
-    getRestaurantOrders: (restaurantId) => {
-        return apiClient.get(`/orders/restaurant/${restaurantId}`);
-    },
-
-    // Демо метод для создания тестового заказа
+    getUserOrders: (userId) => apiClient.get(`/orders/user/${userId}`),
+    cancelOrder: (orderId) => apiClient.delete(`/orders/${orderId}`),
+    getRestaurantOrders: (restaurantId) => apiClient.get(`/orders/restaurant/${restaurantId}`),
     createTestOrder: () => {
         const testOrder = {
             restaurantId: 1,

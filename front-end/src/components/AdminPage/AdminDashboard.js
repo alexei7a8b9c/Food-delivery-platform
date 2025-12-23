@@ -163,84 +163,42 @@ const AdminDashboard = () => {
         }
     };
 
+    // ФУНКЦИЯ ЗАГРУЗКИ ЗАКАЗОВ
     const loadOrders = async () => {
         setOrdersLoading(true);
         setOrdersError('');
         setApiStatus('');
 
         try {
-            console.log('🔄 Начинаю загрузку заказов...');
-            setApiStatus('Проверка соединения с сервером заказов...');
+            console.log('🔄 Загрузка заказов через API Gateway...');
 
-            // Пробуем разные методы получения заказов
+            // Используем реальный API вместо демо-данных
+            const response = await orderApi.getAllOrders();
+            console.log('✅ Ответ от сервера заказов:', response.data);
+
             let ordersData = [];
-            let methodUsed = '';
 
-            // Метод 1: Получить все заказы через API Gateway
-            try {
-                console.log('🔄 Метод 1: Пробую получить все заказы...');
-                const response = await orderApi.getAll();
-                console.log('✅ Ответ от API заказов:', response);
-
-                if (response && response.data) {
-                    // Обрабатываем разные форматы ответа
-                    if (Array.isArray(response.data)) {
-                        ordersData = response.data;
-                        methodUsed = 'getAll (array)';
-                    } else if (response.data.content && Array.isArray(response.data.content)) {
-                        ordersData = response.data.content;
-                        methodUsed = 'getAll (paged)';
-                    } else if (typeof response.data === 'object') {
-                        // Если это один объект заказа
-                        ordersData = [response.data];
-                        methodUsed = 'getAll (single object)';
-                    } else if (response.data.status && response.data.message) {
-                        // Если это тестовый ответ
-                        console.log('ℹ️ Получен тестовый ответ:', response.data);
-                        methodUsed = 'test response';
-                    }
-                }
-            } catch (error1) {
-                console.warn('⚠️ Метод 1 не сработал:', error1.message);
-            }
-
-            // Метод 2: Если первый не сработал, пробуем тестовый эндпоинт
-            if (ordersData.length === 0) {
-                try {
-                    console.log('🔄 Метод 2: Пробую тестовый эндпоинт...');
-                    const testResponse = await orderApi.testConnection();
-                    console.log('✅ Тестовый ответ:', testResponse.data);
-
-                    if (testResponse && testResponse.data) {
-                        methodUsed = 'testConnection';
-                        // Создаем тестовые данные на основе ответа
-                        if (testResponse.data.message && testResponse.data.message.includes('working')) {
-                            ordersData = createTestOrders();
-                        }
-                    }
-                } catch (error2) {
-                    console.warn('⚠️ Метод 2 не сработал:', error2.message);
+            if (response && response.data) {
+                if (Array.isArray(response.data)) {
+                    ordersData = response.data;
+                } else if (response.data.content && Array.isArray(response.data.content)) {
+                    ordersData = response.data.content;
+                } else if (typeof response.data === 'object') {
+                    ordersData = [response.data];
                 }
             }
 
-            // Метод 3: Если все методы не сработали, используем демо-данные
-            if (ordersData.length === 0) {
-                console.log('🔄 Метод 3: Использую демо-данные...');
-                ordersData = createTestOrders();
-                methodUsed = 'demo data';
-                setOrdersError('⚠️ Сервер заказов недоступен. Показаны демо-данные.');
-            }
+            console.log(`✅ Загружено ${ordersData.length} заказов из БД`);
+            setApiStatus(`Загружено ${ordersData.length} реальных заказов из базы данных`);
 
-            console.log(`✅ Загружено ${ordersData.length} заказов (метод: ${methodUsed})`);
-            setApiStatus(`Загружено ${ordersData.length} заказов`);
-
-            // Применяем поиск если есть
+            // Фильтрация по поиску
             if (ordersSearchTerm) {
                 const term = ordersSearchTerm.toLowerCase();
                 ordersData = ordersData.filter(order =>
                     (order.id && order.id.toString().includes(term)) ||
                     (order.status && order.status.toLowerCase().includes(term)) ||
-                    (order.userId && order.userId.toString().includes(term))
+                    (order.customerTelephone && order.customerTelephone.includes(term)) ||
+                    (order.customerFullName && order.customerFullName.toLowerCase().includes(term))
                 );
             }
 
@@ -249,150 +207,88 @@ const AdminDashboard = () => {
             setOrdersTotalElements(ordersData.length);
 
         } catch (error) {
-            console.error('❌ Критическая ошибка загрузки заказов:', error);
+            console.error('❌ Ошибка загрузки заказов:', error);
             const errorMessage = formatErrorMessage(error);
-            setOrdersError(`Не удалось загрузить заказы: ${errorMessage}`);
+            setOrdersError(`Не удалось загрузить заказов: ${errorMessage}`);
 
-            // Показываем демо-данные при ошибке
-            const demoOrders = createTestOrders();
-            setOrders(demoOrders);
+            // В случае ошибки показываем пустой список
+            setOrders([]);
             setOrdersTotalPages(1);
-            setOrdersTotalElements(demoOrders.length);
-            setApiStatus('Используются демо-данные из-за ошибки соединения');
+            setOrdersTotalElements(0);
+            setApiStatus('Ошибка подключения к серверу заказов');
         } finally {
             setOrdersLoading(false);
         }
     };
 
-    // Создание тестовых заказов для демонстрации
-    const createTestOrders = () => {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
+    const handleViewOrderDetails = async (order) => {
+        try {
+            // Загружаем полные данные заказа из сервера
+            console.log(`🔍 Загрузка деталей заказа #${order.id}...`);
+            const response = await orderApi.getOrderById(order.id);
+            console.log('✅ Детали заказа загружены:', response.data);
 
-        return [
-            {
-                id: 1001,
-                status: 'PENDING',
-                orderDate: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-                userId: 1,
-                restaurantId: 1,
-                restaurantName: 'Mario Italian Kitchen',
-                totalPrice: 3798,
-                items: [
-                    {
-                        dishId: 1,
-                        dishName: 'Margherita Pizza',
-                        quantity: 2,
-                        price: 1899,
-                        dishDescription: 'Classic pizza with tomato sauce'
-                    }
-                ]
-            },
-            {
-                id: 1002,
-                status: 'CONFIRMED',
-                orderDate: new Date(today.getTime() - 4 * 60 * 60 * 1000).toISOString(),
-                userId: 2,
-                restaurantId: 2,
-                restaurantName: 'Dragon Palace',
-                totalPrice: 3200,
-                items: [
-                    {
-                        dishId: 5,
-                        dishName: 'Kung Pao Chicken',
-                        quantity: 1,
-                        price: 1699,
-                        dishDescription: 'Spicy stir-fried chicken'
-                    },
-                    {
-                        dishId: 6,
-                        dishName: 'Fried Rice',
-                        quantity: 2,
-                        price: 1225,
-                        dishDescription: 'Wok-fried rice with eggs'
-                    }
-                ]
-            },
-            {
-                id: 1003,
-                status: 'PREPARING',
-                orderDate: new Date(today.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-                userId: 3,
-                restaurantId: 3,
-                restaurantName: 'Burger Haven',
-                totalPrice: 2450,
-                items: [
-                    {
-                        dishId: 9,
-                        dishName: 'Classic Cheeseburger',
-                        quantity: 1,
-                        price: 1599,
-                        dishDescription: 'Beef patty with cheese'
-                    },
-                    {
-                        dishId: 11,
-                        dishName: 'French Fries',
-                        quantity: 1,
-                        price: 725,
-                        dishDescription: 'Crispy golden fries'
-                    }
-                ]
-            },
-            {
-                id: 1004,
-                status: 'OUT_FOR_DELIVERY',
-                orderDate: new Date(today.getTime() - 30 * 60 * 1000).toISOString(),
-                userId: 4,
-                restaurantId: 4,
-                restaurantName: 'Tokyo Sushi Bar',
-                totalPrice: 4000,
-                items: [
-                    {
-                        dishId: 13,
-                        dishName: 'Salmon Sushi Roll',
-                        quantity: 2,
-                        price: 2000,
-                        dishDescription: 'Fresh salmon sushi'
-                    }
-                ]
-            },
-            {
-                id: 1005,
-                status: 'DELIVERED',
-                orderDate: new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-                userId: 5,
-                restaurantId: 5,
-                restaurantName: 'Taco Fiesta',
-                totalPrice: 2997,
-                items: [
-                    {
-                        dishId: 17,
-                        dishName: 'Beef Tacos',
-                        quantity: 2,
-                        price: 1499,
-                        dishDescription: 'Three soft tacos'
-                    }
-                ]
-            },
-            {
-                id: 1006,
-                status: 'CANCELLED',
-                orderDate: new Date(today.getTime() - 48 * 60 * 60 * 1000).toISOString(),
-                userId: 6,
-                restaurantId: 6,
-                restaurantName: 'Parisian Bistro',
-                totalPrice: 2850,
-                items: [
-                    {
-                        dishId: 21,
-                        dishName: 'Beef Bourguignon',
-                        quantity: 1,
-                        price: 2850,
-                        dishDescription: 'Slow-cooked beef'
-                    }
-                ]
+            if (response.data) {
+                setSelectedOrder(response.data);
+                setOrderFormData({ status: response.data.status || '' });
+                setIsOrderModalOpen(true);
+            } else {
+                setSelectedOrder(order);
+                setOrderFormData({ status: order.status || '' });
+                setIsOrderModalOpen(true);
+                setError('Не удалось загрузить полные данные заказа');
             }
-        ];
+        } catch (error) {
+            console.error('❌ Ошибка загрузки деталей заказа:', error);
+            // Если не удалось загрузить, показываем то, что есть
+            setSelectedOrder(order);
+            setOrderFormData({ status: order.status || '' });
+            setIsOrderModalOpen(true);
+            setError('Не удалось загрузить полные данные заказа');
+        }
+    };
+
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
+    const handleUpdateOrderStatus = async (orderId, status) => {
+        try {
+            console.log(`🔄 Обновление статуса заказа #${orderId} на ${status}`);
+
+            // Отправляем запрос на сервер
+            const response = await orderApi.updateOrderStatus(orderId, status);
+            console.log('✅ Ответ сервера при обновлении статуса:', response.data);
+
+            return response.data;
+
+        } catch (error) {
+            console.error('❌ Ошибка обновления статуса:', error);
+            console.error('Детали ошибки:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                config: error.config
+            });
+
+            let errorMessage = formatErrorMessage(error);
+
+            // Добавляем детали ошибки из ответа сервера
+            if (error.response?.data) {
+                if (typeof error.response.data === 'object') {
+                    if (error.response.data.error) {
+                        errorMessage = error.response.data.error;
+                    }
+                    if (error.response.data.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                    if (error.response.data.details) {
+                        errorMessage += `\nДетали: ${error.response.data.details}`;
+                    }
+                } else if (typeof error.response.data === 'string') {
+                    errorMessage = error.response.data;
+                }
+            }
+
+            throw new Error(errorMessage);
+        }
     };
 
     // Тестирование соединения с сервером заказов
@@ -406,15 +302,19 @@ const AdminDashboard = () => {
             const testResponse = await orderApi.testConnection();
             console.log('✅ Тестовый ответ:', testResponse.data);
 
-            // Тест 2: Попытка получить реальные данные
-            const ordersResponse = await orderApi.getAll();
+            // Тест 2: Проверка авторизации
+            const authResponse = await orderApi.testAuth();
+            console.log('✅ Ответ авторизации:', authResponse.data);
+
+            // Тест 3: Попытка получить реальные данные
+            const ordersResponse = await orderApi.getAllOrders();
             console.log('✅ Ответ с заказами:', ordersResponse.data);
 
             setApiStatus(`✅ Соединение установлено! Получено ${ordersResponse.data?.length || 0} заказов`);
 
         } catch (error) {
             console.error('❌ Ошибка тестирования:', error);
-            setApiStatus('❌ Ошибка соединения. Показаны демо-данные.');
+            setApiStatus('❌ Ошибка соединения.');
             setOrdersError(formatErrorMessage(error));
         } finally {
             setIsTestingConnection(false);
@@ -441,7 +341,8 @@ const AdminDashboard = () => {
             const filtered = orders.filter(order =>
                 (order.id && order.id.toString().includes(term)) ||
                 (order.status && order.status.toLowerCase().includes(term.toLowerCase())) ||
-                (order.userId && order.userId.toString().includes(term)) ||
+                (order.customerTelephone && order.customerTelephone.includes(term)) ||
+                (order.customerFullName && order.customerFullName.toLowerCase().includes(term.toLowerCase())) ||
                 (order.restaurantName && order.restaurantName.toLowerCase().includes(term.toLowerCase()))
             );
             setOrders(filtered);
@@ -537,68 +438,16 @@ const AdminDashboard = () => {
     };
 
     // Заказы CRUD
-    const handleViewOrderDetails = (order) => {
-        setSelectedOrder(order);
-        setIsOrderModalOpen(true);
-    };
-
-    const handleUpdateOrderStatus = async (orderId, newStatus) => {
-        try {
-            await orderApi.updateStatus(orderId, newStatus);
-            alert(`Статус заказа #${orderId} изменен на: ${newStatus}`);
-
-            // Обновляем статус в локальном состоянии
-            setOrders(prevOrders =>
-                prevOrders.map(order =>
-                    order.id === orderId ? { ...order, status: newStatus } : order
-                )
-            );
-
-            setIsOrderModalOpen(false);
-        } catch (error) {
-            console.error('Error updating order status:', error);
-            const errorMessage = formatErrorMessage(error);
-            alert(`Не удалось обновить статус заказа: ${errorMessage}`);
-
-            // В демо-режиме просто обновляем локально
-            if (ordersError.includes('демо')) {
-                setOrders(prevOrders =>
-                    prevOrders.map(order =>
-                        order.id === orderId ? { ...order, status: newStatus } : order
-                    )
-                );
-                alert(`Демо: Статус заказа #${orderId} изменен на: ${newStatus}`);
-                setIsOrderModalOpen(false);
-            }
-        }
-    };
-
     const handleCancelOrder = async (orderId) => {
         if (window.confirm(`Вы уверены, что хотите отменить заказ #${orderId}?`)) {
             try {
-                await orderApi.cancel(orderId);
-                alert(`Заказ #${orderId} отменен`);
-
-                // Обновляем статус в локальном состоянии
-                setOrders(prevOrders =>
-                    prevOrders.map(order =>
-                        order.id === orderId ? { ...order, status: 'CANCELLED' } : order
-                    )
-                );
+                // Используем функцию обновления статуса для отмены
+                await handleUpdateOrderStatus(orderId, 'CANCELLED');
+                alert(`Заказ #${orderId} успешно отменен`);
+                loadOrders();
             } catch (error) {
                 console.error('Error cancelling order:', error);
-                const errorMessage = formatErrorMessage(error);
-                alert(`Не удалось отменить заказ: ${errorMessage}`);
-
-                // В демо-режиме просто обновляем локально
-                if (ordersError.includes('демо')) {
-                    setOrders(prevOrders =>
-                        prevOrders.map(order =>
-                            order.id === orderId ? { ...order, status: 'CANCELLED' } : order
-                        )
-                    );
-                    alert(`Демо: Заказ #${orderId} отменен`);
-                }
+                alert(`Не удалось отменить заказ: ${error.message}`);
             }
         }
     };
@@ -823,6 +672,7 @@ const AdminDashboard = () => {
         }
     };
 
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
     const handleOrderStatusSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -832,7 +682,44 @@ const AdminDashboard = () => {
                 throw new Error('Выберите новый статус');
             }
 
-            await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
+            // Проверяем, что статус изменился
+            if (orderFormData.status === selectedOrder.status) {
+                setError('Статус уже установлен на это значение');
+                return;
+            }
+
+            console.log(`Отправка обновления статуса для заказа #${selectedOrder.id}: ${orderFormData.status}`);
+
+            // Обновляем статус на сервере
+            const updatedOrder = await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
+
+            // Обновляем локальное состояние
+            setOrders(prevOrders =>
+                prevOrders.map(order =>
+                    order.id === selectedOrder.id ? {
+                        ...order,
+                        status: orderFormData.status
+                    } : order
+                )
+            );
+
+            // Обновляем выбранный заказ
+            setSelectedOrder(prev => ({
+                ...prev,
+                status: orderFormData.status
+            }));
+
+            alert(`✅ Статус заказа #${selectedOrder.id} успешно изменен на: ${orderFormData.status}`);
+
+            // Закрываем модальное окно
+            setIsOrderModalOpen(false);
+            setOrderFormData({ status: '' });
+
+            // Перезагружаем заказы для обновления данных
+            setTimeout(() => {
+                loadOrders();
+            }, 500);
+
         } catch (error) {
             console.error('Error updating order status:', error);
             setError(error.message || formatErrorMessage(error));
@@ -1257,7 +1144,7 @@ const AdminDashboard = () => {
                         <div className="section-actions">
                             <SearchBar
                                 onSearch={handleOrderSearch}
-                                placeholder="Поиск заказов по ID, статусу или ресторану..."
+                                placeholder="Поиск заказов по ID, статусу, телефону или имени..."
                             />
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <button
@@ -1306,7 +1193,8 @@ const AdminDashboard = () => {
                                     <thead>
                                     <tr>
                                         <th>ID заказа</th>
-                                        <th>Пользователь</th>
+                                        <th>Клиент</th>
+                                        <th>Телефон</th>
                                         <th>Ресторан</th>
                                         <th>Статус</th>
                                         <th>Общая сумма</th>
@@ -1317,7 +1205,7 @@ const AdminDashboard = () => {
                                     <tbody>
                                     {orders.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" className="empty-cell">
+                                            <td colSpan="8" className="empty-cell">
                                                 <div className="empty-state">
                                                     <div className="empty-icon">📋</div>
                                                     <h3>Заказы не найдены</h3>
@@ -1345,7 +1233,12 @@ const AdminDashboard = () => {
                                             <tr key={order.id}>
                                                 <td className="id-cell">#{order.id}</td>
                                                 <td>
-                                                    <div style={{ fontWeight: '600' }}>ID: {order.userId || 'N/A'}</div>
+                                                    <div style={{ fontWeight: '600' }}>{order.customerFullName || 'Не указано'}</div>
+                                                </td>
+                                                <td className="phone-column">
+                                                    <div style={{ fontWeight: '500', fontFamily: 'monospace' }}>
+                                                        {order.customerTelephone || 'Не указан'}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <div style={{ fontWeight: '500' }}>{order.restaurantName || `ID: ${order.restaurantId || 'N/A'}`}</div>
@@ -1610,12 +1503,30 @@ const AdminDashboard = () => {
                     <div className="order-details">
                         <div className="order-summary">
                             <div className="summary-row">
+                                <span className="summary-label">ID заказа:</span>
+                                <span className="summary-value">#{selectedOrder.id}</span>
+                            </div>
+                            <div className="summary-row">
                                 <span className="summary-label">Статус:</span>
                                 <span className="summary-value">{getStatusBadge(selectedOrder.status)}</span>
                             </div>
                             <div className="summary-row">
-                                <span className="summary-label">ID пользователя:</span>
-                                <span className="summary-value">{selectedOrder.userId}</span>
+                                <span className="summary-label">Клиент:</span>
+                                <span className="summary-value">{selectedOrder.customerFullName || 'Не указано'}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">Телефон:</span>
+                                <span className="summary-value">
+                                    <strong>{selectedOrder.customerTelephone || 'Не указан'}</strong>
+                                </span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">Email:</span>
+                                <span className="summary-value">{selectedOrder.customerEmail || 'Не указан'}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span className="summary-label">Адрес доставки:</span>
+                                <span className="summary-value">{selectedOrder.deliveryAddress || 'Не указан'}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Ресторан:</span>
@@ -1676,6 +1587,23 @@ const AdminDashboard = () => {
                             </div>
                         )}
 
+                        {/* Отладочная информация */}
+                        <div className="debug-info" style={{
+                            marginTop: '20px',
+                            padding: '15px',
+                            backgroundColor: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '8px',
+                            fontSize: '0.85rem'
+                        }}>
+                            <h4 style={{ marginBottom: '10px' }}>Отладочная информация:</h4>
+                            <p><strong>ID заказа:</strong> {selectedOrder?.id}</p>
+                            <p><strong>Текущий статус:</strong> {selectedOrder?.status}</p>
+                            <p><strong>Выбранный статус:</strong> {orderFormData.status}</p>
+                            <p><strong>API Endpoint:</strong> PUT /api/orders/{selectedOrder?.id}/status</p>
+                            <p><strong>Request Data:</strong> {JSON.stringify({ status: orderFormData.status })}</p>
+                        </div>
+
                         <form onSubmit={handleOrderStatusSubmit} className="status-form">
                             <div className="form-group">
                                 <label>Изменить статус:</label>
@@ -1723,6 +1651,26 @@ const AdminDashboard = () => {
                                 >
                                     Закрыть
                                 </button>
+
+                                {/* Тестовая кнопка для отладки */}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        console.log('Тестовый вызов updateOrderStatus...');
+                                        try {
+                                            await handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED');
+                                            alert('✅ Тестовый статус установлен');
+                                            loadOrders();
+                                            setIsOrderModalOpen(false);
+                                        } catch (error) {
+                                            alert(`❌ Ошибка: ${error.message}`);
+                                        }
+                                    }}
+                                    className="btn"
+                                    style={{ backgroundColor: '#6c757d', color: 'white' }}
+                                >
+                                    Тест (DELIVERED)
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -1734,14 +1682,15 @@ const AdminDashboard = () => {
                     max-height: 70vh;
                     overflow-y: auto;
                 }
-                
+
                 .order-summary {
                     background-color: #f8f9fa;
                     border-radius: 8px;
                     padding: 20px;
                     margin-bottom: 20px;
+                    border: 2px solid #000000;
                 }
-                
+
                 .summary-row {
                     display: flex;
                     justify-content: space-between;
@@ -1749,31 +1698,34 @@ const AdminDashboard = () => {
                     padding-bottom: 10px;
                     border-bottom: 1px solid #dee2e6;
                 }
-                
+
                 .summary-row:last-child {
                     border-bottom: none;
                     margin-bottom: 0;
                     padding-bottom: 0;
                 }
-                
+
                 .summary-label {
                     font-weight: 600;
                     color: #000000;
+                    min-width: 150px;
                 }
-                
+
                 .summary-value {
                     color: #000000;
+                    text-align: right;
+                    flex: 1;
                 }
-                
+
                 .order-items {
                     margin-bottom: 20px;
                 }
-                
+
                 .order-items h4 {
                     margin-bottom: 15px;
                     color: #000000;
                 }
-                
+
                 .items-table {
                     width: 100%;
                     border-collapse: collapse;
@@ -1782,7 +1734,7 @@ const AdminDashboard = () => {
                     border-radius: 8px;
                     overflow: hidden;
                 }
-                
+
                 .items-table th {
                     background-color: #000000;
                     color: #ffffff;
@@ -1790,30 +1742,30 @@ const AdminDashboard = () => {
                     text-align: left;
                     font-weight: 600;
                 }
-                
+
                 .items-table td {
                     padding: 12px 15px;
                     border-bottom: 1px solid #e0e0e0;
                 }
-                
+
                 .items-table tr:last-child td {
                     border-bottom: none;
                 }
-                
+
                 .items-table tr:hover {
                     background-color: #f5f5f5;
                 }
-                
+
                 .items-table tfoot {
                     background-color: #f8f9fa;
                     font-weight: bold;
                 }
-                
+
                 .status-form {
                     border-top: 2px solid #000000;
                     padding-top: 20px;
                 }
-                
+
                 .status-select {
                     width: 100%;
                     padding: 12px 15px;
@@ -1823,59 +1775,59 @@ const AdminDashboard = () => {
                     background-color: #ffffff;
                     color: #000000;
                 }
-                
+
                 .btn-refresh {
                     background-color: #000000;
                     color: #ffffff;
                 }
-                
+
                 .btn-refresh:hover {
                     background-color: #333333;
                 }
-                
+
                 .btn-retry {
                     background-color: #000000;
                     color: #ffffff;
                 }
-                
+
                 .btn-retry:hover {
                     background-color: #333333;
                 }
-                
+
                 .btn-view {
                     background-color: #ffffff;
                 }
-                
+
                 .btn-view:hover {
                     background-color: #17a2b8;
                     color: #ffffff;
                 }
-                
+
                 .api-status {
                     padding: 10px 15px;
                     border-radius: 8px;
                     margin-bottom: 15px;
                     font-weight: 500;
                 }
-                
+
                 .api-status.success {
                     background-color: #d4edda;
                     color: #155724;
                     border: 1px solid #c3e6cb;
                 }
-                
+
                 .api-status.error {
                     background-color: #f8d7da;
                     color: #721c24;
                     border: 1px solid #f5c6cb;
                 }
-                
+
                 .api-status.info {
                     background-color: #d1ecf1;
                     color: #0c5460;
                     border: 1px solid #bee5eb;
                 }
-                
+
                 .alert-warning {
                     background-color: #fff3cd;
                     color: #856404;
@@ -1883,6 +1835,23 @@ const AdminDashboard = () => {
                     padding: 15px;
                     border-radius: 8px;
                     margin-bottom: 20px;
+                }
+
+                .phone-column {
+                    font-family: monospace;
+                    color: #000000;
+                    font-weight: 500;
+                }
+
+                .customer-phone {
+                    background-color: #f8f9fa;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    border: 1px solid #000000;
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                    display: inline-block;
+                    margin: 5px 0;
                 }
             `}</style>
         </div>

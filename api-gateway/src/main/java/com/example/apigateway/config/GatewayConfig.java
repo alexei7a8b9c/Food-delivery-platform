@@ -15,15 +15,24 @@ public class GatewayConfig {
                 .route("user-service", r -> r.path("/api/auth/**", "/api/users/**", "/api/health/user/**")
                         .uri("lb://USER-SERVICE"))
 
-                // Order Service
-                .route("order-service", r -> r.path("/api/orders/**", "/api/cart/**", "/api/health/order/**")
-                        .filters(f -> f.addRequestHeader("X-User-Id", "16") // Временный заголовок
-                                .addRequestHeader("X-User-Name", "test@test.com"))
+                // Order Service - ИСПРАВЛЕННЫЕ МАРШРУТЫ
+                .route("order-service", r -> r.path(
+                                "/api/orders/**",
+                                "/api/cart/**",
+                                "/api/health/order/**"
+                        )
+                        .filters(f -> f
+                                .addRequestHeader("X-User-Id", "16") // Временный заголовок
+                                .addRequestHeader("X-User-Name", "admin@fooddelivery.com")
+                                .addRequestHeader("X-User-Roles", "ROLE_ADMIN,ROLE_MANAGER,ROLE_USER")
+                                .rewritePath("/api/orders/(?<segment>.*)", "/orders/${segment}")
+                                .rewritePath("/api/cart/(?<segment>.*)", "/cart/${segment}")
+                        )
                         .uri("lb://ORDER-SERVICE"))
 
-
                 // Restaurant Service
-                .route("restaurant-service", r -> r.path("/api/restaurants/**", "/api/dishes/**", "/api/menu/**", "/api/health/restaurant/**")
+                .route("restaurant-service", r -> r.path("/api/restaurants/**", "/api/dishes/**", "/api/menu/**",
+                                "/api/health/restaurant/**")
                         .uri("lb://RESTAURANT-SERVICE"))
 
                 .build();

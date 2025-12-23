@@ -203,12 +203,21 @@ public class OrderService {
 
     @Transactional
     public OrderResponseDto updateOrderStatus(Long orderId, String status) {
+        log.info("🔄 Updating order {} status to {}", orderId, status);
+
         try {
+            // Преобразуем строку в enum
             Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
             return updateOrderStatus(orderId, orderStatus);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid order status: {}", status);
-            throw new RuntimeException("Invalid order status: " + status);
+            log.error("❌ Invalid order status: {}", status);
+
+            // Исправленная строка: собираем список допустимых статусов
+            String validStatuses = java.util.Arrays.stream(Order.OrderStatus.values())
+                    .map(Enum::name)
+                    .collect(java.util.stream.Collectors.joining(", "));
+
+            throw new RuntimeException("Invalid order status: " + status + ". Valid values: " + validStatuses);
         }
     }
 
@@ -310,94 +319,6 @@ public class OrderService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getUserOrdersByStatus(Long userId, Order.OrderStatus status) {
-        log.info("👤 Getting orders for user {} with status {}", userId, status);
-
-        try {
-            List<Order> orders = orderRepository.findByUserIdAndStatus(userId, status);
-            log.info("Found {} orders for user {} with status {}", orders.size(), userId, status);
-
-            return orders.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error getting user orders by status: {}", e.getMessage());
-            throw new RuntimeException("Failed to get user orders by status: " + e.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getRestaurantOrdersByStatus(Long restaurantId, Order.OrderStatus status) {
-        log.info("🏪 Getting orders for restaurant {} with status {}", restaurantId, status);
-
-        try {
-            List<Order> orders = orderRepository.findByRestaurantIdAndStatus(restaurantId, status);
-            log.info("Found {} orders for restaurant {} with status {}", orders.size(), restaurantId, status);
-
-            return orders.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error getting restaurant orders by status: {}", e.getMessage());
-            throw new RuntimeException("Failed to get restaurant orders by status: " + e.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public OrderStatistics getOrderStatistics() {
-        log.info("📈 Getting order statistics");
-
-        try {
-            long totalOrders = orderRepository.count();
-            long pendingOrders = orderRepository.findByStatus(Order.OrderStatus.PENDING).size();
-            long deliveredOrders = orderRepository.findByStatus(Order.OrderStatus.DELIVERED).size();
-            long cancelledOrders = orderRepository.findByStatus(Order.OrderStatus.CANCELLED).size();
-
-            log.info("Statistics: Total={}, Pending={}, Delivered={}, Cancelled={}",
-                    totalOrders, pendingOrders, deliveredOrders, cancelledOrders);
-
-            return new OrderStatistics(totalOrders, pendingOrders, deliveredOrders, cancelledOrders);
-        } catch (Exception e) {
-            log.error("Error getting order statistics: {}", e.getMessage());
-            throw new RuntimeException("Failed to get order statistics: " + e.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getOrdersByOrderDateBetween(java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
-        log.info("📅 Getting orders between {} and {}", startDate, endDate);
-
-        try {
-            List<Order> orders = orderRepository.findByOrderDateBetween(startDate, endDate);
-            log.info("Found {} orders in date range", orders.size());
-
-            return orders.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error getting orders by date range: {}", e.getMessage());
-            throw new RuntimeException("Failed to get orders by date range: " + e.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getUserOrdersByOrderDateBetween(Long userId, java.time.LocalDateTime startDate, java.time.LocalDateTime endDate) {
-        log.info("📅 Getting orders for user {} between {} and {}", userId, startDate, endDate);
-
-        try {
-            List<Order> orders = orderRepository.findByUserIdAndOrderDateBetween(userId, startDate, endDate);
-            log.info("Found {} orders for user {} in date range", orders.size(), userId);
-
-            return orders.stream()
-                    .map(this::convertToDto)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Error getting user orders by date range: {}", e.getMessage());
-            throw new RuntimeException("Failed to get user orders by date range: " + e.getMessage());
-        }
-    }
-
     // Вспомогательные методы
 
     private Integer calculateTotalPrice(List<CreateOrderRequest.OrderItemDto> items) {
@@ -415,7 +336,7 @@ public class OrderService {
         dto.setRestaurantId(order.getRestaurantId());
         dto.setTotalPrice(order.getTotalPrice());
 
-        // КОНТАКТНАЯ ИНФОРМАЦИЯ
+        // ВАЖНО: Включаем контактную информацию
         dto.setCustomerEmail(order.getCustomerEmail());
         dto.setCustomerFullName(order.getCustomerFullName());
         dto.setCustomerTelephone(order.getCustomerTelephone());
