@@ -221,6 +221,7 @@ const AdminDashboard = () => {
         }
     };
 
+
     // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
     const handleViewOrderDetails = async (order) => {
         try {
@@ -262,18 +263,14 @@ const AdminDashboard = () => {
 
             console.log('Данные для обновления:', orderData);
 
-            // 2. Получаем токен и данные пользователя
-            const token = localStorage.getItem('token');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-            // 3. Отправляем запрос на сервер через наш API
+            // 2. Отправляем запрос на сервер через наш API
             const response = await orderApi.updateOrderStatus(orderId, newStatus);
             console.log('✅ Ответ сервера при обновлении статуса:', response.data);
 
-            if (response.data && response.data.id) {
+            if (response.data) {
                 alert(`✅ Статус заказа #${orderId} успешно изменен на: ${newStatus}`);
 
-                // 4. Обновляем локальное состояние
+                // 3. Обновляем локальное состояние
                 setOrders(prevOrders =>
                     prevOrders.map(order =>
                         order.id === orderId ? {
@@ -283,7 +280,7 @@ const AdminDashboard = () => {
                     )
                 );
 
-                // 5. Обновляем выбранный заказ в модальном окне
+                // 4. Обновляем выбранный заказ в модальном окне
                 if (selectedOrder && selectedOrder.id === orderId) {
                     setSelectedOrder(prev => ({
                         ...prev,
@@ -291,38 +288,16 @@ const AdminDashboard = () => {
                     }));
                 }
 
-                // 6. Закрываем модальное окно
-                setIsOrderModalOpen(false);
-                setOrderFormData({ status: '' });
+                // 5. Если модальное окно открыто - закрываем его
+                if (isOrderModalOpen) {
+                    setIsOrderModalOpen(false);
+                    setOrderFormData({ status: '' });
+                }
 
-                // 7. Перезагружаем заказы для обновления данных
+                // 6. Перезагружаем заказы для обновления данных
                 setTimeout(() => {
                     loadOrders();
                 }, 1000);
-
-            } else {
-                // Если ответ не содержит данных, но статус 200 OK
-                alert(`✅ Статус заказа #${orderId} изменен на: ${newStatus}`);
-
-                // Обновляем локальное состояние
-                setOrders(prevOrders =>
-                    prevOrders.map(order =>
-                        order.id === orderId ? {
-                            ...order,
-                            status: newStatus
-                        } : order
-                    )
-                );
-
-                if (selectedOrder && selectedOrder.id === orderId) {
-                    setSelectedOrder(prev => ({
-                        ...prev,
-                        status: newStatus
-                    }));
-                }
-
-                setIsOrderModalOpen(false);
-                setOrderFormData({ status: '' });
             }
 
         } catch (error) {
@@ -370,17 +345,21 @@ const AdminDashboard = () => {
         try {
             // Тест 1: Проверка тестового эндпоинта
             const testResponse = await orderApi.testConnection();
-            console.log('✅ Тестовый ответ:', testResponse.data);
+            console.log('✅ Тестовый ответ:', testResponse);
 
             // Тест 2: Проверка авторизации
             const authResponse = await orderApi.testAuth();
-            console.log('✅ Ответ авторизации:', authResponse.data);
+            console.log('✅ Ответ авторизации:', authResponse);
 
-            // Тест 3: Попытка получить реальные данные
-            const ordersResponse = await orderApi.getAllOrders();
-            console.log('✅ Ответ с заказами:', ordersResponse.data);
-
-            setApiStatus(`✅ Соединение установлено! Получено ${ordersResponse.data?.length || 0} заказов`);
+            // Тест 3: Попытка получить реальные данные (если сервер доступен)
+            try {
+                const ordersResponse = await orderApi.getAllOrders();
+                console.log('✅ Ответ с заказами:', ordersResponse.data);
+                setApiStatus(`✅ Соединение установлено! Получено ${ordersResponse.data?.length || 0} заказов`);
+            } catch (serverError) {
+                console.warn('⚠️ Сервер доступен, но данные получить не удалось:', serverError.message);
+                setApiStatus('✅ Соединение установлено, но сервер заказов вернул ошибку');
+            }
 
         } catch (error) {
             console.error('❌ Ошибка тестирования:', error);
@@ -511,6 +490,24 @@ const AdminDashboard = () => {
     const handleCancelOrder = async (orderId) => {
         if (window.confirm(`Вы уверены, что хотите отменить заказ #${orderId}?`)) {
             try {
+                // Получаем текущий заказ для проверки статуса
+                const order = orders.find(o => o.id === orderId);
+                if (!order) {
+                    alert('Заказ не найден');
+                    return;
+                }
+
+                // Проверяем, можно ли отменить заказ
+                if (order.status === 'CANCELLED') {
+                    alert('Заказ уже отменен');
+                    return;
+                }
+
+                if (order.status === 'DELIVERED') {
+                    alert('Нельзя отменить доставленный заказ');
+                    return;
+                }
+
                 // Используем функцию обновления статуса для отмены
                 await handleUpdateOrderStatus(orderId, 'CANCELLED');
             } catch (error) {
@@ -760,6 +757,12 @@ const AdminDashboard = () => {
             console.log(`Отправка обновления статуса для заказа #${selectedOrder.id}: ${orderFormData.status}`);
 
             await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
+
+            // Закрываем модальное окно после успешного обновления
+            setIsOrderModalOpen(false);
+            setSelectedOrder(null);
+            setOrderFormData({ status: '' });
+
         } catch (error) {
             console.error('Error updating order status:', error);
             setError(error.message || formatErrorMessage(error));
@@ -1324,6 +1327,8 @@ const AdminDashboard = () => {
                                                             onClick={() => handleCancelOrder(order.id)}
                                                             className="btn-action btn-delete"
                                                             disabled={order.status === 'CANCELLED' || order.status === 'DELIVERED'}
+                                                            style={order.status === 'CANCELLED' || order.status === 'DELIVERED' ?
+                                                                { opacity: 0.5, cursor: 'not-allowed' } : {}}
                                                         >
                                                             🗑️ Отменить
                                                         </button>
