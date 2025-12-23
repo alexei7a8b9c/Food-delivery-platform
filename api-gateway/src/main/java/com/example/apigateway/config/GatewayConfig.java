@@ -21,12 +21,7 @@ public class GatewayConfig {
                                 "/api/cart/**",
                                 "/api/health/order/**"
                         )
-                        .filters(f -> f
-                                .addRequestHeader("X-User-Id", "16") // Временный заголовок
-                                .addRequestHeader("X-User-Name", "admin@fooddelivery.com")
-                                .addRequestHeader("X-User-Roles", "ROLE_ADMIN,ROLE_MANAGER,ROLE_USER") // Добавьте роли
-                        )
-                        .uri("lb://ORDER-SERVICE"))
+                        .uri("lb://ORDER-SERVICE"))  // <-- Должно быть ORDER-SERVICE
 
                 // Restaurant Service
                 .route("restaurant-service", r -> r.path("/api/restaurants/**", "/api/dishes/**", "/api/menu/**",

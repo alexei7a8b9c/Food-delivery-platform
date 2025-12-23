@@ -14,14 +14,6 @@ spring:
             allowed-headers: "*"
             allow-credentials: true
             max-age: 3600
-      httpclient:
-        connect-timeout: 10000
-        response-timeout: 30000
-  # Конфигурация для обработки больших файлов
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
 
 eureka:
   client:
