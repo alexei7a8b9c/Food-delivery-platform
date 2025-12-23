@@ -170,11 +170,11 @@ const AdminDashboard = () => {
         setApiStatus('');
 
         try {
-            console.log('🔄 Загрузка заказов через API Gateway...');
+            console.log('Загрузка заказов через API...');
 
-            // Используем реальный API вместо демо-данных
+            // Используем реальный API
             const response = await orderApi.getAllOrders();
-            console.log('✅ Ответ от сервера заказов:', response.data);
+            console.log('Ответ от сервера заказов:', response.data);
 
             let ordersData = [];
 
@@ -188,8 +188,15 @@ const AdminDashboard = () => {
                 }
             }
 
-            console.log(`✅ Загружено ${ordersData.length} заказов из БД`);
-            setApiStatus(`Загружено ${ordersData.length} реальных заказов из базы данных`);
+            console.log(`Загружено ${ordersData.length} заказов из БД`);
+            setApiStatus(`Загружено ${ordersData.length} заказов из базы данных`);
+
+            // Сортируем заказы по дате создания (сначала новые)
+            ordersData.sort((a, b) => {
+                const dateA = new Date(a.orderDate || a.createdAt || a.date || 0);
+                const dateB = new Date(b.orderDate || b.createdAt || b.date || 0);
+                return dateB - dateA; // Убывание (сначала новые)
+            });
 
             // Фильтрация по поиску
             if (ordersSearchTerm) {
@@ -207,7 +214,7 @@ const AdminDashboard = () => {
             setOrdersTotalElements(ordersData.length);
 
         } catch (error) {
-            console.error('❌ Ошибка загрузки заказов:', error);
+            console.error('Ошибка загрузки заказов:', error);
             const errorMessage = formatErrorMessage(error);
             setOrdersError(`Не удалось загрузить заказов: ${errorMessage}`);
 
@@ -221,14 +228,13 @@ const AdminDashboard = () => {
         }
     };
 
-
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
+    // ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
     const handleViewOrderDetails = async (order) => {
         try {
             // Загружаем полные данные заказа из сервера
-            console.log(`🔍 Загрузка деталей заказа #${order.id}...`);
+            console.log(`Загрузка деталей заказа #${order.id}...`);
             const response = await orderApi.getOrderById(order.id);
-            console.log('✅ Детали заказа загружены:', response.data);
+            console.log('Детали заказа загружены:', response.data);
 
             if (response.data) {
                 setSelectedOrder(response.data);
@@ -241,7 +247,7 @@ const AdminDashboard = () => {
                 setError('Не удалось загрузить полные данные заказа');
             }
         } catch (error) {
-            console.error('❌ Ошибка загрузки деталей заказа:', error);
+            console.error('Ошибка загрузки деталей заказа:', error);
             // Если не удалось загрузить, показываем то, что есть
             setSelectedOrder(order);
             setOrderFormData({ status: order.status || '' });
@@ -250,11 +256,10 @@ const AdminDashboard = () => {
         }
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
+    // ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
     const handleUpdateOrderStatus = async (orderId, newStatus) => {
         try {
-            console.log(`🔄 Обновление статуса заказа #${orderId} на ${newStatus}`);
+            console.log(`Обновление статуса заказа #${orderId} на ${newStatus}`);
 
             // 1. Формируем корректные данные
             const orderData = {
@@ -265,20 +270,29 @@ const AdminDashboard = () => {
 
             // 2. Отправляем запрос на сервер через наш API
             const response = await orderApi.updateOrderStatus(orderId, newStatus);
-            console.log('✅ Ответ сервера при обновлении статуса:', response.data);
+            console.log('Ответ сервера при обновлении статуса:', response.data);
 
             if (response.data) {
-                alert(`✅ Статус заказа #${orderId} успешно изменен на: ${newStatus}`);
+                alert(`Статус заказа #${orderId} успешно изменен на: ${newStatus}`);
 
-                // 3. Обновляем локальное состояние
-                setOrders(prevOrders =>
-                    prevOrders.map(order =>
+                // 3. Обновляем локальное состояние с сохранением сортировки
+                setOrders(prevOrders => {
+                    const updatedOrders = prevOrders.map(order =>
                         order.id === orderId ? {
                             ...order,
                             status: newStatus
                         } : order
-                    )
-                );
+                    );
+
+                    // Сортируем по дате (сначала новые)
+                    updatedOrders.sort((a, b) => {
+                        const dateA = new Date(a.orderDate || a.createdAt || a.date || 0);
+                        const dateB = new Date(b.orderDate || b.createdAt || b.date || 0);
+                        return dateB - dateA;
+                    });
+
+                    return updatedOrders;
+                });
 
                 // 4. Обновляем выбранный заказ в модальном окне
                 if (selectedOrder && selectedOrder.id === orderId) {
@@ -301,7 +315,7 @@ const AdminDashboard = () => {
             }
 
         } catch (error) {
-            console.error('❌ Ошибка обновления статуса:', error);
+            console.error('Ошибка обновления статуса:', error);
             console.error('Детали ошибки:', {
                 status: error.response?.status,
                 data: error.response?.data,
@@ -327,7 +341,7 @@ const AdminDashboard = () => {
                 }
             }
 
-            alert(`❌ Не удалось обновить статус заказа #${orderId}:\n${errorMessage}`);
+            alert(`Не удалось обновить статус заказа #${orderId}:\n${errorMessage}`);
 
             // Показываем дополнительные детали для отладки
             if (error.response?.data) {
@@ -343,27 +357,19 @@ const AdminDashboard = () => {
         setApiStatus('Тестирование соединения...');
 
         try {
-            // Тест 1: Проверка тестового эндпоинта
-            const testResponse = await orderApi.testConnection();
-            console.log('✅ Тестовый ответ:', testResponse);
-
-            // Тест 2: Проверка авторизации
-            const authResponse = await orderApi.testAuth();
-            console.log('✅ Ответ авторизации:', authResponse);
-
-            // Тест 3: Попытка получить реальные данные (если сервер доступен)
+            // Тест: Попытка получить реальные данные
             try {
                 const ordersResponse = await orderApi.getAllOrders();
-                console.log('✅ Ответ с заказами:', ordersResponse.data);
-                setApiStatus(`✅ Соединение установлено! Получено ${ordersResponse.data?.length || 0} заказов`);
+                console.log('Ответ с заказами:', ordersResponse.data);
+                setApiStatus(`Соединение установлено! Получено ${ordersResponse.data?.length || 0} заказов`);
             } catch (serverError) {
-                console.warn('⚠️ Сервер доступен, но данные получить не удалось:', serverError.message);
-                setApiStatus('✅ Соединение установлено, но сервер заказов вернул ошибку');
+                console.warn('Сервер доступен, но данные получить не удалось:', serverError.message);
+                setApiStatus('Соединение установлено, но сервер заказов вернул ошибку');
             }
 
         } catch (error) {
-            console.error('❌ Ошибка тестирования:', error);
-            setApiStatus('❌ Ошибка соединения.');
+            console.error('Ошибка тестирования:', error);
+            setApiStatus('Ошибка соединения.');
             setOrdersError(formatErrorMessage(error));
         } finally {
             setIsTestingConnection(false);
@@ -394,6 +400,14 @@ const AdminDashboard = () => {
                 (order.customerFullName && order.customerFullName.toLowerCase().includes(term.toLowerCase())) ||
                 (order.restaurantName && order.restaurantName.toLowerCase().includes(term.toLowerCase()))
             );
+
+            // Сортируем отфильтрованные результаты
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.orderDate || a.createdAt || a.date || 0);
+                const dateB = new Date(b.orderDate || b.createdAt || b.date || 0);
+                return dateB - dateA; // Убывание (сначала новые)
+            });
+
             setOrders(filtered);
             setOrdersTotalElements(filtered.length);
         } else {
@@ -738,7 +752,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
+    // ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
     const handleOrderStatusSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -1714,19 +1728,6 @@ const AdminDashboard = () => {
                                     className="btn btn-cancel"
                                 >
                                     Закрыть
-                                </button>
-
-                                {/* Тестовая кнопка для отладки */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        console.log('Тестовый вызов updateOrderStatus...');
-                                        handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED');
-                                    }}
-                                    className="btn"
-                                    style={{ backgroundColor: '#6c757d', color: 'white' }}
-                                >
-                                    Тест (DELIVERED)
                                 </button>
                             </div>
                         </form>
