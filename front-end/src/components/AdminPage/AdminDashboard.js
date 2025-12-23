@@ -163,7 +163,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ ЗАКАЗОВ
+    // ФУНКЦИЯ ЗАГРУЗКИ ЗАКАЗОВ
     const loadOrders = async () => {
         setOrdersLoading(true);
         setOrdersError('');
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
                 ordersData = ordersData.filter(order =>
                     (order.id && order.id.toString().includes(term)) ||
                     (order.status && order.status.toLowerCase().includes(term)) ||
-                    (order.customerTelephone && order.customerTelephone.includes(term)) || // Поиск по телефону
+                    (order.customerTelephone && order.customerTelephone.includes(term)) ||
                     (order.customerFullName && order.customerFullName.toLowerCase().includes(term))
                 );
             }
@@ -221,48 +221,143 @@ const AdminDashboard = () => {
         }
     };
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОСМОТРА ДЕТАЛЕЙ ЗАКАЗА
     const handleViewOrderDetails = async (order) => {
         try {
             // Загружаем полные данные заказа из сервера
+            console.log(`🔍 Загрузка деталей заказа #${order.id}...`);
             const response = await orderApi.getOrderById(order.id);
-            console.log('Детали заказа:', response.data);
-            setSelectedOrder(response.data);
-            setIsOrderModalOpen(true);
+            console.log('✅ Детали заказа загружены:', response.data);
+
+            if (response.data) {
+                setSelectedOrder(response.data);
+                setOrderFormData({ status: response.data.status || '' });
+                setIsOrderModalOpen(true);
+            } else {
+                setSelectedOrder(order);
+                setOrderFormData({ status: order.status || '' });
+                setIsOrderModalOpen(true);
+                setError('Не удалось загрузить полные данные заказа');
+            }
         } catch (error) {
-            console.error('Ошибка загрузки деталей заказа:', error);
+            console.error('❌ Ошибка загрузки деталей заказа:', error);
             // Если не удалось загрузить, показываем то, что есть
             setSelectedOrder(order);
+            setOrderFormData({ status: order.status || '' });
             setIsOrderModalOpen(true);
             setError('Не удалось загрузить полные данные заказа');
         }
     };
 
-    // ОБНОВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
     const handleUpdateOrderStatus = async (orderId, newStatus) => {
         try {
-            // Отправляем запрос на сервер
+            console.log(`🔄 Обновление статуса заказа #${orderId} на ${newStatus}`);
+
+            // 1. Формируем корректные данные
+            const orderData = {
+                status: newStatus
+            };
+
+            console.log('Данные для обновления:', orderData);
+
+            // 2. Получаем токен и данные пользователя
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            // 3. Отправляем запрос на сервер через наш API
             const response = await orderApi.updateOrderStatus(orderId, newStatus);
-            console.log('Статус обновлен:', response.data);
-            alert(`✅ Статус заказа #${orderId} изменен на: ${newStatus}`);
+            console.log('✅ Ответ сервера при обновлении статуса:', response.data);
 
-            // Обновляем локальное состояние
-            setOrders(prevOrders =>
-                prevOrders.map(order =>
-                    order.id === orderId ? { ...order, status: newStatus } : order
-                )
-            );
+            if (response.data && response.data.id) {
+                alert(`✅ Статус заказа #${orderId} успешно изменен на: ${newStatus}`);
 
-            // Обновляем выбранный заказ в модальном окне
-            if (selectedOrder && selectedOrder.id === orderId) {
-                setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+                // 4. Обновляем локальное состояние
+                setOrders(prevOrders =>
+                    prevOrders.map(order =>
+                        order.id === orderId ? {
+                            ...order,
+                            status: newStatus
+                        } : order
+                    )
+                );
+
+                // 5. Обновляем выбранный заказ в модальном окне
+                if (selectedOrder && selectedOrder.id === orderId) {
+                    setSelectedOrder(prev => ({
+                        ...prev,
+                        status: newStatus
+                    }));
+                }
+
+                // 6. Закрываем модальное окно
+                setIsOrderModalOpen(false);
+                setOrderFormData({ status: '' });
+
+                // 7. Перезагружаем заказы для обновления данных
+                setTimeout(() => {
+                    loadOrders();
+                }, 1000);
+
+            } else {
+                // Если ответ не содержит данных, но статус 200 OK
+                alert(`✅ Статус заказа #${orderId} изменен на: ${newStatus}`);
+
+                // Обновляем локальное состояние
+                setOrders(prevOrders =>
+                    prevOrders.map(order =>
+                        order.id === orderId ? {
+                            ...order,
+                            status: newStatus
+                        } : order
+                    )
+                );
+
+                if (selectedOrder && selectedOrder.id === orderId) {
+                    setSelectedOrder(prev => ({
+                        ...prev,
+                        status: newStatus
+                    }));
+                }
+
+                setIsOrderModalOpen(false);
+                setOrderFormData({ status: '' });
             }
 
-            setIsOrderModalOpen(false);
         } catch (error) {
-            console.error('Ошибка обновления статуса:', error);
-            const errorMessage = formatErrorMessage(error);
-            alert(`❌ Не удалось обновить статус заказа: ${errorMessage}`);
+            console.error('❌ Ошибка обновления статуса:', error);
+            console.error('Детали ошибки:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                config: error.config
+            });
+
+            let errorMessage = formatErrorMessage(error);
+
+            // Добавляем детали ошибки из ответа сервера
+            if (error.response?.data) {
+                if (typeof error.response.data === 'object') {
+                    if (error.response.data.error) {
+                        errorMessage = error.response.data.error;
+                    }
+                    if (error.response.data.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                    if (error.response.data.details) {
+                        errorMessage += `\nДетали: ${error.response.data.details}`;
+                    }
+                } else if (typeof error.response.data === 'string') {
+                    errorMessage = error.response.data;
+                }
+            }
+
+            alert(`❌ Не удалось обновить статус заказа #${orderId}:\n${errorMessage}`);
+
+            // Показываем дополнительные детали для отладки
+            if (error.response?.data) {
+                console.error('Данные ошибки:', error.response.data);
+            }
         }
     };
 
@@ -277,7 +372,11 @@ const AdminDashboard = () => {
             const testResponse = await orderApi.testConnection();
             console.log('✅ Тестовый ответ:', testResponse.data);
 
-            // Тест 2: Попытка получить реальные данные
+            // Тест 2: Проверка авторизации
+            const authResponse = await orderApi.testAuth();
+            console.log('✅ Ответ авторизации:', authResponse.data);
+
+            // Тест 3: Попытка получить реальные данные
             const ordersResponse = await orderApi.getAllOrders();
             console.log('✅ Ответ с заказами:', ordersResponse.data);
 
@@ -412,15 +511,8 @@ const AdminDashboard = () => {
     const handleCancelOrder = async (orderId) => {
         if (window.confirm(`Вы уверены, что хотите отменить заказ #${orderId}?`)) {
             try {
-                await orderApi.cancelOrder(orderId);
-                alert(`Заказ #${orderId} отменен`);
-
-                // Обновляем статус в локальном состоянии
-                setOrders(prevOrders =>
-                    prevOrders.map(order =>
-                        order.id === orderId ? { ...order, status: 'CANCELLED' } : order
-                    )
-                );
+                // Используем функцию обновления статуса для отмены
+                await handleUpdateOrderStatus(orderId, 'CANCELLED');
             } catch (error) {
                 console.error('Error cancelling order:', error);
                 const errorMessage = formatErrorMessage(error);
@@ -649,6 +741,7 @@ const AdminDashboard = () => {
         }
     };
 
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА ЗАКАЗА
     const handleOrderStatusSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -657,6 +750,14 @@ const AdminDashboard = () => {
             if (!selectedOrder || !orderFormData.status) {
                 throw new Error('Выберите новый статус');
             }
+
+            // Проверяем, что статус изменился
+            if (orderFormData.status === selectedOrder.status) {
+                setError('Статус уже установлен на это значение');
+                return;
+            }
+
+            console.log(`Отправка обновления статуса для заказа #${selectedOrder.id}: ${orderFormData.status}`);
 
             await handleUpdateOrderStatus(selectedOrder.id, orderFormData.status);
         } catch (error) {
@@ -759,6 +860,23 @@ const AdminDashboard = () => {
     };
 
     const stats = getStats();
+
+    // Функция для получения названия ресторана по ID
+    const getRestaurantNameById = (restaurantId) => {
+        if (!restaurantId) return 'Не указан';
+
+        const restaurant = restaurants.find(r => r.id === restaurantId);
+        return restaurant ? restaurant.name : `ID: ${restaurantId}`;
+    };
+
+    // Функция для форматирования суммы (деление на 100 для перевода из копеек в рубли)
+    const formatTotalPrice = (price) => {
+        if (price === undefined || price === null) return '0.00';
+
+        // Если цена хранится в копейках (как в вашем backend), делим на 100
+        const priceInRubles = price / 100;
+        return priceInRubles.toFixed(2);
+    };
 
     return (
         <div className="admin-dashboard">
@@ -1180,13 +1298,15 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div style={{ fontWeight: '500' }}>{order.restaurantName || `ID: ${order.restaurantId || 'N/A'}`}</div>
+                                                    <div style={{ fontWeight: '500' }}>
+                                                        {order.restaurantName || getRestaurantNameById(order.restaurantId)}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     {getStatusBadge(order.status)}
                                                 </td>
                                                 <td className="price">
-                                                    ${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}
+                                                    ${formatTotalPrice(order.totalPrice)}
                                                 </td>
                                                 <td>
                                                     {order.orderDate ? new Date(order.orderDate).toLocaleString() : 'N/A'}
@@ -1469,11 +1589,11 @@ const AdminDashboard = () => {
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Ресторан:</span>
-                                <span className="summary-value">{selectedOrder.restaurantName || `ID: ${selectedOrder.restaurantId}`}</span>
+                                <span className="summary-value">{selectedOrder.restaurantName || getRestaurantNameById(selectedOrder.restaurantId)}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Общая сумма:</span>
-                                <span className="summary-value">${selectedOrder.totalPrice?.toFixed(2) || '0.00'}</span>
+                                <span className="summary-value">${formatTotalPrice(selectedOrder.totalPrice)}</span>
                             </div>
                             <div className="summary-row">
                                 <span className="summary-label">Дата заказа:</span>
@@ -1507,9 +1627,9 @@ const AdminDashboard = () => {
                                                 )}
                                             </td>
                                             <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                                            <td style={{ textAlign: 'right' }}>${item.price?.toFixed(2) || '0.00'}</td>
+                                            <td style={{ textAlign: 'right' }}>${formatTotalPrice(item.price)}</td>
                                             <td style={{ textAlign: 'right', fontWeight: '600' }}>
-                                                ${((item.price || 0) * item.quantity).toFixed(2)}
+                                                ${((item.price || 0) * item.quantity / 100).toFixed(2)}
                                             </td>
                                         </tr>
                                     ))}
@@ -1518,13 +1638,30 @@ const AdminDashboard = () => {
                                     <tr>
                                         <td colSpan="3" style={{ textAlign: 'right', fontWeight: '600' }}>Итого:</td>
                                         <td style={{ textAlign: 'right', fontWeight: '700' }}>
-                                            ${selectedOrder.totalPrice?.toFixed(2) || '0.00'}
+                                            ${formatTotalPrice(selectedOrder.totalPrice)}
                                         </td>
                                     </tr>
                                     </tfoot>
                                 </table>
                             </div>
                         )}
+
+                        {/* Отладочная информация */}
+                        <div className="debug-info" style={{
+                            marginTop: '20px',
+                            padding: '15px',
+                            backgroundColor: '#f8f9fa',
+                            border: '1px solid #dee2e6',
+                            borderRadius: '8px',
+                            fontSize: '0.85rem'
+                        }}>
+                            <h4 style={{ marginBottom: '10px' }}>Отладочная информация:</h4>
+                            <p><strong>ID заказа:</strong> {selectedOrder?.id}</p>
+                            <p><strong>Текущий статус:</strong> {selectedOrder?.status}</p>
+                            <p><strong>Выбранный статус:</strong> {orderFormData.status}</p>
+                            <p><strong>API Endpoint:</strong> PUT /orders/{selectedOrder?.id}/status</p>
+                            <p><strong>Request Data:</strong> {JSON.stringify({ status: orderFormData.status })}</p>
+                        </div>
 
                         <form onSubmit={handleOrderStatusSubmit} className="status-form">
                             <div className="form-group">
@@ -1572,6 +1709,19 @@ const AdminDashboard = () => {
                                     className="btn btn-cancel"
                                 >
                                     Закрыть
+                                </button>
+
+                                {/* Тестовая кнопка для отладки */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        console.log('Тестовый вызов updateOrderStatus...');
+                                        handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED');
+                                    }}
+                                    className="btn"
+                                    style={{ backgroundColor: '#6c757d', color: 'white' }}
+                                >
+                                    Тест (DELIVERED)
                                 </button>
                             </div>
                         </form>
