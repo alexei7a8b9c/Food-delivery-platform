@@ -68,7 +68,7 @@ public class CartController {
     @PutMapping("/items/{dishId}")
     public ResponseEntity<Map<String, Object>> updateQuantity(
             @RequestHeader("X-User-Id") String userId,
-            @PathVariable Long dishId,
+            @PathVariable("dishId") Long dishId,  // <-- Явное указание имени
             @RequestBody Map<String, Integer> request) {
 
         Integer quantity = request.get("quantity");
@@ -98,7 +98,7 @@ public class CartController {
     @DeleteMapping("/items/{dishId}")
     public ResponseEntity<Map<String, Object>> removeFromCart(
             @RequestHeader("X-User-Id") String userId,
-            @PathVariable Long dishId) {
+            @PathVariable("dishId") Long dishId) {  // <-- Явное указание имени
 
         System.out.println("DELETE /api/cart/items/" + dishId + " called, userId: " + userId);
 

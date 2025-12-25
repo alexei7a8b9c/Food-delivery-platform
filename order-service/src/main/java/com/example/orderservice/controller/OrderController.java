@@ -3,6 +3,8 @@ package com.example.orderservice.controller;
 import com.example.orderservice.dto.CreateOrderRequest;
 import com.example.orderservice.dto.OrderResponseDto;
 import com.example.orderservice.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Tag(name = "Заказы", description = "API для управления заказами")
 public class OrderController {
 
     private final OrderService orderService;
@@ -24,31 +27,68 @@ public class OrderController {
     // НОВЫЙ МЕТОД: Получить все заказы (для администратора)
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Получить все заказы (администратор)")
     public ResponseEntity<List<OrderResponseDto>> getAllOrders() {
-        System.out.println("📋 Получение всех заказов (админ)");
+        System.out.println("📋 [API Gateway] Получение всех заказов (админ)");
 
         try {
             List<OrderResponseDto> orders = orderService.getAllOrders();
-            System.out.println("✅ Найдено заказов: " + orders.size());
+            System.out.println("✅ [API Gateway] Найдено заказов: " + orders.size());
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            System.err.println("❌ Ошибка получения заказов: " + e.getMessage());
+            System.err.println("❌ [API Gateway] Ошибка получения заказов: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
+    // НОВЫЙ МЕТОД: Получить заказы ресторана (для менеджера/админа)
+    @GetMapping("/admin/restaurant/{restaurantId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Получить заказы ресторана")
+    public ResponseEntity<List<OrderResponseDto>> getRestaurantOrders(
+            @PathVariable("restaurantId") Long restaurantId) {  // <-- Явное указание имени
+        System.out.println("🍽️ [API Gateway] Получение заказов ресторана ID: " + restaurantId);
+
+        try {
+            List<OrderResponseDto> orders = orderService.getRestaurantOrders(restaurantId);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            System.err.println("❌ [API Gateway] Ошибка получения заказов ресторана: " + e.getMessage());
+            return ResponseEntity.status(500).body(List.of());
+        }
+    }
+
+    // НОВЫЙ МЕТОД: Получить заказы по статусу (для админа)
+    @GetMapping("/admin/status/{status}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Получить заказы по статусу")
+    public ResponseEntity<List<OrderResponseDto>> getOrdersByStatus(
+            @PathVariable("status") String status) {  // <-- Явное указание имени
+        System.out.println("📊 [API Gateway] Получение заказов по статусу: " + status);
+
+        try {
+            List<OrderResponseDto> orders = orderService.getOrdersByStatus(status);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            System.err.println("❌ [API Gateway] Ошибка получения заказов по статусу: " + e.getMessage());
+            return ResponseEntity.status(400).body(List.of());
         }
     }
 
     // НОВЫЙ МЕТОД: Получить заказ по ID с деталями
     @GetMapping("/{orderId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable Long orderId) {
-        System.out.println("🔍 Получение заказа по ID: " + orderId);
+    @Operation(summary = "Получить заказ по ID")
+    public ResponseEntity<OrderResponseDto> getOrderById(
+            @PathVariable("orderId") Long orderId) {  // <-- Явное указание имени
+        System.out.println("🔍 [API Gateway] Получение заказа по ID: " + orderId);
 
         try {
             OrderResponseDto order = orderService.getOrderById(orderId);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
-            System.err.println("❌ Ошибка получения заказа #" + orderId + ": " + e.getMessage());
+            System.err.println("❌ [API Gateway] Ошибка получения заказа #" + orderId + ": " + e.getMessage());
             return ResponseEntity.status(404).build();
         }
     }
@@ -56,13 +96,14 @@ public class OrderController {
     // ИСПРАВЛЕННЫЙ МЕТОД: Обновить статус заказа
     @PutMapping("/{orderId}/status")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Обновить статус заказа")
     public ResponseEntity<?> updateOrderStatus(
-            @PathVariable Long orderId,
+            @PathVariable("orderId") Long orderId,  // <-- Явное указание имени
             @RequestBody StatusUpdateRequest request) {
 
-        System.out.println("🔄 API: Обновление статуса заказа #" + orderId);
-        System.out.println("📊 Запрошенный статус: " + request.getStatus());
-        System.out.println("📦 Данные запроса: " + request);
+        System.out.println("🔄 [API Gateway] Обновление статуса заказа #" + orderId);
+        System.out.println("📊 [API Gateway] Запрошенный статус: " + request.getStatus());
+        System.out.println("📦 [API Gateway] Данные запроса: " + request);
 
         try {
             // Проверяем, что статус не пустой
@@ -75,12 +116,12 @@ public class OrderController {
 
             // Обновляем статус
             OrderResponseDto updatedOrder = orderService.updateOrderStatus(orderId, request.getStatus());
-            System.out.println("✅ Статус заказа #" + orderId + " обновлен на: " + updatedOrder.getStatus());
+            System.out.println("✅ [API Gateway] Статус заказа #" + orderId + " обновлен на: " + updatedOrder.getStatus());
 
             return ResponseEntity.ok(updatedOrder);
 
         } catch (IllegalArgumentException e) {
-            System.err.println("❌ Некорректный статус: " + e.getMessage());
+            System.err.println("❌ [API Gateway] Некорректный статус: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "error", e.getMessage(),
                     "orderId", orderId,
@@ -88,7 +129,7 @@ public class OrderController {
             ));
 
         } catch (RuntimeException e) {
-            System.err.println("❌ Ошибка обновления статуса: " + e.getMessage());
+            System.err.println("❌ [API Gateway] Ошибка обновления статуса: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
                     "error", "Внутренняя ошибка сервера: " + e.getMessage(),
@@ -97,7 +138,7 @@ public class OrderController {
             ));
 
         } catch (Exception e) {
-            System.err.println("❌ Неожиданная ошибка: " + e.getMessage());
+            System.err.println("❌ [API Gateway] Неожиданная ошибка: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
                     "error", "Внутренняя ошибка сервера",
@@ -108,11 +149,40 @@ public class OrderController {
         }
     }
 
+    // НОВЫЙ МЕТОД: Отменить заказ (админ)
+    @DeleteMapping("/{orderId}/cancel")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Отменить заказ")
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable("orderId") Long orderId) {  // <-- Явное указание имени
+        System.out.println("❌ [API Gateway] Отмена заказа #" + orderId + " (админ)");
+
+        try {
+            OrderResponseDto cancelledOrder = orderService.cancelOrder(orderId);
+            return ResponseEntity.ok(cancelledOrder);
+        } catch (RuntimeException e) {
+            System.err.println("❌ [API Gateway] Ошибка отмены заказа: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage(),
+                    "orderId", orderId
+            ));
+        } catch (Exception e) {
+            System.err.println("❌ [API Gateway] Неожиданная ошибка при отмене заказа: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "Внутренняя ошибка сервера",
+                    "orderId", orderId
+            ));
+        }
+    }
+
     // НОВЫЙ МЕТОД: Получить данные пользователя по ID
     @GetMapping("/user/{userId}/details")
+    @Operation(summary = "Получить данные пользователя")
     public ResponseEntity<UserDetailsResponse> getUserDetails(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,  // <-- Явное указание имени
             @RequestHeader("X-User-Id") Long currentUserId) {
+
+        System.out.println("👤 [API Gateway] Получение данных пользователя: " + userId);
 
         // Проверяем, что пользователь запрашивает свои данные
         if (!userId.equals(currentUserId)) {
@@ -135,16 +205,18 @@ public class OrderController {
         }
     }
 
-    // Существующие методы...
+    // Тестовые эндпоинты
     @GetMapping("/test")
+    @Operation(summary = "Тестовый эндпоинт")
     public ResponseEntity<String> test() {
-        System.out.println("✅ Тестовый эндпоинт order-service работает!");
+        System.out.println("✅ [API Gateway] Тестовый эндпоинт order-service работает!");
         return ResponseEntity.ok("Order service is working!");
     }
 
     @GetMapping("/test/auth")
+    @Operation(summary = "Тест авторизации")
     public ResponseEntity<Map<String, Object>> testAuth() {
-        System.out.println("✅ Тест авторизации order-service");
+        System.out.println("✅ [API Gateway] Тест авторизации order-service");
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "service", "order-service",
@@ -153,20 +225,38 @@ public class OrderController {
         ));
     }
 
+    // Создание заказа
     @PostMapping
+    @Operation(summary = "Создать новый заказ")
     public ResponseEntity<OrderResponseDto> createOrder(
             @RequestHeader("X-User-Id") Long userId,
             @RequestBody CreateOrderRequest orderRequest) {
 
-        System.out.println("Creating order for user: " + userId);
-        System.out.println("Order request: " + orderRequest);
-        System.out.println("Customer info: " +
+        System.out.println("📦 [API Gateway] Создание заказа для пользователя: " + userId);
+        System.out.println("📦 [API Gateway] Данные заказа: " + orderRequest);
+        System.out.println("📧 [API Gateway] Контактные данные: " +
                 orderRequest.getCustomerEmail() + ", " +
                 orderRequest.getCustomerFullName() + ", " +
                 orderRequest.getCustomerTelephone());
 
         OrderResponseDto order = orderService.placeOrder(userId, orderRequest);
         return ResponseEntity.status(201).body(order);
+    }
+
+    // Получить заказы пользователя
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Получить заказы пользователя")
+    public ResponseEntity<List<OrderResponseDto>> getUserOrders(
+            @PathVariable("userId") Long userId) {  // <-- Явное указание имени
+        System.out.println("📋 [API Gateway] Получение заказов пользователя ID: " + userId);
+
+        try {
+            List<OrderResponseDto> orders = orderService.getUserOrders(userId);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            System.err.println("❌ [API Gateway] Ошибка получения заказов пользователя: " + e.getMessage());
+            return ResponseEntity.status(500).body(List.of());
+        }
     }
 
     // DTO для ответа с данными пользователя
