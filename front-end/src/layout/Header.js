@@ -56,9 +56,6 @@ const Header = () => {
                     ) : (
                         <div className="user-menu">
                             <span className="user-email">{user?.email}</span>
-                            <button onClick={() => console.log('User:', user)} className="btn btn-debug">
-                                Debug
-                            </button>
                             <button onClick={handleLogout} className="btn btn-logout">
                                 Выйти
                             </button>

@@ -28,32 +28,26 @@ export const AuthProvider = ({ children }) => {
 
         if (token) {
             try {
-                // Декодируем токен для получения ролей
                 const decodedToken = decodeToken(token);
 
-                // Пробуем получить роли из разных мест
                 let roles = ['USER'];
                 let userEmail = '';
                 let userId = null;
 
                 if (decodedToken) {
-                    // Извлекаем email и ID
                     userEmail = decodedToken.sub || userData?.email || 'unknown';
                     userId = decodedToken.userId || decodedToken.id;
 
-                    // Пробуем разные поля, где могут быть роли
                     roles = decodedToken.roles ||
                         decodedToken.authorities ||
                         decodedToken.scope ||
                         ['USER'];
 
-                    // Если roles строка, преобразуем в массив
                     if (typeof roles === 'string') {
                         roles = roles.split(',').map(r => r.trim());
                     }
                 }
 
-                // Сохраняем или обновляем пользователя
                 const userObj = userData ? JSON.parse(userData) : {};
                 const updatedUser = {
                     ...userObj,
@@ -63,7 +57,7 @@ export const AuthProvider = ({ children }) => {
                     fullName: userObj.fullName || '',
                     telephone: userObj.telephone || '',
                     roles: roles,
-                    decoded: decodedToken // Для отладки
+                    decoded: decodedToken
                 };
 
                 console.log('Final user object:', updatedUser);
@@ -93,7 +87,6 @@ export const AuthProvider = ({ children }) => {
                 const token = response.data.accessToken;
                 const decoded = decodeToken(token);
 
-                // Извлекаем данные из ответа
                 let roles = ['USER'];
                 if (decoded) {
                     roles = decoded.roles ||
@@ -106,7 +99,6 @@ export const AuthProvider = ({ children }) => {
                     }
                 }
 
-                // Сохраняем полные данные пользователя
                 const userData = {
                     email: response.data.email || email,
                     id: response.data.userId || decoded?.userId || decoded?.id,
@@ -174,10 +166,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        console.log('Logging out');
+        console.log('Logging out - clearing all user data');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        // Также очищаем корзину
+        localStorage.removeItem('cart');
         setUser(null);
+
+        // Принудительно перезагружаем страницу для полного сброса состояния
+        window.location.href = '/';
     };
 
     const isAuthenticated = () => {
@@ -200,7 +197,6 @@ export const AuthProvider = ({ children }) => {
             userEmail: user.email
         });
 
-        // Проверяем разные форматы
         if (Array.isArray(userRoles)) {
             const result = userRoles.some(r => {
                 const roleMatch =

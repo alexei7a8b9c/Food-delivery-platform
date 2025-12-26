@@ -2007,3 +2007,197 @@ body {
     color: #000000;
     font-weight: 700;
 }
+
+/* Стили для секции заказов пользователя */
+.user-orders-section {
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    position: sticky;
+    top: 400px;
+}
+
+.user-orders-section .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    color: #000000;
+}
+
+.orders-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.orders-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.orders-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.orders-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.orders-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.order-item {
+    border: 1px solid #000000;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.order-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.order-info {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    color: #333333;
+}
+
+.order-info div {
+    margin-bottom: 4px;
+}
+
+.btn-view-details {
+    width: 100%;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-view-details:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Стили для модального окна заказа */
+.order-details-modal {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.order-details-modal .order-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #000000;
+}
+
+.order-details-modal .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.order-details-modal .summary-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.items-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.items-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.items-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.items-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.item-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.item-row:last-child {
+    border-bottom: none;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-close {
+    padding: 8px 16px;
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+    background-color: #333333;
+}
+
+/* Адаптивные стили для заказов */
+@media (max-width: 768px) {
+    .user-orders-section {
+        margin-top: 15px;
+        padding: 15px;
+    }
+
+    .order-item {
+        padding: 10px;
+    }
+
+    .order-header {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .order-info div {
+        font-size: 0.8rem;
+    }
+}
