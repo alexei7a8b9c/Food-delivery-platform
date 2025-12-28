@@ -2,8 +2,6 @@ server:
   port: 8761
 
 spring:
-  application:
-    name: eureka-server
   security:
     user:
       name: admin
@@ -15,19 +13,15 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://admin:admin123@localhost:8761/eureka/
-  instance:
-    hostname: localhost
-    prefer-ip-address: false
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
+    endpoint:
+      health:
+        show-details: always
 
 logging:
   level:
