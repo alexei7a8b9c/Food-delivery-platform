@@ -1,45 +1,39 @@
-# УДАЛИТЬ строку version: '3.8' или закомментировать ее
+version: '3.8'
 
 networks:
   food-delivery-network:
-    driver: bridge
-    name: food-delivery-network
+    external: true
 
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
-  pgadmin_data:    # ДОБАВИТЬ эту строку
 
 services:
-  # PostgreSQL
   postgres:
     image: postgres:15-alpine
-    container_name: food-delivery-postgres
+    container_name: postgres
     environment:
       POSTGRES_DB: food_delivery
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
-      POSTGRES_MULTIPLE_DATABASES: "user_db,order_db,restaurant_db"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d food_delivery"]
+      test: ["CMD-SHELL", "pg_isready -U admin"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
     restart: unless-stopped
 
-  # Redis
   redis:
     image: redis:7-alpine
-    container_name: food-delivery-redis
+    container_name: redis
     command: redis-server --requirepass redis123 --appendonly yes
     ports:
       - "6379:6379"
@@ -52,13 +46,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
     restart: unless-stopped
 
-  # RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: food-delivery-rabbitmq
+    container_name: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
@@ -74,23 +66,4 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
     restart: unless-stopped
-
-
-  # УДАЛИТЕ или закомментируйте секцию pgadmin если она не нужна
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: food-delivery-pgadmin
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@fooddelivery.com
-  #     PGADMIN_DEFAULT_PASSWORD: admin123
-  #   ports:
-  #     - "5050:80"
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
-  #   networks:
-  #     - food-delivery-network
-  #   depends_on:
-  #     - postgres
-  #   restart: unless-stopped

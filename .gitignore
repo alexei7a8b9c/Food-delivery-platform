@@ -1,5 +1,7 @@
 # Front-end папка
 front-end/node_modules
+.jdks
+maven
 
 # Maven
 target/

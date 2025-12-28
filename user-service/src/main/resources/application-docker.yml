@@ -9,33 +9,55 @@ spring:
     username: user_db
     password: user_db
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
   flyway:
     enabled: true
     locations: classpath:db/migration
+    baseline-on-migrate: true
+
+jwt:
+  secret: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
+  expiration: 86400000
 
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: http://admin:admin123@eureka-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+    enabled: true
   instance:
     prefer-ip-address: true
+    hostname: user-service
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
 
-jwt:
-  secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
-  expiration: 86400000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
 
 logging:
   level:
-    org.flywaydb: DEBUG
-    org.hibernate.SQL: DEBUG
     com.example.userservice: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+    org.springframework.security: DEBUG
+    org.flywaydb: INFO
