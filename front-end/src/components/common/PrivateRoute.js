@@ -17,7 +17,7 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
         return (
             <div className="loading">
                 <div className="spinner"></div>
-                <p>Загрузка...</p>
+                <p>Loading...</p>
             </div>
         );
     }
@@ -31,14 +31,14 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
         console.log('Access denied - not admin');
         return (
             <div className="access-denied">
-                <h2>⚠️ Доступ запрещен</h2>
-                <p>Только администраторы могут просматривать эту страницу.</p>
+                <h2>⚠️ Access Denied</h2>
+                <p>Only administrators can view this page.</p>
 
                 <div className="debug-info">
-                    <h3>Отладочная информация:</h3>
+                    <h3>Debug Information:</h3>
                     <p><strong>Email:</strong> {user?.email}</p>
-                    <p><strong>Роли в localStorage:</strong> {JSON.stringify(user?.roles)}</p>
-                    <p><strong>Токен:</strong> {user?.token ? 'Есть' : 'Нет'}</p>
+                    <p><strong>Roles in localStorage:</strong> {JSON.stringify(user?.roles)}</p>
+                    <p><strong>Token:</strong> {user?.token ? 'Present' : 'Missing'}</p>
 
                     <button
                         onClick={() => {
@@ -49,27 +49,27 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
                         }}
                         className="btn btn-debug"
                     >
-                        Обновить данные
+                        Refresh Data
                     </button>
                 </div>
 
                 <div className="solutions">
-                    <h3>Возможные решения:</h3>
+                    <h3>Possible Solutions:</h3>
                     <ol>
-                        <li>Выйти и войти снова</li>
-                        <li>Проверить, что вы используете админский аккаунт</li>
-                        <li>Проверить консоль браузера (F12)</li>
+                        <li>Log out and log in again</li>
+                        <li>Check that you are using an admin account</li>
+                        <li>Check the browser console (F12)</li>
                     </ol>
                 </div>
 
                 <div className="actions">
-                    <a href="/" className="btn">На главную</a>
+                    <a href="/" className="btn">Go to Home</a>
                     <button onClick={() => {
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
                         window.location.href = '/login';
                     }} className="btn btn-logout">
-                        Выйти и войти снова
+                        Log out and log in again
                     </button>
                 </div>
             </div>

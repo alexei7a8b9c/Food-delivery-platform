@@ -14,16 +14,16 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
         const file = event.target.files[0];
         if (!file) return;
 
-        // Проверяем размер файла
+        // Check file size
         if (file.size > maxSizeMB * 1024 * 1024) {
-            setError(`Максимальный размер файла: ${maxSizeMB}MB`);
+            setError(`Maximum file size: ${maxSizeMB}MB`);
             return;
         }
 
-        // Проверяем тип файла
+        // Check file type
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            setError('Поддерживаются только изображения (JPEG, PNG, GIF, WebP)');
+            setError('Only images are supported (JPEG, PNG, GIF, WebP)');
             return;
         }
 
@@ -33,14 +33,14 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
         try {
             await onUpload(file);
 
-            // Создаем preview для отображения
+            // Create preview for display
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImageUrl(e.target.result);
             };
             reader.readAsDataURL(file);
         } catch (error) {
-            setError(error.message || 'Ошибка при загрузке изображения');
+            setError(error.message || 'Error uploading image');
             console.error('Upload error:', error);
         } finally {
             setUploading(false);
@@ -53,7 +53,7 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
             setImageUrl('');
             setError('');
         } catch (error) {
-            setError(error.message || 'Ошибка при удалении изображения');
+            setError(error.message || 'Error deleting image');
             console.error('Delete error:', error);
         }
     };
@@ -90,7 +90,7 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
                                     className="btn btn-sm"
                                     disabled={uploading}
                                 >
-                                    📁 Заменить
+                                    📁 Reload
                                 </button>
                                 <button
                                     type="button"
@@ -98,7 +98,7 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
                                     className="btn btn-sm btn-danger"
                                     disabled={uploading}
                                 >
-                                    🗑️ Удалить
+                                    🗑️ Delete
                                 </button>
                             </div>
                         </div>
@@ -117,9 +117,9 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
                         >
                             <div className="upload-icon" style={{ fontSize: '2rem', marginBottom: '10px' }}>📷</div>
                             <div className="upload-text">
-                                <p>Нажмите для загрузки изображения</p>
+                                <p>Click to upload image</p>
                                 <p className="upload-hint" style={{ fontSize: '0.9rem', color: '#666' }}>
-                                    Макс. размер: {maxSizeMB}MB
+                                    Max. size: {maxSizeMB}MB
                                 </p>
                             </div>
                         </div>
@@ -149,7 +149,7 @@ const ImageUploader = ({ onUpload, onDelete, initialImageUrl, label, maxSizeMB =
                     fontSize: '14px',
                     textAlign: 'center'
                 }}>
-                    Загрузка изображения...
+                    Uploading image...
                 </div>
             )}
         </div>

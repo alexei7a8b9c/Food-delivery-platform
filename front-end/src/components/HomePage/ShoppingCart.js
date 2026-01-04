@@ -9,15 +9,15 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
     const [checkoutError, setCheckoutError] = useState('');
     const [orderSuccess, setOrderSuccess] = useState(false);
 
-    // Состояние для контактной информации
+    // State for contact information
     const [contactInfo, setContactInfo] = useState({
         email: '',
         fullName: '',
         telephone: '',
-        deliveryAddress: 'Доставка по адресу'
+        deliveryAddress: 'Delivery to address'
     });
 
-    // Загружаем данные пользователя при открытии модального окна
+    // Load user data when modal opens
     useEffect(() => {
         if (isCheckoutModalOpen && user && user.token) {
             loadUserData();
@@ -26,7 +26,7 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
 
     const loadUserData = async () => {
         try {
-            // Если пользователь авторизован, заполняем его данные
+            // If user is authenticated, populate their data
             if (user && user.email) {
                 setContactInfo(prev => ({
                     ...prev,
@@ -35,7 +35,7 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                     telephone: user.telephone || ''
                 }));
 
-                // Дополнительно пробуем получить данные из user-service через order-service
+                // Additionally try to get data from user-service via order-service
                 if (user.id) {
                     try {
                         const response = await orderApi.getUserDetails(user.id);
@@ -49,7 +49,7 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                         }
                     } catch (error) {
                         console.log('Could not load user details from service:', error.message);
-                        // Используем данные из localStorage
+                        // Use data from localStorage
                     }
                 }
             }
@@ -60,12 +60,12 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
 
     const handleCheckout = () => {
         if (cart.length === 0) {
-            alert('Корзина пуста');
+            alert('Cart is empty');
             return;
         }
 
         if (!restaurantId) {
-            alert('Пожалуйста, выберите ресторан');
+            alert('Please select a restaurant');
             return;
         }
 
@@ -82,17 +82,17 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
 
     const validateContactInfo = () => {
         if (!contactInfo.email || !contactInfo.email.includes('@')) {
-            setCheckoutError('Введите корректный email адрес');
+            setCheckoutError('Enter a valid email address');
             return false;
         }
 
         if (!contactInfo.fullName || contactInfo.fullName.trim().length < 2) {
-            setCheckoutError('Введите ваше полное имя');
+            setCheckoutError('Enter your full name');
             return false;
         }
 
         if (!contactInfo.telephone || contactInfo.telephone.trim().length < 5) {
-            setCheckoutError('Введите ваш телефон');
+            setCheckoutError('Enter your phone number');
             return false;
         }
 
@@ -103,14 +103,14 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
         setCheckoutLoading(true);
         setCheckoutError('');
 
-        // Валидация контактных данных
+        // Validate contact information
         if (!validateContactInfo()) {
             setCheckoutLoading(false);
             return;
         }
 
         try {
-            // Подготавливаем данные заказа с контактной информацией
+            // Prepare order data with contact information
             const orderData = {
                 restaurantId: restaurantId,
                 items: cart.map(item => ({
@@ -129,32 +129,32 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
 
             console.log('Sending order data with contact info:', orderData);
 
-            // Отправляем заказ
+            // Send order
             const response = await orderApi.createOrder(orderData);
 
             console.log('Order created with contact info:', response.data);
 
-            // Показываем успех
+            // Show success
             setOrderSuccess(true);
 
-            // Через 3 секунды закрываем и очищаем корзину
+            // Close and clear cart after 3 seconds
             setTimeout(() => {
                 setIsCheckoutModalOpen(false);
                 onClear();
                 setOrderSuccess(false);
-                // Сбрасываем форму
+                // Reset form
                 setContactInfo({
                     email: user?.email || '',
                     fullName: user?.fullName || '',
                     telephone: user?.telephone || '',
-                    deliveryAddress: 'Доставка по адресу'
+                    deliveryAddress: 'Delivery to address'
                 });
             }, 3000);
 
         } catch (error) {
             console.error('Order creation error:', error);
             const errorMessage = formatErrorMessage(error);
-            setCheckoutError(`Ошибка при оформлении заказа: ${errorMessage}`);
+            setCheckoutError(`Error creating order: ${errorMessage}`);
         } finally {
             setCheckoutLoading(false);
         }
@@ -164,12 +164,12 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
         return (
             <div className="shopping-cart empty">
                 <div className="cart-header">
-                    <h2 className="section-title">Корзина</h2>
+                    <h2 className="section-title">Shopping Cart</h2>
                     <span className="cart-count">0</span>
                 </div>
                 <div className="empty-cart">
                     <div className="empty-icon">🛒</div>
-                    <p>Корзина пуста</p>
+                    <p>Cart is empty</p>
                 </div>
             </div>
         );
@@ -179,7 +179,7 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
         <>
             <div className="shopping-cart">
                 <div className="cart-header" onClick={() => setIsCollapsed(!isCollapsed)}>
-                    <h2 className="section-title">Корзина</h2>
+                    <h2 className="section-title">Shopping Cart</h2>
                     <div className="cart-info">
                         <span className="cart-count">{cart.length}</span>
                         <span className="cart-toggle">{isCollapsed ? '▼' : '▲'}</span>
@@ -231,20 +231,20 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
 
                         <div className="cart-footer">
                             <div className="cart-total">
-                                <span>Итого:</span>
+                                <span>Total:</span>
                                 <span className="total-price">${totalPrice.toFixed(2)}</span>
                             </div>
 
                             <div className="cart-actions">
                                 <button onClick={onClear} className="btn btn-clear-cart">
-                                    Очистить корзину
+                                    Clear Cart
                                 </button>
                                 <button
                                     onClick={handleCheckout}
                                     className="btn btn-checkout"
                                     disabled={!restaurantId}
                                 >
-                                    Оформить заказ
+                                    Checkout
                                 </button>
                             </div>
                         </div>
@@ -252,7 +252,7 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                 )}
             </div>
 
-            {/* Модальное окно подтверждения заказа с контактной информацией */}
+            {/* Order confirmation modal with contact information */}
             <Modal
                 isOpen={isCheckoutModalOpen}
                 onClose={() => {
@@ -262,38 +262,35 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                         setOrderSuccess(false);
                     }
                 }}
-                title="Подтверждение заказа"
+                title="Order Confirmation"
                 size="lg"
             >
                 {orderSuccess ? (
                     <div className="order-success">
                         <div className="success-icon">✅</div>
-                        <h3>Заказ успешно оформлен!</h3>
-                        <p>Номер вашего заказа: <strong>#{Date.now() % 10000}</strong></p>
-                        <p>Статус: <span className="status-badge status-pending">PENDING</span></p>
-                        <p>Мы свяжемся с вами по телефону: <strong>{contactInfo.telephone}</strong></p>
-                        <p>Подтверждение отправлено на: <strong>{contactInfo.email}</strong></p>
+                        <h3>Order successfully placed!!!</h3>
+                        <p>We will contact you by phone: <strong>{contactInfo.telephone}</strong></p>
                     </div>
                 ) : (
                     <div className="checkout-modal">
                         <div className="order-summary">
-                            <h4>Детали заказа</h4>
+                            <h4>Order Details</h4>
                             <div className="summary-item">
-                                <span>Ресторан:</span>
+                                <span>Restaurant:</span>
                                 <strong>{restaurantName}</strong>
                             </div>
                             <div className="summary-item">
-                                <span>Количество блюд:</span>
+                                <span>Number of dishes:</span>
                                 <strong>{cart.length}</strong>
                             </div>
                             <div className="summary-item">
-                                <span>Итого:</span>
+                                <span>Total:</span>
                                 <strong className="total">${totalPrice.toFixed(2)}</strong>
                             </div>
                         </div>
 
                         <div className="order-items-preview">
-                            <h4>Состав заказа:</h4>
+                            <h4>Order Items:</h4>
                             {cart.map(item => (
                                 <div key={item.id} className="preview-item">
                                     <span className="item-name">{item.name} × {item.quantity}</span>
@@ -304,18 +301,18 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                             ))}
                         </div>
 
-                        {/* Форма для контактной информации */}
+                        {/* Contact information form */}
                         <div className="contact-info-form">
-                            <h4>Контактная информация:</h4>
+                            <h4>Contact Information:</h4>
 
                             {user && user.email ? (
                                 <div className="user-info-notice">
-                                    <p className="user-logged-in">👤 Вы авторизованы как: <strong>{user.email}</strong></p>
-                                    <p className="user-info-hint">Используются ваши данные из профиля. Вы можете их изменить:</p>
+                                    <p className="user-logged-in">👤 You are logged in as: <strong>{user.email}</strong></p>
+                                    <p className="user-info-hint">Using your profile data. You can modify it:</p>
                                 </div>
                             ) : (
                                 <div className="user-info-notice">
-                                    <p className="user-not-logged-in">👤 Вы не авторизованы. Заполните данные:</p>
+                                    <p className="user-not-logged-in">👤 You are not logged in. Please fill in your details:</p>
                                 </div>
                             )}
 
@@ -327,59 +324,59 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                                         name="email"
                                         value={contactInfo.email}
                                         onChange={handleContactInfoChange}
-                                        placeholder="Введите ваш email"
+                                        placeholder="Enter your email"
                                         required
                                         className="form-input"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Полное имя *</label>
+                                    <label>Full Name *</label>
                                     <input
                                         type="text"
                                         name="fullName"
                                         value={contactInfo.fullName}
                                         onChange={handleContactInfoChange}
-                                        placeholder="Введите ваше полное имя"
+                                        placeholder="Enter your full name"
                                         required
                                         className="form-input"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Телефон *</label>
+                                    <label>Phone *</label>
                                     <input
                                         type="tel"
                                         name="telephone"
                                         value={contactInfo.telephone}
                                         onChange={handleContactInfoChange}
-                                        placeholder="+7 (999) 999-99-99"
+                                        placeholder="+1 (999) 999-99-99"
                                         required
                                         className="form-input"
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Адрес доставки</label>
+                                    <label>Delivery Address</label>
                                     <textarea
                                         name="deliveryAddress"
                                         value={contactInfo.deliveryAddress}
                                         onChange={handleContactInfoChange}
-                                        placeholder="Укажите адрес доставки"
+                                        placeholder="Specify delivery address"
                                         rows="3"
                                         className="form-textarea"
                                     />
                                 </div>
 
                                 <div className="form-hint">
-                                    <p>* Поля, отмеченные звездочкой, обязательны для заполнения</p>
+                                    <p>* Fields marked with an asterisk are required</p>
                                 </div>
                             </div>
                         </div>
 
                         {checkoutError && (
                             <div className="alert alert-error">
-                                <strong>Ошибка:</strong> {checkoutError}
+                                <strong>Error:</strong> {checkoutError}
                             </div>
                         )}
 
@@ -389,14 +386,14 @@ const ShoppingCart = ({ cart, onRemove, onUpdateQuantity, onClear, totalPrice, r
                                 className="btn btn-confirm"
                                 disabled={checkoutLoading}
                             >
-                                {checkoutLoading ? 'Оформление...' : 'Подтвердить заказ'}
+                                {checkoutLoading ? 'Processing...' : 'Confirm Order'}
                             </button>
                             <button
                                 onClick={() => setIsCheckoutModalOpen(false)}
                                 className="btn btn-cancel"
                                 disabled={checkoutLoading}
                             >
-                                Отмена
+                                Cancel
                             </button>
                         </div>
                     </div>

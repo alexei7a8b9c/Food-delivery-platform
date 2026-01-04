@@ -11,7 +11,7 @@ const apiClient = axios.create({
     },
 });
 
-// Перехватчик для автоматического добавления заголовков
+// Interceptor for automatic header addition
 apiClient.interceptors.request.use(
     config => {
         const token = localStorage.getItem('token');
@@ -19,18 +19,18 @@ apiClient.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Для API Gateway добавляем заголовки пользователя
+        // For API Gateway add user headers
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         if (user && user.email) {
             config.headers['X-User-Id'] = user.id || '16';
             config.headers['X-User-Name'] = user.email;
         } else {
-            // Значения по умолчанию для тестирования
+            // Default values for testing
             config.headers['X-User-Id'] = '16';
             config.headers['X-User-Name'] = 'admin@fooddelivery.com';
         }
 
-        // ДОБАВЛЕНО: Роли для доступа к админским эндпоинтам
+        // ADDED: Roles for accessing admin endpoints
         config.headers['X-User-Roles'] = 'ROLE_ADMIN,ROLE_MANAGER,ROLE_USER';
 
         console.log('📤 API Request:', {
@@ -48,7 +48,7 @@ apiClient.interceptors.request.use(
     }
 );
 
-// Перехватчик для логирования ответов
+// Interceptor for logging responses
 apiClient.interceptors.response.use(
     response => {
         console.log('📥 API Response:', {
@@ -71,7 +71,7 @@ apiClient.interceptors.response.use(
     }
 );
 
-// Функция форматирования ошибок
+// Error message formatting function
 export const formatErrorMessage = (error) => {
     if (error.response) {
         const { status, data } = error.response;
@@ -79,15 +79,15 @@ export const formatErrorMessage = (error) => {
         console.log('Error details:', { status, data });
 
         if (status === 401) {
-            return 'Ошибка авторизации. Пожалуйста, войдите снова.';
+            return 'Authorization error. Please log in again.';
         }
 
         if (status === 403) {
-            return 'У вас нет прав для выполнения этого действия.';
+            return 'You do not have permission to perform this action.';
         }
 
         if (status === 404) {
-            return 'Ресурс не найден.';
+            return 'Resource not found.';
         }
 
         if (status === 400) {
@@ -97,36 +97,36 @@ export const formatErrorMessage = (error) => {
             if (data && data.error) {
                 return data.error;
             }
-            return 'Некорректный запрос. Проверьте введенные данные.';
+            return 'Invalid request. Please check your input.';
         }
 
         if (status === 422) {
-            return 'Ошибка валидации данных. Проверьте правильность введенных данных.';
+            return 'Data validation error. Please check the correctness of the entered data.';
         }
 
         if (status >= 500) {
-            return 'Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.';
+            return 'Internal server error. Please try again later.';
         }
 
         if (data && data.error) {
             return data.error;
         }
 
-        return `Ошибка сервера (${status})`;
+        return `Server error (${status})`;
     }
 
     if (error.request) {
-        return 'Ошибка сети. Проверьте подключение к серверу.';
+        return 'Network error. Please check your server connection.';
     }
 
     if (error.message) {
         return error.message;
     }
 
-    return 'Неизвестная ошибка';
+    return 'Unknown error';
 };
 
-// API для ресторанов
+// Restaurant API
 export const restaurantApi = {
     getAll: (params) => apiClient.get('/restaurants', { params }),
     getById: (id) => apiClient.get(`/restaurants/${id}`),
@@ -135,7 +135,7 @@ export const restaurantApi = {
     delete: (id) => apiClient.delete(`/restaurants/${id}`),
 };
 
-// API для блюд
+// Dish API
 export const dishApi = {
     getAll: (params) => apiClient.get('/dishes', { params }),
     getById: (id) => apiClient.get(`/dishes/${id}`),
@@ -162,7 +162,7 @@ export const dishApi = {
     deleteImage: (id) => apiClient.delete(`/dishes/${id}/image`),
 };
 
-// API для корзины
+// Cart API
 export const cartApi = {
     getCart: () => apiClient.get('/cart'),
     addToCart: (item) => apiClient.post('/cart/items', item),
@@ -172,39 +172,39 @@ export const cartApi = {
     clearCart: () => apiClient.delete('/cart')
 };
 
-// API для заказов - ОБНОВЛЕННЫЙ
+// Order API - UPDATED
 export const orderApi = {
-    // Получить все заказы (для администратора)
+    // Get all orders (for administrator)
     getAllOrders: () => {
-        console.log('📤 Получение всех заказов...');
+        console.log('📤 Getting all orders...');
         return apiClient.get('/orders/admin/all');
     },
 
-    // Получить заказ по ID с деталями
+    // Get order by ID with details
     getOrderById: (orderId) => {
-        console.log(`📤 Получение заказа #${orderId}...`);
+        console.log(`📤 Getting order #${orderId}...`);
         return apiClient.get(`/orders/${orderId}`);
     },
 
-    // ОБНОВИТЬ СТАТУС ЗАКАЗА - ИСПРАВЛЕННЫЙ МЕТОД
+    // UPDATE ORDER STATUS - FIXED METHOD
     updateOrderStatus: (orderId, status) => {
-        console.log(`📤 Обновление статуса заказа #${orderId} -> ${status}`);
+        console.log(`📤 Updating order status #${orderId} -> ${status}`);
         const data = { status: status };
         return apiClient.put(`/orders/${orderId}/status`, data);
     },
 
-    // Тестовые методы - ИСПРАВЛЕННЫЕ (теперь возвращают Promise.resolve для тестирования)
+    // Test methods - FIXED (now return Promise.resolve for testing)
     testConnection: () => {
-        console.log('🔍 Тестирование соединения с сервером заказов');
+        console.log('🔍 Testing connection with order server');
         return Promise.resolve({ data: 'Connection test successful' });
     },
 
     testAuth: () => {
-        console.log('🔍 Тестирование авторизации с сервером заказов');
+        console.log('🔍 Testing authorization with order server');
         return Promise.resolve({ data: 'Auth test successful' });
     },
 
-    // Другие методы
+    // Other methods
     getUserDetails: (userId) =>
         apiClient.get(`/orders/user/${userId}/details`),
     createOrder: (orderData) => {

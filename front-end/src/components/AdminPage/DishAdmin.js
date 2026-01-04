@@ -65,7 +65,7 @@ const DishAdmin = () => {
         } catch (error) {
             console.error('Error loading dishes:', error);
             const errorMessage = formatErrorMessage(error);
-            setError(`Не удалось загрузить блюда: ${errorMessage}`);
+            setError(`Failed to load dishes: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -115,7 +115,7 @@ const DishAdmin = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (window.confirm(`Вы уверены, что хотите удалить блюдо "${name}"?`)) {
+        if (window.confirm(`Are you sure you want to delete the dish "${name}"?`)) {
             try {
                 const dish = dishes.find(d => d.id === id);
                 if (dish && dish.imageUrl) {
@@ -127,12 +127,12 @@ const DishAdmin = () => {
                 }
 
                 await dishApi.delete(id);
-                alert('Блюдо успешно удалено');
+                alert('Dish successfully deleted');
                 loadDishes();
             } catch (error) {
                 console.error('Error deleting dish:', error);
                 const errorMessage = formatErrorMessage(error);
-                alert(`Не удалось удалить блюдо: ${errorMessage}`);
+                alert(`Failed to delete dish: ${errorMessage}`);
             }
         }
     };
@@ -165,7 +165,7 @@ const DishAdmin = () => {
             return Promise.resolve();
         } catch (error) {
             const errorMessage = formatErrorMessage(error);
-            setError(`Ошибка загрузки изображения: ${errorMessage}`);
+            setError(`Image upload error: ${errorMessage}`);
             return Promise.reject(error);
         } finally {
             setImageUploading(false);
@@ -186,7 +186,7 @@ const DishAdmin = () => {
             return Promise.resolve();
         } catch (error) {
             const errorMessage = formatErrorMessage(error);
-            setError(`Ошибка удаления изображения: ${errorMessage}`);
+            setError(`Failed to delete image: ${errorMessage}`);
             return Promise.reject(error);
         }
     };
@@ -207,10 +207,10 @@ const DishAdmin = () => {
                 } else {
                     await dishApi.update(editingDish.id, dishData);
                 }
-                alert('Блюдо успешно обновлено');
+                alert('Dish successfully updated');
             } else {
                 await dishApi.create(dishData);
-                alert('Блюдо успешно создано');
+                alert('Dish successfully created');
             }
 
             setIsModalOpen(false);
@@ -247,7 +247,7 @@ const DishAdmin = () => {
                 <div className="search-filters">
                     <SearchBar
                         onSearch={handleSearch}
-                        placeholder="Поиск блюд по названию или описанию..."
+                        placeholder="Search dishes by name or description..."
                     />
 
                     <select
@@ -255,7 +255,7 @@ const DishAdmin = () => {
                         onChange={handleRestaurantFilterChange}
                         className="filter-select"
                     >
-                        <option value="">Все рестораны</option>
+                        <option value="">All restaurants</option>
                         {restaurants.map(restaurant => (
                             <option key={restaurant.id} value={restaurant.id}>
                                 {restaurant.name}
@@ -265,19 +265,19 @@ const DishAdmin = () => {
 
                     {(searchTerm || selectedRestaurant) && (
                         <button onClick={handleClearFilters} className="btn btn-secondary">
-                            Сбросить фильтры
+                            Clear filters
                         </button>
                     )}
                 </div>
 
                 <button onClick={handleCreate} className="btn btn-primary">
-                    + Добавить блюдо
+                    + Add dish
                 </button>
             </div>
 
             {error && (
                 <div className="alert alert-error">
-                    <strong>Ошибка:</strong> {error}
+                    <strong>Error:</strong> {error}
                 </div>
             )}
 
@@ -285,16 +285,16 @@ const DishAdmin = () => {
                 <div>
                     {selectedRestaurant && (
                         <div className="filter-info">
-                            <span>Фильтр:</span>
+                            <span>Filter:</span>
                             <span className="filter-value">
-                {restaurants.find(r => r.id == selectedRestaurant)?.name || 'Ресторан'}
+                {restaurants.find(r => r.id == selectedRestaurant)?.name || 'Restaurant'}
               </span>
                         </div>
                     )}
                 </div>
                 <div>
           <span className="total-count">
-            Всего блюд: {totalElements}
+            Total dishes: {totalElements}
           </span>
                 </div>
             </div>
@@ -302,7 +302,7 @@ const DishAdmin = () => {
             {loading ? (
                 <div className="loading">
                     <div className="spinner"></div>
-                    <p>Загрузка блюд...</p>
+                    <p>Loading dishes...</p>
                 </div>
             ) : (
                 <>
@@ -310,11 +310,11 @@ const DishAdmin = () => {
                         <table className="admin-table">
                             <thead>
                             <tr>
-                                <th className="name-column">Название</th>
-                                <th className="description-column">Описание</th>
-                                <th className="price-column">Цена</th>
-                                <th className="restaurant-column">Ресторан</th>
-                                <th className="actions-column">Действия</th>
+                                <th className="name-column">Name</th>
+                                <th className="description-column">Description</th>
+                                <th className="price-column">Price</th>
+                                <th className="restaurant-column">Restaurant</th>
+                                <th className="actions-column">Actions</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -323,8 +323,8 @@ const DishAdmin = () => {
                                     <td colSpan="5" className="empty-cell">
                                         <div className="empty-state">
                                             <div className="empty-icon">🍽️</div>
-                                            <h3>Блюда не найдены</h3>
-                                            <p>Попробуйте изменить параметры поиска</p>
+                                            <h3>No dishes found</h3>
+                                            <p>Try changing your search parameters</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -334,7 +334,7 @@ const DishAdmin = () => {
                                         <td>
                                             <strong>{dish.name}</strong>
                                             {dish.imageUrl && (
-                                                <div className="image-indicator" title="Есть изображение">
+                                                <div className="image-indicator" title="Has image">
                                                     📷
                                                 </div>
                                             )}
@@ -346,23 +346,23 @@ const DishAdmin = () => {
                                             ${parseFloat(dish.price).toFixed(2)}
                                         </td>
                                         <td>
-                                            {dish.restaurantName || 'Неизвестно'}
+                                            {dish.restaurantName || 'Unknown'}
                                         </td>
                                         <td>
                                             <div className="action-buttons">
                                                 <button
                                                     onClick={() => handleEdit(dish)}
                                                     className="btn btn-sm"
-                                                    title="Редактировать"
+                                                    title="Edit"
                                                 >
-                                                    ✏️ Редактировать
+                                                    ✏️ Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(dish.id, dish.name)}
                                                     className="btn btn-sm btn-danger"
-                                                    title="Удалить"
+                                                    title="Delete"
                                                 >
-                                                    🗑️ Удалить
+                                                    🗑️ Delete
                                                 </button>
                                             </div>
                                         </td>
@@ -387,13 +387,13 @@ const DishAdmin = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editingDish ? 'Редактировать блюдо' : 'Добавить блюдо'}
+                title={editingDish ? 'Edit dish' : 'Add dish'}
             >
                 <form onSubmit={handleSubmit} className="admin-form">
                     <div className="form-row">
                         <div className="form-column">
                             <div className="form-group">
-                                <label>Название блюда *</label>
+                                <label>Dish name *</label>
                                 <input
                                     type="text"
                                     name="name"
@@ -402,24 +402,24 @@ const DishAdmin = () => {
                                     required
                                     minLength="2"
                                     maxLength="100"
-                                    placeholder="Введите название блюда"
+                                    placeholder="Enter dish name"
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Описание</label>
+                                <label>Description</label>
                                 <textarea
                                     name="description"
                                     value={formData.description}
                                     onChange={handleFormChange}
                                     maxLength="500"
                                     rows="3"
-                                    placeholder="Описание блюда (необязательно)"
+                                    placeholder="Dish description (optional)"
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Цена *</label>
+                                <label>Price *</label>
                                 <input
                                     type="number"
                                     name="price"
@@ -434,14 +434,14 @@ const DishAdmin = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Ресторан *</label>
+                                <label>Restaurant *</label>
                                 <select
                                     name="restaurantId"
                                     value={formData.restaurantId}
                                     onChange={handleFormChange}
                                     required
                                 >
-                                    <option value="">Выберите ресторан</option>
+                                    <option value="">Select restaurant</option>
                                     {restaurants.map(restaurant => (
                                         <option key={restaurant.id} value={restaurant.id}>
                                             {restaurant.name}
@@ -456,11 +456,11 @@ const DishAdmin = () => {
                                 onUpload={handleImageUpload}
                                 onDelete={handleImageDelete}
                                 initialImageUrl={formData.imageUrl}
-                                label="Изображение блюда"
+                                label="Dish image"
                                 maxSizeMB={10}
                             />
                             <div className="image-info">
-                                <p className="image-info-text">Изображение будет отображаться в меню ресторана</p>
+                                <p className="image-info-text">Image will be displayed in the restaurant menu</p>
                             </div>
                         </div>
                     </div>
@@ -477,7 +477,7 @@ const DishAdmin = () => {
                             className="btn btn-primary"
                             disabled={imageUploading}
                         >
-                            {imageUploading ? 'Загрузка...' : (editingDish ? 'Сохранить изменения' : 'Создать блюдо')}
+                            {imageUploading ? 'Uploading...' : (editingDish ? 'Save changes' : 'Create dish')}
                         </button>
                         <button
                             type="button"
@@ -485,7 +485,7 @@ const DishAdmin = () => {
                             className="btn"
                             disabled={imageUploading}
                         >
-                            Отмена
+                            Cancel
                         </button>
                     </div>
                 </form>

@@ -4,7 +4,7 @@ const Footer = () => {
     return (
         <footer className="footer">
             <div className="container">
-                <p>© {new Date().getFullYear()} Restaurant Management System</p>
+                <p>© {new Date().getFullYear()} Restaurant and dishes</p>
             </div>
         </footer>
     );

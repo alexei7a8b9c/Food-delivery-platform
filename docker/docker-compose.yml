@@ -76,21 +76,3 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
-
-
-  # УДАЛИТЕ или закомментируйте секцию pgadmin если она не нужна
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: food-delivery-pgadmin
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@fooddelivery.com
-  #     PGADMIN_DEFAULT_PASSWORD: admin123
-  #   ports:
-  #     - "5050:80"
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
-  #   networks:
-  #     - food-delivery-network
-  #   depends_on:
-  #     - postgres
-  #   restart: unless-stopped

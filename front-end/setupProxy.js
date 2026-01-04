@@ -3,7 +3,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 module.exports = function(app) {
     console.log('🔄 Setting up proxy middleware...');
 
-    // Прокси для API
+    // Proxy for API
     app.use(
         '/api',
         createProxyMiddleware({
@@ -20,7 +20,7 @@ module.exports = function(app) {
         })
     );
 
-    // Прокси для загрузок
+    // Proxy for uploads
     app.use(
         '/uploads',
         createProxyMiddleware({

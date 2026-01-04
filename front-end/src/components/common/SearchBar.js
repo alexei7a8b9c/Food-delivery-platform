@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SearchBar = ({ onSearch, placeholder = "Поиск..." }) => {
+const SearchBar = ({ onSearch, placeholder = "Search..." }) => {
     const [value, setValue] = useState('');
 
     const handleSubmit = (e) => {

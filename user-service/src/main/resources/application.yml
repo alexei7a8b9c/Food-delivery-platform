@@ -26,8 +26,8 @@ spring:
 
 jwt:
   secret: "mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey"
-  expiration: 86400000  # 24 часа в миллисекундах
-  refresh: 2592000      # 30 дней (в секундах)
+  expiration: 86400000000  # 24 часа в миллисекундах
+  refresh: 2592000000      # 30 дней (в секундах)
 eureka:
   client:
     service-url:

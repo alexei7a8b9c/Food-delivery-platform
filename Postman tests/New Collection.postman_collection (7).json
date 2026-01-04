@@ -1,0 +1,1870 @@
+{
+	"info": {
+		"_postman_id": "88f9a746-be89-4903-bce7-a814d5b02d47",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "48632170"
+	},
+	"item": [
+		{
+			"name": "Front-end 3000",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:3000"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8080/api/auth/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"admin@fooddelivery.com\",\r\n    \"password\": \"admin123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/api/auth/login"
+			},
+			"response": []
+		},
+		{
+			"name": "register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"testuser333@example.com\",\r\n    \"password\": \"password123333\",\r\n    \"fullName\": \"Test User333\",\r\n    \"telephone\": \"+1-555-5677447\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/api/auth/register"
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"testuser333@example.com\",\r\n    \"password\": \"password123333\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/api/auth/login"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8081/swagger-ui/index.html",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8081/swagger-ui/index.html"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/swagger-ui/index.html",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/swagger-ui/index.html"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8083/swagger-ui/index.html",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8083/swagger-ui/index.html"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/1",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/1"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/restaurants/2"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/3",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/restaurants/3"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/4",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/restaurants/4"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/5",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/restaurants/5"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/4",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Tokyo Sushi Bar\",\r\n    \"cuisine\": \"Japanese\",\r\n    \"address\": \"277 Maple Drive, San Francisco, CA 87350\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"updatedAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/4"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/2",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Dragon Palacee\",\r\n    \"cuisine\": \"Chinese\",\r\n    \"address\": \"372 Oak Avenue, Los Angeles, CA 8763\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/2"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/1",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Mario Italian Kitchen\",\r\n    \"cuisine\": \"Italian\",\r\n    \"address\": \"123 Black-Green Street, Los Angeles, LA 47201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/1"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Mario Kitchen\",\r\n    \"cuisine\": \"France\",\r\n    \"address\": \"France 47201\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Mario-Mary Kitchen\",\r\n    \"cuisine\": \"Italian\",\r\n    \"address\": \"Los Angeles, LA 37651\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"La Bella Vista\",\r\n    \"cuisine\": \"Italian\",\r\n    \"address\": \"New York, NY 10001\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Golden Dragon\",\r\n    \"cuisine\": \"Chinese\",\r\n    \"address\": \"San Francisco, CA 94102\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Le Petit Bistro\",\r\n    \"cuisine\": \"French\",\r\n    \"address\": \"Chicago, IL 60601\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"El Ranchito\",\r\n    \"cuisine\": \"Mexican\",\r\n    \"address\": \"Austin, TX 73301\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Tandoori Flame\",\r\n    \"cuisine\": \"Indian\",\r\n    \"address\": \"Boston, MA 02101\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"The Athenian\",\r\n    \"cuisine\": \"Greek\",\r\n    \"address\": \"Miami, FL 33101\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Seoul Garden\",\r\n    \"cuisine\": \"Korean\",\r\n    \"address\": \"Los Angeles, CA 90001\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bavarian Haus\",\r\n    \"cuisine\": \"German\",\r\n    \"address\": \"Denver, CO 80201\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bangkok Spice\",\r\n    \"cuisine\": \"Thai\",\r\n    \"address\": \"Portland, OR 97201\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Saigon Delight\",\r\n    \"cuisine\": \"Vietnamese\",\r\n    \"address\": \"Houston, TX 77001\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Casa de Tapas\",\r\n    \"cuisine\": \"Spanish\",\r\n    \"address\": \"San Diego, CA 92101\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"The Rustic Table\",\r\n    \"cuisine\": \"American\",\r\n    \"address\": \"Nashville, TN 37201\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Casablanca Grill\",\r\n    \"cuisine\": \"Moroccan\",\r\n    \"address\": \"Washington, DC 20001\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Istanbul Kebab\",\r\n    \"cuisine\": \"Turkish\",\r\n    \"address\": \"Philadelphia, PA 19101\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Little Havana\",\r\n    \"cuisine\": \"Cuban\",\r\n    \"address\": \"Tampa, FL 33601\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"The Hungry Bear\",\r\n    \"cuisine\": \"Russian\",\r\n    \"address\": \"Brooklyn, NY 11201\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Lisbon Seafood\",\r\n    \"cuisine\": \"Portuguese\",\r\n    \"address\": \"Newark, NJ 07101\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"The Blue Lagoon\",\r\n    \"cuisine\": \"Mediterranean\",\r\n    \"address\": \"Phoenix, AZ 85001\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse\",\r\n    \"cuisine\": \"Barbecue\",\r\n    \"address\": \"Dallas, TX 75201\"\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"La Bella Vista Trattoria\",\r\n    \"cuisine\": \"Italian Fine Dining\",\r\n    \"address\": \"456 Broadway, New York, NY 10001\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/10"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Golden Dragon Palace\",\r\n    \"cuisine\": \"Sichuan Chinese\",\r\n    \"address\": \"789 Chinatown Street, San Francisco, CA 94102\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/11"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Le Petit Bistro & Wine Bar\",\r\n    \"cuisine\": \"Modern French\",\r\n    \"address\": \"101 Rue de Paris, Chicago, IL 60601\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/12"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Tokyo Sushi Master\",\r\n    \"cuisine\": \"Omakase Japanese\",\r\n    \"address\": \"234 Sakura Avenue, Seattle, WA 98101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/13"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"El Ranchito Authentico\",\r\n    \"cuisine\": \"Oaxacan Mexican\",\r\n    \"address\": \"567 Fiesta Lane, Austin, TX 73301\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/14"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Tandoori Flame Express\",\r\n    \"cuisine\": \"North Indian\",\r\n    \"address\": \"890 Spice Road, Boston, MA 02101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/15"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"The Athenian Taverna\",\r\n    \"cuisine\": \"Aegean Greek\",\r\n    \"address\": \"321 Olive Street, Miami, FL 33101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/16"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Seoul Garden BBQ\",\r\n    \"cuisine\": \"Korean BBQ\",\r\n    \"address\": \"654 Kimchi Boulevard, Los Angeles, CA 90001\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/17"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bavarian Haus Brauhaus\",\r\n    \"cuisine\": \"Bavarian German\",\r\n    \"address\": \"987 Beer Hall Way, Denver, CO 80201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/18"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bangkok Spice Street\",\r\n    \"cuisine\": \"Street Thai\",\r\n    \"address\": \"135 Chili Alley, Portland, OR 97201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/19"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Saigon Delight Pho\",\r\n    \"cuisine\": \"Northern Vietnamese\",\r\n    \"address\": \"246 Noodle Lane, Houston, TX 77001\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/20"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Casa de Tapas Moderna\",\r\n    \"cuisine\": \"Modern Spanish\",\r\n    \"address\": \"369 Paella Court, San Diego, CA 92101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/21"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"The Rustic Table Grill\",\r\n    \"cuisine\": \"Southern American\",\r\n    \"address\": \"753 Bourbon Street, Nashville, TN 37201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/22"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Casablanca Grill Lounge\",\r\n    \"cuisine\": \"Moroccan Fusion\",\r\n    \"address\": \"159 Mint Tea Road, Washington, DC 20001\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/23"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Istanbul Kebab House\",\r\n    \"cuisine\": \"Anatolian Turkish\",\r\n    \"address\": \"482 Bazaar Street, Philadelphia, PA 19101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/24"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Little Havana Social\",\r\n    \"cuisine\": \"Cuban Fusion\",\r\n    \"address\": \"624 Salsa Avenue, Tampa, FL 33601\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/25"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"The Hungry Bear Tavern\",\r\n    \"cuisine\": \"Russian-Ukrainian\",\r\n    \"address\": \"777 Vodka Lane, Brooklyn, NY 11201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/26"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Lisbon Seafood Market\",\r\n    \"cuisine\": \"Coastal Portuguese\",\r\n    \"address\": \"888 Ocean Drive, Newark, NJ 07101\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/27"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"The Blue Lagoon Grill\",\r\n    \"cuisine\": \"Eastern Mediterranean\",\r\n    \"address\": \"999 Sunset Boulevard, Phoenix, AZ 85001\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/28"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/restaurants/29"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/10"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/11"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/12"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/13"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/14"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/15"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/16"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/17"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/18"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/19"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/restaurants/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Texas Smokehouse Pit\",\r\n    \"cuisine\": \"Central Texas BBQ\",\r\n    \"address\": \"111 Ranch Road, Dallas, TX 75201\",\r\n    \"deleted\": false,\r\n    \"createdAt\": \"2025-12-14T18:23:23.018636\",\r\n    \"dishes\": null\r\n  }"
+				},
+				"url": "http://localhost:8082/api/restaurants/20"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes/1"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes/2"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/3",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes/3"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/4",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes/4"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/5",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8082/api/dishes/5"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Spaghetti Carbonara\",\r\n    \"description\": \"Classic Roman pasta with eggs, cheese, pancetta, and black pepper\",\r\n    \"price\": 14.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/3ee7d182-f23a-43a8-8b05-e359ef6b7eff.jpeg\",\r\n    \"restaurantId\": 21\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Margherita Pizza\",\r\n    \"description\": \"Traditional Neapolitan pizza with tomato, mozzarella, and basil\",\r\n    \"price\": 12.90,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/d854b508-2aaa-41b2-9d46-218f94e8a4bd.jpg\",\r\n    \"restaurantId\": 21\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Peking Duck\",\r\n    \"description\": \"Crispy roasted duck served with pancakes and hoisin sauce\",\r\n    \"price\": 28.99,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/8301767b-6f56-4e85-86e0-ae5583bacb32.jpeg\",\r\n    \"restaurantId\": 22\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Coq au Vin\",\r\n    \"description\": \"French braised chicken cooked with wine, mushrooms, and onions\",\r\n    \"price\": 22.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/3c3d9a95-40d3-4964-9039-61e44f0ab208.jpeg\",\r\n    \"restaurantId\": 23\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Croque Monsieur\",\r\n    \"description\": \"Grilled ham and cheese sandwich with bechamel sauce\",\r\n    \"price\": 11.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/fa3b3e66-717e-403d-b67d-b15e2167848c.jpg\",\r\n    \"restaurantId\": 23\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Sushi Platter\",\r\n    \"description\": \"Assortment of fresh nigiri and maki rolls\",\r\n    \"price\": 24.80,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/6dd4474c-1793-415b-a6ab-caf1533a0f61.jpeg\",\r\n    \"restaurantId\": 25\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"cc\",\r\n    \"description\": \"Rich pork bone broth ramen with chashu and boiled egg\",\r\n    \"price\": 15.40,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/8859dc96-f3f8-406e-8abe-cd5b345f5c86.jpg\",\r\n    \"restaurantId\": 24\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Tacos Al Pastor\",\r\n    \"description\": \"Marinated pork tacos with pineapple and cilantro\",\r\n    \"price\": 9.99,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/57f9052c-7e55-4815-8730-989b00f1d5a1.jpeg\",\r\n    \"restaurantId\": 25\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Mole Poblano\",\r\n    \"description\": \"Chicken in rich chocolate-chili sauce with sesame seeds\",\r\n    \"price\": 18.75,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/ee952de2-5153-43be-90b2-c9f634477966.jpg\",\r\n    \"restaurantId\": 25\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Chicken Tikka Masala\",\r\n    \"description\": \"Grilled chicken in creamy tomato and spice sauce\",\r\n    \"price\": 17.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/93433168-8b9c-4cc0-8a04-893676e423c4.jpeg\",\r\n    \"restaurantId\": 26\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Vegetable Biryani\",\r\n    \"description\": \"Fragrant rice dish with mixed vegetables and spices\",\r\n    \"price\": 13.90,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/b28953ef-fc23-4e0b-ac02-dffdbecc8ca9.jpeg\",\r\n    \"restaurantId\": 26\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Moussaka\",\r\n    \"description\": \"Layered eggplant and potato dish with spiced meat sauce\",\r\n    \"price\": 16.80,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/2ea3076f-12b0-46a5-915c-6f54c14d23cc.jpg\",\r\n    \"restaurantId\": 27\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Greek Salad\",\r\n    \"description\": \"Fresh vegetables with feta cheese, olives, and oregano\",\r\n    \"price\": 10.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/923edf74-6e94-4f7a-b912-c657be134a7b.jpeg\",\r\n    \"restaurantId\": 27\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bulgogi\",\r\n    \"description\": \"Marinated beef grilled to perfection with side dishes\",\r\n    \"price\": 19.99,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/41539481-d05d-4714-8cc2-322b53dc20f8.jpg\",\r\n    \"restaurantId\": 28\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Kimchi Jjigae\",\r\n    \"description\": \"Spicy kimchi stew with pork and tofu\",\r\n    \"price\": 14.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/3a483ff2-ddef-4ae0-8f37-d25d2d28822a.jpeg\",\r\n    \"restaurantId\": 28\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Schnitzel\",\r\n    \"description\": \"Breaded and fried veal cutlet with potato salad\",\r\n    \"price\": 20.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/6769a55a-0172-41c7-ae42-5c1912d5a9e3.jpeg\",\r\n    \"restaurantId\": 29\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Bratwurst Plate\",\r\n    \"description\": \"German sausages with sauerkraut and mustard\",\r\n    \"price\": 15.75,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/a82bd056-bcb0-4da1-88c7-03efeedb9bc2.jpg\",\r\n    \"restaurantId\": 29\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Pad Thai\",\r\n    \"description\": \"Stir-fried rice noodles with shrimp, tofu, and peanuts\",\r\n    \"price\": 13.99,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/f8e12ffb-82c1-47da-a703-82197b15d38e.jpeg\",\r\n    \"restaurantId\": 30\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Green Curry\",\r\n    \"description\": \"Spicy coconut milk curry with chicken and vegetables\",\r\n    \"price\": 16.40,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/67738a68-7a65-4e81-b756-70dc978e72be.jpeg\",\r\n    \"restaurantId\": 30\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Tiramisu\",\r\n    \"description\": \"Classic Italian dessert with coffee-soaked ladyfingers\",\r\n    \"price\": 8.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/87a81734-533b-4efb-85c3-9bba2cd7cab9.webp\",\r\n    \"restaurantId\": 21\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Spring Rolls\",\r\n    \"description\": \"Crispy vegetarian rolls with sweet chili sauce\",\r\n    \"price\": 7.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/6946f1d2-9e61-4ef5-931e-d51a365f3d21.jpg\",\r\n    \"restaurantId\": 22\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"French Onion Soup\",\r\n    \"description\": \"Caramelized onion soup with cheese crouton\",\r\n    \"price\": 9.80,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/f05018b2-6a2c-44df-8f9d-1690142efbed.webp\",\r\n    \"restaurantId\": 23\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Edamame\",\r\n    \"description\": \"Steamed young soybeans with sea salt\",\r\n    \"price\": 5.90,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/e21f2d9a-ed65-49ae-8075-710ae24c565c.jpg\",\r\n    \"restaurantId\": 24\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/148fee36-16d8-40e6-a039-c5ac9a7b1f96.jpg\",\r\n    \"restaurantId\": 25\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Garlic Naan\",\r\n    \"description\": \"Traditional Indian bread with garlic butter\",\r\n    \"price\": 4.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/2bc19864-939e-4648-b216-a9304dbf18b7.jpg\",\r\n    \"restaurantId\": 26\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Spanakopita\",\r\n    \"description\": \"Spinach and feta cheese phyllo pastry\",\r\n    \"price\": 7.99,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/6d94147a-628c-4cf3-b637-a0abbea693fe.jpeg\",\r\n    \"restaurantId\": 27\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Japchae\",\r\n    \"description\": \"Korean glass noodles stir-fried with vegetables\",\r\n    \"price\": 12.75,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/3f71e446-178a-4257-97a9-c1b4efdcb676.jpeg\",\r\n    \"restaurantId\": 28\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Mango Sticky Rice\",\r\n    \"description\": \"Sweet Thai dessert with coconut milk\",\r\n    \"price\": 8.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/1725b990-b651-4c79-a1c9-48ba8a2f8c41.jpeg\",\r\n    \"restaurantId\": 30\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Caprese Salad\",\r\n    \"description\": \"Fresh mozzarella, tomatoes, and basil with balsamic glaze\",\r\n    \"price\": 11.25,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/db9027b7-a446-4a53-92dc-472971ca88b3.jpg\",\r\n    \"restaurantId\": 21\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Dim Sum Platter\",\r\n    \"description\": \"Assortment of steamed and fried Chinese dumplings\",\r\n    \"price\": 18.50,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/3136862c-46eb-40ed-b039-b223a48d75cb.jpeg\",\r\n    \"restaurantId\": 22\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n    \"name\": \"Beef Bourguignon\",\r\n    \"description\": \"Slow-cooked beef stew in red wine with mushrooms and carrots\",\r\n    \"price\": 23.75,\r\n    \"imageUrl\": \"http://172.21.64.1:8082/uploads/b9efafb7-d9ba-4772-b738-0995f657d3a1.jpeg\",\r\n    \"restaurantId\": 23\r\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8082/api/dishes"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/71"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/70",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/70"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/69",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/69"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/68",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/68"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/67",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/67"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/66",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/66"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/65",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/65"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/64",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/64"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/63",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/63"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8082/api/dishes/62",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "  {\r\n    \"name\": \"Guacamole\",\r\n    \"description\": \"Fresh avocado dip with tomatoes and lime\",\r\n    \"price\": 8.75,\r\n    \"imageUrl\": \"/^WT.6aKPO:hlCTp_+\\\\L:4n:5HBe)@F6c1f-Ykb}#sApWvwK5=6Uz2~T#0!{!LfY.jpg\",\r\n    \"restaurantId\": 25\r\n  }"
+				},
+				"url": "http://localhost:8082/api/dishes/62"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "jwt",
+		"jwt": {
+			"algorithm": "HS256",
+			"isSecretBase64Encoded": false,
+			"payload": "{}",
+			"addTokenTo": "header",
+			"headerPrefix": "Bearer",
+			"queryParamKey": "token",
+			"header": "{}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

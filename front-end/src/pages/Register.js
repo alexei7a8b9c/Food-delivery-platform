@@ -26,30 +26,28 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
-        // Валидация
         if (formData.password !== confirmPassword) {
-            setError('Пароли не совпадают');
+            setError('Passwords do not match');
             return;
         }
 
         if (formData.password.length < 6) {
-            setError('Пароль должен содержать минимум 6 символов');
+            setError('Password must be at least 6 characters long');
             return;
         }
 
         if (!formData.email.includes('@')) {
-            setError('Введите корректный email');
+            setError('Please enter a valid email address');
             return;
         }
 
         setLoading(true);
-
         const result = await register(formData);
 
         if (result.success) {
             navigate('/');
         } else {
-            setError(result.error || 'Ошибка регистрации');
+            setError(result.error || 'Registration error');
         }
 
         setLoading(false);
@@ -58,76 +56,80 @@ const Register = () => {
     return (
         <div className="auth-page">
             <div className="container">
-                <div className="auth-card">
-                    <h2 className="auth-title">Регистрация</h2>
+                <div className="wide-auth-card">
+                    <h2 className="auth-title">Registration</h2>
 
                     {error && (
                         <div className="error-message">
-                            <strong>Ошибка:</strong> {error}
+                            <strong>Error:</strong> {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        <div className="form-group">
-                            <label>Полное имя</label>
-                            <input
-                                type="text"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                required
-                                placeholder="Введите ваше имя"
-                                disabled={loading}
-                            />
+                    <form onSubmit={handleSubmit} className="wide-auth-form">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Full Name</label>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="Enter your name"
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="Enter email"
+                                    disabled={loading}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Password (minimum 6 characters)</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    minLength="6"
+                                    placeholder="Enter password"
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    placeholder="Repeat password"
+                                    disabled={loading}
+                                />
+                            </div>
                         </div>
 
                         <div className="form-group">
-                            <label>Email</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                placeholder="Введите email"
-                                disabled={loading}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Пароль (минимум 6 символов)</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                minLength="6"
-                                placeholder="Введите пароль"
-                                disabled={loading}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Подтверждение пароля</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                placeholder="Повторите пароль"
-                                disabled={loading}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Телефон (необязательно)</label>
+                            <label>Phone (optional)</label>
                             <input
                                 type="tel"
                                 name="telephone"
                                 value={formData.telephone}
                                 onChange={handleChange}
-                                placeholder="Введите телефон"
+                                placeholder="Enter phone number"
                                 disabled={loading}
                             />
                         </div>
@@ -137,16 +139,16 @@ const Register = () => {
                             className="btn btn-submit"
                             disabled={loading}
                         >
-                            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                            {loading ? 'Registering...' : 'Register'}
                         </button>
                     </form>
 
                     <div className="auth-links">
                         <p>
-                            Уже есть аккаунт? <Link to="/login">Войти</Link>
+                            Already have an account? <Link to="/login">Login</Link>
                         </p>
                         <p>
-                            Вернуться на <Link to="/">главную</Link>
+                            Return to <Link to="/">home page</Link>
                         </p>
                     </div>
                 </div>

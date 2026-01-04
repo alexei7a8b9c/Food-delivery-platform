@@ -42,7 +42,7 @@ const RestaurantAdmin = () => {
         } catch (error) {
             console.error('Error loading restaurants:', error);
             const errorMessage = formatErrorMessage(error);
-            setError(`Не удалось загрузить рестораны: ${errorMessage}`);
+            setError(`Failed to load restaurants: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -70,15 +70,15 @@ const RestaurantAdmin = () => {
     };
 
     const handleDelete = async (id, name) => {
-        if (window.confirm(`Вы уверены, что хотите удалить ресторан "${name}"?`)) {
+        if (window.confirm(`Are you sure you want to delete the restaurant "${name}"?`)) {
             try {
                 await restaurantApi.delete(id);
-                alert('Ресторан успешно удален');
+                alert('Restaurant deleted successfully');
                 loadRestaurants();
             } catch (error) {
                 console.error('Error deleting restaurant:', error);
                 const errorMessage = formatErrorMessage(error);
-                alert(`Не удалось удалить ресторан: ${errorMessage}`);
+                alert(`Failed to delete restaurant: ${errorMessage}`);
             }
         }
     };
@@ -90,10 +90,10 @@ const RestaurantAdmin = () => {
         try {
             if (editingRestaurant) {
                 await restaurantApi.update(editingRestaurant.id, formData);
-                alert('Ресторан успешно обновлен');
+                alert('Restaurant updated successfully');
             } else {
                 await restaurantApi.create(formData);
-                alert('Ресторан успешно создан');
+                alert('Restaurant created successfully');
             }
 
             setIsModalOpen(false);
@@ -124,17 +124,17 @@ const RestaurantAdmin = () => {
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                     <SearchBar
                         onSearch={handleSearch}
-                        placeholder="Поиск ресторанов по названию или адресу..."
+                        placeholder="Search restaurants by name or address..."
                     />
                     {searchTerm && (
                         <button onClick={handleClearSearch} className="btn btn-clear">
-                            ❌ Очистить поиск
+                            ❌ Clear search
                         </button>
                     )}
                 </div>
 
                 <button onClick={handleCreate} className="btn btn-create">
-                    + Добавить ресторан
+                    + Add Restaurant
                 </button>
             </div>
 
@@ -147,14 +147,14 @@ const RestaurantAdmin = () => {
                     borderRadius: '8px',
                     marginBottom: '20px'
                 }}>
-                    <strong>Ошибка:</strong> {error}
+                    <strong>Error:</strong> {error}
                 </div>
             )}
 
             {loading ? (
                 <div className="loading">
                     <div className="spinner"></div>
-                    <p>Загрузка ресторанов...</p>
+                    <p>Loading restaurants...</p>
                 </div>
             ) : (
                 <>
@@ -162,10 +162,10 @@ const RestaurantAdmin = () => {
                         <table className="admin-table">
                             <thead>
                             <tr>
-                                <th>Название</th>
-                                <th>Кухня</th>
-                                <th>Адрес</th>
-                                <th style={{ width: '200px' }}>Действия</th>
+                                <th>Name</th>
+                                <th>Cuisine</th>
+                                <th>Address</th>
+                                <th style={{ width: '200px' }}>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -174,8 +174,8 @@ const RestaurantAdmin = () => {
                                     <td colSpan="4" style={{ textAlign: 'center', padding: '40px' }}>
                                         <div className="empty-state">
                                             <div className="empty-icon">🏪</div>
-                                            <h3>Рестораны не найдены</h3>
-                                            <p>Попробуйте изменить параметры поиска</p>
+                                            <h3>No restaurants found</h3>
+                                            <p>Try changing your search parameters</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -199,16 +199,16 @@ const RestaurantAdmin = () => {
                                                 <button
                                                     onClick={() => handleEdit(restaurant)}
                                                     className="btn-action btn-edit"
-                                                    title="Редактировать"
+                                                    title="Edit"
                                                 >
-                                                    ✏️ Редактировать
+                                                    ✏️ Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(restaurant.id, restaurant.name)}
                                                     className="btn-action btn-delete"
-                                                    title="Удалить"
+                                                    title="Delete"
                                                 >
-                                                    🗑️ Удалить
+                                                    🗑️ Delete
                                                 </button>
                                             </div>
                                         </td>
@@ -233,11 +233,11 @@ const RestaurantAdmin = () => {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={editingRestaurant ? 'Редактировать ресторан' : 'Добавить ресторан'}
+                title={editingRestaurant ? 'Edit Restaurant' : 'Add Restaurant'}
             >
                 <form onSubmit={handleSubmit} className="admin-form">
                     <div className="form-group">
-                        <label>Название ресторана *</label>
+                        <label>Restaurant Name *</label>
                         <input
                             type="text"
                             name="name"
@@ -246,12 +246,12 @@ const RestaurantAdmin = () => {
                             required
                             minLength="2"
                             maxLength="100"
-                            placeholder="Введите название ресторана"
+                            placeholder="Enter restaurant name"
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>Тип кухни *</label>
+                        <label>Cuisine Type *</label>
                         <input
                             type="text"
                             name="cuisine"
@@ -260,12 +260,12 @@ const RestaurantAdmin = () => {
                             required
                             minLength="2"
                             maxLength="50"
-                            placeholder="Например: Итальянская, Японская"
+                            placeholder="e.g., Italian, Japanese"
                         />
                     </div>
 
                     <div className="form-group">
-                        <label>Адрес *</label>
+                        <label>Address *</label>
                         <textarea
                             name="address"
                             value={formData.address}
@@ -274,7 +274,7 @@ const RestaurantAdmin = () => {
                             minLength="5"
                             maxLength="255"
                             rows="3"
-                            placeholder="Полный адрес ресторана"
+                            placeholder="Full restaurant address"
                         />
                     </div>
 
@@ -292,14 +292,14 @@ const RestaurantAdmin = () => {
 
                     <div className="form-actions">
                         <button type="submit" className="btn btn-submit">
-                            {editingRestaurant ? 'Сохранить изменения' : 'Создать ресторан'}
+                            {editingRestaurant ? 'Save Changes' : 'Create Restaurant'}
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsModalOpen(false)}
                             className="btn btn-cancel"
                         >
-                            Отмена
+                            Cancel
                         </button>
                     </div>
                 </form>

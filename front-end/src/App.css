@@ -1,4 +1,4 @@
-/* Основные стили - черно-белая тема */
+/* Main styles - black and white theme */
 * {
     margin: 0;
     padding: 0;
@@ -126,6 +126,7 @@ body {
     justify-content: center;
     gap: 8px;
     text-decoration: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .btn:hover {
@@ -605,7 +606,7 @@ body {
     color: #ffffff;
 }
 
-/* Tables */
+/* Tables - UPDATED for unified font */
 .table-container {
     overflow-x: auto;
     border: 2px solid #000000;
@@ -617,6 +618,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     background-color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .admin-table th {
@@ -626,11 +628,13 @@ body {
     text-align: left;
     font-weight: 600;
     border-bottom: 2px solid #000000;
+    font-family: inherit;
 }
 
 .admin-table td {
     padding: 15px;
     border-bottom: 1px solid #e0e0e0;
+    font-family: inherit;
 }
 
 .admin-table tr:last-child td {
@@ -676,6 +680,7 @@ body {
 .price {
     font-weight: 600;
     color: #000000;
+    font-family: inherit;
 }
 
 /* Action buttons */
@@ -694,6 +699,7 @@ body {
     transition: all 0.3s ease;
     font-size: 0.9rem;
     white-space: nowrap;
+    font-family: inherit;
 }
 
 .btn-action:hover {
@@ -828,6 +834,7 @@ body {
     background-color: #ffffff;
     color: #000000;
     width: 100%;
+    font-family: inherit;
 }
 
 .form-group input:focus,
@@ -1693,9 +1700,9 @@ body {
         min-width: 100%;
     }
 }
-/* Добавьте в конец файла App.css */
+/* Add to the end of App.css file */
 
-/* Стили для вкладки заказов */
+/* Styles for orders tab */
 .btn-refresh {
     background-color: #000000;
     color: #ffffff;
@@ -1708,6 +1715,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    font-family: inherit;
 }
 
 .btn-refresh:hover {
@@ -1724,13 +1732,14 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 15px;
+    font-family: inherit;
 }
 
 .btn-retry:hover {
     background-color: #333333;
 }
 
-/* Стили для бейджей статусов заказов */
+/* Styles for order status badges */
 .status-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -1740,9 +1749,10 @@ body {
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-family: inherit !important;
 }
 
-/* Стили для деталей заказа */
+/* Styles for order details */
 .order-details {
     max-height: 70vh;
     overflow-y: auto;
@@ -1774,12 +1784,14 @@ body {
     font-weight: 600;
     color: #000000;
     min-width: 150px;
+    font-family: inherit;
 }
 
 .summary-value {
     color: #000000;
     text-align: right;
     flex: 1;
+    font-family: inherit;
 }
 
 .order-items {
@@ -1790,6 +1802,7 @@ body {
     margin-bottom: 15px;
     color: #000000;
     font-size: 1.1rem;
+    font-family: inherit;
 }
 
 .items-table {
@@ -1799,6 +1812,7 @@ body {
     border: 2px solid #000000;
     border-radius: 8px;
     overflow: hidden;
+    font-family: inherit;
 }
 
 .items-table th {
@@ -1808,12 +1822,14 @@ body {
     text-align: left;
     font-weight: 600;
     font-size: 0.9rem;
+    font-family: inherit;
 }
 
 .items-table td {
     padding: 12px 15px;
     border-bottom: 1px solid #e0e0e0;
     font-size: 0.9rem;
+    font-family: inherit;
 }
 
 .items-table tr:last-child td {
@@ -1838,6 +1854,7 @@ body {
     background-color: #ffffff;
     color: #000000;
     margin-bottom: 15px;
+    font-family: inherit;
 }
 
 .status-select:focus {
@@ -1845,7 +1862,7 @@ body {
     border-color: #000000;
 }
 
-/* Адаптивные стили */
+/* Responsive styles */
 @media (max-width: 768px) {
     .summary-row {
         flex-direction: column;
@@ -1867,10 +1884,10 @@ body {
         padding: 8px 10px;
     }
 }
-/* Добавьте в конец App.css */
-/* Добавьте в конец файла App.css */
 
-/* Стили для формы контактной информации в модальном окне заказа */
+/* Add to the end of App.css file */
+
+/* Styles for contact information form in order modal */
 .contact-info-form {
     margin: 20px 0;
     padding: 20px;
@@ -1884,6 +1901,7 @@ body {
     color: #000000;
     font-size: 1.1rem;
     font-weight: 600;
+    font-family: inherit;
 }
 
 .user-info-notice {
@@ -1898,17 +1916,20 @@ body {
     color: #0c5460;
     font-weight: 500;
     margin-bottom: 5px;
+    font-family: inherit;
 }
 
 .user-not-logged-in {
     color: #856404;
     font-weight: 500;
+    font-family: inherit;
 }
 
 .user-info-hint {
     color: #666666;
     font-size: 0.9rem;
     margin: 0;
+    font-family: inherit;
 }
 
 .contact-form {
@@ -1933,6 +1954,7 @@ body {
     font-weight: 600;
     color: #000000;
     font-size: 0.95rem;
+    font-family: inherit;
 }
 
 .contact-form label::after {
@@ -1950,6 +1972,7 @@ body {
     background-color: #ffffff;
     color: #000000;
     transition: border-color 0.3s ease;
+    font-family: inherit;
 }
 
 .contact-form .form-input:focus,
@@ -1970,9 +1993,10 @@ body {
     font-size: 0.85rem;
     color: #666666;
     font-style: italic;
+    font-family: inherit;
 }
 
-/* Стили для успешного заказа */
+/* Styles for successful order */
 .order-success {
     text-align: center;
     padding: 30px 20px;
@@ -1995,20 +2019,23 @@ body {
     margin-bottom: 15px;
     color: #28a745;
     font-size: 1.5rem;
+    font-family: inherit;
 }
 
 .order-success p {
     margin-bottom: 10px;
     color: #000000;
     font-size: 1rem;
+    font-family: inherit;
 }
 
 .order-success strong {
     color: #000000;
     font-weight: 700;
+    font-family: inherit;
 }
 
-/* Стили для секции заказов пользователя */
+/* Styles for user orders section */
 .user-orders-section {
     background-color: #ffffff;
     border: 2px solid #000000;
@@ -2023,6 +2050,7 @@ body {
     font-size: 1.1rem;
     margin-bottom: 0;
     color: #000000;
+    font-family: inherit;
 }
 
 .orders-list {
@@ -2076,10 +2104,12 @@ body {
     font-size: 0.85rem;
     margin-bottom: 10px;
     color: #333333;
+    font-family: inherit;
 }
 
 .order-info div {
     margin-bottom: 4px;
+    font-family: inherit;
 }
 
 .btn-view-details {
@@ -2091,6 +2121,7 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-family: inherit;
 }
 
 .btn-view-details:hover {
@@ -2098,7 +2129,7 @@ body {
     color: #ffffff;
 }
 
-/* Стили для модального окна заказа */
+/* Styles for order modal */
 .order-details-modal {
     max-height: 70vh;
     overflow-y: auto;
@@ -2153,6 +2184,7 @@ body {
     justify-content: space-between;
     padding: 8px 12px;
     border-bottom: 1px solid #e0e0e0;
+    font-family: inherit;
 }
 
 .item-row:last-child {
@@ -2175,13 +2207,14 @@ body {
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s ease;
+    font-family: inherit;
 }
 
 .btn-close:hover {
     background-color: #333333;
 }
 
-/* Адаптивные стили для заказов */
+/* Responsive styles for orders */
 @media (max-width: 768px) {
     .user-orders-section {
         margin-top: 15px;
@@ -2200,4 +2233,226 @@ body {
     .order-info div {
         font-size: 0.8rem;
     }
+}
+
+/* Wide registration form */
+.wide-auth-card {
+    max-width: 800px;
+    width: 100%;
+    padding: 40px;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    background-color: #ffffff;
+    margin: 0 auto;
+}
+
+.wide-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.wide-auth-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 0;
+}
+
+.wide-auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.wide-auth-form label {
+    font-weight: 600;
+    color: #000000;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+.wide-auth-form input {
+    padding: 14px 16px;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #000000;
+    width: 100%;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.wide-auth-form input:focus {
+    outline: none;
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.wide-auth-form input:disabled {
+    background-color: #f5f5f5;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+.wide-auth-form .btn-submit {
+    width: 100%;
+    background-color: #000000;
+    color: #ffffff;
+    padding: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.wide-auth-form .btn-submit:hover:not(:disabled) {
+    background-color: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.wide-auth-form .btn-submit:disabled {
+    background-color: #666666;
+    cursor: not-allowed;
+}
+
+/* Mobile adaptation */
+@media (max-width: 768px) {
+    .wide-auth-card {
+        max-width: 100%;
+        padding: 25px 20px;
+        margin: 10px;
+        border-width: 1px;
+    }
+
+    .wide-auth-form .form-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .wide-auth-form {
+        gap: 20px;
+    }
+
+    .wide-auth-form input {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .wide-auth-form .btn-submit {
+        padding: 14px;
+        font-size: 1rem;
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+}
+
+/* Adaptation for very small screens */
+@media (max-width: 480px) {
+    .wide-auth-card {
+        padding: 20px 15px;
+    }
+
+    .wide-auth-form input {
+        padding: 10px 12px;
+    }
+
+    .wide-auth-form .btn-submit {
+        padding: 12px;
+    }
+
+    .auth-links {
+        font-size: 0.9rem;
+    }
+}
+
+/* For tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .wide-auth-card {
+        max-width: 700px;
+        padding: 35px 30px;
+    }
+
+    .wide-auth-form .form-row {
+        gap: 25px;
+    }
+}
+
+/* Special styles for orders tab - UPDATED for unified font */
+.order-id-cell,
+.customer-name-cell,
+.customer-phone-cell,
+.restaurant-name-cell,
+.status-badge-cell,
+.price-cell,
+.order-date-cell,
+.action-buttons-cell {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.order-id {
+    font-family: inherit !important;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #000000;
+}
+
+.customer-name {
+    font-family: inherit !important;
+    font-weight: 500;
+    color: #000000;
+}
+
+.customer-phone {
+    font-family: inherit !important;
+    font-weight: 500;
+    color: #000000;
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.restaurant-name {
+    font-family: inherit !important;
+    font-weight: 500;
+    color: #000000;
+}
+
+.order-price {
+    font-family: inherit !important;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #000000;
+}
+
+.order-date-cell .order-date {
+    font-family: inherit !important;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Forced styles for orders table */
+.admin-table[data-table="orders"] th,
+.admin-table[data-table="orders"] td,
+.admin-table[data-table="orders"] * {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+}
+
+/* Styles for action cells in orders */
+.action-buttons-cell .btn-action {
+    font-family: inherit !important;
+    font-size: 0.9rem;
 }

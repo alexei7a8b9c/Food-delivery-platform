@@ -20,7 +20,7 @@ const Pagination = ({ currentPage, totalPages, totalElements, onPageChange }) =>
     return (
         <div className="pagination">
             <div className="pagination-info">
-                Страница {currentPage + 1} из {totalPages} • Всего: {totalElements}
+                Page {currentPage + 1} from {totalPages} • Total: {totalElements}
             </div>
 
             <div className="pagination-controls">
@@ -29,7 +29,7 @@ const Pagination = ({ currentPage, totalPages, totalElements, onPageChange }) =>
                     disabled={currentPage === 0}
                     className="btn-pagination"
                 >
-                    ← Назад
+                    ← Back
                 </button>
 
                 <div className="pagination-numbers">
@@ -49,7 +49,7 @@ const Pagination = ({ currentPage, totalPages, totalElements, onPageChange }) =>
                     disabled={currentPage >= totalPages - 1}
                     className="btn-pagination"
                 >
-                    Вперед →
+                    Next →
                 </button>
             </div>
         </div>

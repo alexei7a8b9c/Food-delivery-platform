@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const [email, setEmail] = useState('admin@fooddelivery.com');
-    const [password, setPassword] = useState('admin123');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const { login } = useAuth();
@@ -25,7 +25,7 @@ const Login = () => {
             console.log('Login successful, navigating to /');
             navigate('/');
         } else {
-            setError(result.error || 'Ошибка входа');
+            setError(result.error || 'Login error');
             console.error('Login failed:', result.error);
         }
 
@@ -49,11 +49,11 @@ const Login = () => {
         <div className="auth-page">
             <div className="container">
                 <div className="auth-card">
-                    <h2 className="auth-title">Вход в систему (Debug Mode)</h2>
+                    <h2 className="auth-title">Login</h2>
 
                     {error && (
                         <div className="error-message">
-                            <strong>Ошибка:</strong> {error}
+                            <strong>Error:</strong> {error}
                         </div>
                     )}
 
@@ -65,64 +65,38 @@ const Login = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                placeholder="Введите email"
+                                placeholder="Enter email"
                                 disabled={loading}
+                                autoComplete="off"
                             />
                         </div>
 
                         <div className="form-group">
-                            <label>Пароль</label>
+                            <label>Password</label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                placeholder="Введите пароль"
+                                placeholder="Enter password"
                                 disabled={loading}
+                                autoComplete="new-password"
                             />
                         </div>
 
                         <button
                             type="submit"
                             className="btn btn-submit"
-                            disabled={loading}
+                            disabled={loading || !email || !password}
                         >
-                            {loading ? 'Вход...' : 'Войти (с отладкой)'}
+                            {loading ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
 
                     <div className="test-accounts">
-                        <h4>Тестовые аккаунты:</h4>
-                        <div className="test-buttons">
-                            <button
-                                type="button"
-                                onClick={() => useTestAccount('admin')}
-                                className="btn btn-test"
-                            >
-                                Администратор
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => useTestAccount('user')}
-                                className="btn btn-test"
-                            >
-                                Пользователь
-                            </button>
-                        </div>
                         <p className="test-credentials">
-                            <strong>Админ:</strong> admin@fooddelivery.com / admin123<br/>
-                            <strong>Пользователь:</strong> user@example.com / user123
+                            <strong>Admin:</strong> admin@fooddelivery.com / admin123<br/>
                         </p>
-                    </div>
-
-                    <div className="debug-tips">
-                        <h4>Если не работает:</h4>
-                        <ol>
-                            <li>Откройте консоль браузера (F12)</li>
-                            <li>Посмотрите Network → login запрос</li>
-                            <li>Проверьте Response от сервера</li>
-                            <li>Скопируйте токен и проверьте на <a href="https://jwt.io" target="_blank" rel="noreferrer">jwt.io</a></li>
-                        </ol>
                     </div>
                 </div>
             </div>

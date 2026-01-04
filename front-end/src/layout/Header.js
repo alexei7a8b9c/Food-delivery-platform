@@ -17,7 +17,7 @@ const Header = () => {
             <div className="container">
                 <div className="logo">
                     <Link to="/" className="logo-link">
-                        <span className="logo-text">🍽️ Restaurant System</span>
+                        <span className="logo-text">🍽️ Restaurant and dishes</span>
                     </Link>
                 </div>
 
@@ -26,7 +26,7 @@ const Header = () => {
                         to="/"
                         className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
                     >
-                        Главная
+                        Home
                     </Link>
 
                     {isAuthenticated() && isAdmin() && (
@@ -34,7 +34,7 @@ const Header = () => {
                             to="/admin"
                             className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}
                         >
-                            Админ
+                            Admin
                         </Link>
                     )}
 
@@ -44,20 +44,20 @@ const Header = () => {
                                 to="/login"
                                 className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}
                             >
-                                Вход
+                                Login
                             </Link>
                             <Link
                                 to="/register"
                                 className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}
                             >
-                                Регистрация
+                                Register
                             </Link>
                         </>
                     ) : (
                         <div className="user-menu">
                             <span className="user-email">{user?.email}</span>
                             <button onClick={handleLogout} className="btn btn-logout">
-                                Выйти
+                                Logout
                             </button>
                         </div>
                     )}

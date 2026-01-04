@@ -3,7 +3,7 @@ import React from 'react';
 const RestaurantSelector = ({ restaurants, selectedRestaurant, onSelect }) => {
     return (
         <div className="restaurant-selector">
-            <h2 className="section-title">Выберите ресторан</h2>
+            <h2 className="section-title">Select Restaurant</h2>
             <div className="restaurant-list">
                 {restaurants.map(restaurant => (
                     <div

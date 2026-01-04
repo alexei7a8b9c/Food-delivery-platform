@@ -28,6 +28,7 @@ const HomePage = () => {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [restaurantInfo, setRestaurantInfo] = useState(null);
     const [restaurantLoading, setRestaurantLoading] = useState(false);
+    const [showOrderSuccessMessage, setShowOrderSuccessMessage] = useState(false);
 
     const { user, isAuthenticated } = useAuth();
 
@@ -52,7 +53,7 @@ const HomePage = () => {
             }
         } catch (error) {
             console.error('Error loading restaurants:', error);
-            setError('Не удалось загрузить рестораны. Проверьте подключение к серверу.');
+            setError('Failed to load restaurants. Please check your server connection.');
         } finally {
             setLoading(false);
         }
@@ -67,7 +68,7 @@ const HomePage = () => {
             if (response.data && Array.isArray(response.data)) {
                 const serverCart = response.data.map(item => ({
                     id: item.dishId,
-                    name: item.dishName || `Блюдо ${item.dishId}`,
+                    name: item.dishName || `Dish ${item.dishId}`,
                     price: item.price / 100,
                     quantity: item.quantity || 1,
                     description: item.dishDescription,
@@ -96,21 +97,21 @@ const HomePage = () => {
 
         setRestaurantLoading(true);
         try {
-            console.log(`Загрузка информации о ресторане ID: ${restaurantId}`);
+            console.log(`Loading restaurant information ID: ${restaurantId}`);
             const response = await restaurantApi.getRestaurantById(restaurantId);
-            console.log('Информация о ресторане:', response.data);
+            console.log('Restaurant information:', response.data);
             setRestaurantInfo(response.data);
         } catch (error) {
-            console.error('Ошибка загрузки информации о ресторане:', error);
+            console.error('Error loading restaurant information:', error);
             const foundRestaurant = restaurants.find(r => r.id === restaurantId);
             if (foundRestaurant) {
                 setRestaurantInfo(foundRestaurant);
             } else {
                 setRestaurantInfo({
                     id: restaurantId,
-                    name: `Ресторан #${restaurantId}`,
-                    address: 'Адрес не указан',
-                    cuisine: 'Тип кухни не указан'
+                    name: `Restaurant #${restaurantId}`,
+                    address: 'Address not specified',
+                    cuisine: 'Cuisine type not specified'
                 });
             }
         } finally {
@@ -123,10 +124,10 @@ const HomePage = () => {
 
         setOrdersLoading(true);
         try {
-            console.log('Загрузка заказов пользователя ID:', user.id);
+            console.log('Loading user orders ID:', user.id);
 
             const response = await orderApi.getAllOrders();
-            console.log('Все заказы с сервера:', response.data);
+            console.log('All orders from server:', response.data);
 
             let ordersData = [];
 
@@ -145,7 +146,7 @@ const HomePage = () => {
                 order.customerEmail === userEmail
             );
 
-            console.log(`Найдено ${userOrdersData.length} заказов пользователя ${userEmail}`);
+            console.log(`Found ${userOrdersData.length} orders for user ${userEmail}`);
 
             let restaurantsList = [];
             try {
@@ -154,9 +155,9 @@ const HomePage = () => {
                     size: 100
                 });
                 restaurantsList = restaurantsResponse.data.content || [];
-                console.log('Загружено ресторанов:', restaurantsList.length);
+                console.log('Loaded restaurants:', restaurantsList.length);
             } catch (restaurantError) {
-                console.error('Ошибка загрузки ресторанов:', restaurantError);
+                console.error('Error loading restaurants:', restaurantError);
             }
 
             const enrichedOrders = userOrdersData.map(order => {
@@ -172,7 +173,7 @@ const HomePage = () => {
                 }
 
                 if (!restaurantName) {
-                    restaurantName = `Ресторан #${order.restaurantId || 'Неизвестно'}`;
+                    restaurantName = `Restaurant #${order.restaurantId || 'Unknown'}`;
                 }
 
                 return {
@@ -189,7 +190,7 @@ const HomePage = () => {
 
             setUserOrders(enrichedOrders);
         } catch (error) {
-            console.error('Ошибка загрузки заказов пользователя:', error);
+            console.error('Error loading user orders:', error);
             setUserOrders([]);
         } finally {
             setOrdersLoading(false);
@@ -239,9 +240,31 @@ const HomePage = () => {
         }
     }, [isOrderModalOpen, selectedOrder, loadRestaurantInfo]);
 
+    // Determine whether to show the order success message
+    useEffect(() => {
+        if (isOrderModalOpen && selectedOrder) {
+            // If the order has status PENDING and was created recently (e.g., within the last 5 minutes)
+            // show the success message
+            const orderDate = new Date(selectedOrder.orderDate || selectedOrder.createdAt || Date.now());
+            const now = new Date();
+            const timeDiff = Math.abs(now - orderDate); // difference in milliseconds
+            const minutesDiff = timeDiff / (1000 * 60);
+
+            // Show message for new orders (created less than 5 minutes ago)
+            // with status PENDING
+            if (selectedOrder.status === 'PENDING' && minutesDiff < 5) {
+                setShowOrderSuccessMessage(true);
+            } else {
+                setShowOrderSuccessMessage(false);
+            }
+        } else {
+            setShowOrderSuccessMessage(false);
+        }
+    }, [isOrderModalOpen, selectedOrder]);
+
     const handleRestaurantChange = useCallback((restaurant) => {
         if (cart.length > 0) {
-            if (!window.confirm('При смене ресторана корзина будет очищена. Продолжить?')) {
+            if (!window.confirm('Switching restaurants will clear your cart. Continue?')) {
                 return;
             }
             setCart([]);
@@ -253,7 +276,7 @@ const HomePage = () => {
 
     const addToCart = useCallback(async (dish) => {
         if (!selectedRestaurant) {
-            alert('Пожалуйста, выберите ресторан');
+            alert('Please select a restaurant');
             return;
         }
 
@@ -294,7 +317,7 @@ const HomePage = () => {
     }, [cart, removeFromCart, saveCartToServer]);
 
     const clearCart = useCallback(async () => {
-        if (window.confirm('Вы уверены, что хотите очистить корзину?')) {
+        if (window.confirm('Are you sure you want to clear your cart?')) {
             setCart([]);
             localStorage.removeItem('cart');
 
@@ -307,9 +330,9 @@ const HomePage = () => {
     }, []);
 
     const formatDate = useCallback((dateString) => {
-        if (!dateString) return 'Н/Д';
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU', {
+        return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
         });
@@ -337,13 +360,13 @@ const HomePage = () => {
 
     const formatTotalPrice = useCallback((price) => {
         if (price === undefined || price === null) return '0.00';
-        const priceInRubles = price / 100;
-        return priceInRubles.toFixed(2);
+        const priceInDollars = price / 100;
+        return priceInDollars.toFixed(2);
     }, []);
 
     const handleViewOrderDetails = useCallback(async (order) => {
         try {
-            console.log(`Загрузка деталей заказа #${order.id}...`);
+            console.log(`Loading order details #${order.id}...`);
             const response = await orderApi.getOrderById(order.id);
 
             if (response.data) {
@@ -354,7 +377,7 @@ const HomePage = () => {
                 setIsOrderModalOpen(true);
             }
         } catch (error) {
-            console.error('Ошибка загрузки деталей заказа:', error);
+            console.error('Error loading order details:', error);
             setSelectedOrder(order);
             setIsOrderModalOpen(true);
         }
@@ -371,7 +394,7 @@ const HomePage = () => {
     }, [cart]);
 
     const getOrderRestaurantName = useMemo(() => {
-        if (!selectedOrder) return 'Неизвестно';
+        if (!selectedOrder) return 'Unknown';
 
         if (selectedOrder.restaurantName) {
             return selectedOrder.restaurantName;
@@ -382,17 +405,17 @@ const HomePage = () => {
         }
 
         if (selectedOrder.restaurantId) {
-            return `Ресторан #${selectedOrder.restaurantId}`;
+            return `Restaurant #${selectedOrder.restaurantId}`;
         }
 
-        return 'Неизвестно';
+        return 'Unknown';
     }, [selectedOrder, restaurantInfo]);
 
     if (loading) {
         return (
             <div className="loading-container">
                 <div className="spinner"></div>
-                <p>Загрузка ресторанов...</p>
+                <p>Loading restaurants...</p>
             </div>
         );
     }
@@ -400,10 +423,10 @@ const HomePage = () => {
     if (error) {
         return (
             <div className="error-container">
-                <h2>Ошибка</h2>
+                <h2>Error</h2>
                 <p>{error}</p>
                 <button onClick={loadRestaurants} className="btn btn-retry">
-                    Попробовать снова
+                    Try again
                 </button>
             </div>
         );
@@ -414,7 +437,7 @@ const HomePage = () => {
             <div className="container">
                 <div className="grid-layout">
                     <div className="sidebar">
-                        {/* Блок выбора ресторана */}
+                        {/* Restaurant selection block */}
                         <div className="sidebar-section restaurant-selector-section">
                             <RestaurantSelector
                                 restaurants={restaurants}
@@ -423,7 +446,7 @@ const HomePage = () => {
                             />
                         </div>
 
-                        {/* Блок корзины */}
+                        {/* Shopping cart block */}
                         <div className="sidebar-section cart-section">
                             <ShoppingCart
                                 cart={cart}
@@ -437,7 +460,7 @@ const HomePage = () => {
                             />
                         </div>
 
-                        {/* Блок заказов пользователя */}
+                        {/* User orders block */}
                         {isAuthenticated() && (
                             <div className="sidebar-section orders-section">
                                 <div className="user-orders-section">
@@ -447,7 +470,7 @@ const HomePage = () => {
                                         alignItems: 'center',
                                         marginBottom: '15px'
                                     }}>
-                                        <h2 className="section-title">Мои заказы</h2>
+                                        <h2 className="section-title">My Orders</h2>
                                         <button
                                             onClick={refreshUserOrders}
                                             className="btn-refresh"
@@ -459,7 +482,7 @@ const HomePage = () => {
                                                 cursor: 'pointer',
                                                 transition: 'transform 0.3s ease'
                                             }}
-                                            title="Обновить заказы"
+                                            title="Refresh orders"
                                         >
                                             🔄
                                         </button>
@@ -473,13 +496,13 @@ const HomePage = () => {
                                             padding: '20px'
                                         }}>
                                             <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
-                                            <p style={{ marginTop: '10px', fontSize: '0.9rem' }}>Загрузка заказов...</p>
+                                            <p style={{ marginTop: '10px', fontSize: '0.9rem' }}>Loading orders...</p>
                                         </div>
                                     ) : userOrders.length === 0 ? (
                                         <div className="empty-state" style={{ padding: '15px', textAlign: 'center' }}>
-                                            <p>У вас пока нет заказов</p>
+                                            <p>You don't have any orders yet</p>
                                             <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '5px' }}>
-                                                Сделайте ваш первый заказ!
+                                                Make your first order!
                                             </p>
                                         </div>
                                     ) : (
@@ -501,7 +524,7 @@ const HomePage = () => {
                                                     }}>
                                                         <div>
                                                             <strong style={{ fontSize: '0.9rem' }}>
-                                                                Заказ #{order.id}
+                                                                Order #{order.id}
                                                             </strong>
                                                             <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2px' }}>
                                                                 {formatDate(order.orderDate)}
@@ -515,10 +538,10 @@ const HomePage = () => {
                                                         marginBottom: '10px'
                                                     }}>
                                                         <div>
-                                                            <strong>Ресторан:</strong> {order.restaurantName}
+                                                            <strong>Restaurant:</strong> {order.restaurantName}
                                                         </div>
                                                         <div>
-                                                            <strong>Сумма:</strong> ${formatTotalPrice(order.totalPrice)}
+                                                            <strong>Amount:</strong> ${formatTotalPrice(order.totalPrice)}
                                                         </div>
                                                     </div>
 
@@ -536,7 +559,7 @@ const HomePage = () => {
                                                             transition: 'all 0.2s ease'
                                                         }}
                                                     >
-                                                        Детали заказа
+                                                        Order Details
                                                     </button>
                                                 </div>
                                             ))}
@@ -573,12 +596,30 @@ const HomePage = () => {
                     setIsOrderModalOpen(false);
                     setSelectedOrder(null);
                     setRestaurantInfo(null);
+                    setShowOrderSuccessMessage(false);
                 }}
-                title={`Детали заказа #${selectedOrder?.id}`}
+                title={`Order Details #${selectedOrder?.id}`}
                 size="lg"
             >
                 {selectedOrder && (
                     <div className="order-details-modal">
+                        {/* Order success message */}
+                        {showOrderSuccessMessage && (
+                            <div className="order-success-message" style={{
+                                backgroundColor: '#d4edda',
+                                color: '#155724',
+                                padding: '15px',
+                                borderRadius: '8px',
+                                marginBottom: '20px',
+                                border: '1px solid #c3e6cb',
+                                textAlign: 'center',
+                                fontWeight: 'bold',
+                                fontSize: '1.1rem'
+                            }}>
+                                ✅ Your order has been placed!!!
+                            </div>
+                        )}
+
                         {(selectedOrder.restaurantId || restaurantInfo) && (
                             <div className="restaurant-section" style={{
                                 backgroundColor: '#e8f4fd',
@@ -595,13 +636,13 @@ const HomePage = () => {
                                     gap: '8px'
                                 }}>
                                     <span>🍽️</span>
-                                    <span>Информация о ресторане</span>
+                                    <span>Restaurant Information</span>
                                 </h4>
 
                                 {restaurantLoading ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
-                                        <span>Загрузка информации о ресторане...</span>
+                                        <span>Loading restaurant information...</span>
                                     </div>
                                 ) : (
                                     <div className="restaurant-details">
@@ -612,27 +653,27 @@ const HomePage = () => {
                                             fontSize: '0.9rem'
                                         }}>
                                             <div>
-                                                <strong>Название:</strong>
+                                                <strong>Name:</strong>
                                                 <div style={{ marginTop: '4px' }}>{getOrderRestaurantName}</div>
                                             </div>
 
                                             {restaurantInfo?.address && (
                                                 <div>
-                                                    <strong>Адрес:</strong>
+                                                    <strong>Address:</strong>
                                                     <div style={{ marginTop: '4px' }}>{restaurantInfo.address}</div>
                                                 </div>
                                             )}
 
                                             {restaurantInfo?.cuisine && (
                                                 <div>
-                                                    <strong>Кухня:</strong>
+                                                    <strong>Cuisine:</strong>
                                                     <div style={{ marginTop: '4px' }}>{restaurantInfo.cuisine}</div>
                                                 </div>
                                             )}
 
                                             {restaurantInfo?.phone && (
                                                 <div>
-                                                    <strong>Телефон:</strong>
+                                                    <strong>Phone:</strong>
                                                     <div style={{ marginTop: '4px' }}>{restaurantInfo.phone}</div>
                                                 </div>
                                             )}
@@ -655,7 +696,7 @@ const HomePage = () => {
                                 borderBottom: '2px solid #dee2e6',
                                 paddingBottom: '8px'
                             }}>
-                                Основная информация
+                                Basic Information
                             </h4>
 
                             <div style={{
@@ -664,42 +705,42 @@ const HomePage = () => {
                                 gap: '15px'
                             }}>
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>ID заказа:</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Order ID:</div>
                                     <div>#{selectedOrder.id}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Статус:</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Status:</div>
                                     <div>{getStatusBadge(selectedOrder.status)}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Дата и время:</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Date & Time:</div>
                                     <div>{formatDate(selectedOrder.orderDate)}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Клиент:</div>
-                                    <div>{selectedOrder.customerFullName || 'Не указано'}</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Customer:</div>
+                                    <div>{selectedOrder.customerFullName || 'Not specified'}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Телефон:</div>
-                                    <div>{selectedOrder.customerTelephone || 'Не указан'}</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Phone:</div>
+                                    <div>{selectedOrder.customerTelephone || 'Not specified'}</div>
                                 </div>
 
                                 <div className="summary-row">
                                     <div style={{ fontWeight: '600', marginBottom: '4px' }}>Email:</div>
-                                    <div>{selectedOrder.customerEmail || 'Не указан'}</div>
+                                    <div>{selectedOrder.customerEmail || 'Not specified'}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Адрес доставки:</div>
-                                    <div>{selectedOrder.deliveryAddress || 'Не указан'}</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Delivery Address:</div>
+                                    <div>{selectedOrder.deliveryAddress || 'Not specified'}</div>
                                 </div>
 
                                 <div className="summary-row">
-                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Общая сумма:</div>
+                                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>Total Amount:</div>
                                     <div style={{ fontWeight: '700', fontSize: '1.1rem', color: '#198754' }}>
                                         ${formatTotalPrice(selectedOrder.totalPrice)}
                                     </div>
@@ -715,7 +756,7 @@ const HomePage = () => {
                                     borderBottom: '2px solid #dee2e6',
                                     paddingBottom: '8px'
                                 }}>
-                                    Состав заказа ({selectedOrder.items.length} позиций)
+                                    Order Items ({selectedOrder.items.length} items)
                                 </h4>
                                 <div className="items-list" style={{
                                     maxHeight: '250px',
@@ -731,10 +772,10 @@ const HomePage = () => {
                                         fontWeight: '600',
                                         borderBottom: '2px solid #dee2e6'
                                     }}>
-                                        <div>Блюдо</div>
-                                        <div>Кол-во</div>
-                                        <div>Цена</div>
-                                        <div>Сумма</div>
+                                        <div>Dish</div>
+                                        <div>Qty</div>
+                                        <div>Price</div>
+                                        <div>Amount</div>
                                     </div>
 
                                     {selectedOrder.items.map((item, index) => {
@@ -750,7 +791,7 @@ const HomePage = () => {
                                             }}>
                                                 <div>
                                                     <div style={{ fontWeight: '500' }}>
-                                                        {item.dishName || `Блюдо #${item.dishId}`}
+                                                        {item.dishName || `Dish #${item.dishId}`}
                                                     </div>
                                                     {item.dishDescription && (
                                                         <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '2px' }}>
@@ -766,7 +807,7 @@ const HomePage = () => {
                                                         ${formatTotalPrice(item.price)}
                                                     </div>
                                                     <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                                                        за шт.
+                                                        per item
                                                     </div>
                                                 </div>
                                                 <div style={{ fontWeight: '600', color: '#198754' }}>
@@ -786,7 +827,7 @@ const HomePage = () => {
                                 }}>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '5px' }}>
-                                            Итого:
+                                            Total:
                                         </div>
                                         <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#000000' }}>
                                             ${formatTotalPrice(selectedOrder.totalPrice)}
@@ -799,14 +840,14 @@ const HomePage = () => {
                         <div className="modal-actions" style={{
                             marginTop: '25px',
                             display: 'flex',
-                            justifyContent: 'flex-end',
-                            gap: '10px'
+                            justifyContent: 'flex-end'
                         }}>
                             <button
                                 onClick={() => {
                                     setIsOrderModalOpen(false);
                                     setSelectedOrder(null);
                                     setRestaurantInfo(null);
+                                    setShowOrderSuccessMessage(false);
                                 }}
                                 className="btn btn-close"
                                 style={{
@@ -816,33 +857,12 @@ const HomePage = () => {
                                     border: 'none',
                                     borderRadius: '8px',
                                     cursor: 'pointer',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
+                                    width: '100%'
                                 }}
                             >
-                                Закрыть
+                                Close
                             </button>
-
-                            {selectedOrder?.status === 'PENDING' && (
-                                <button
-                                    onClick={() => {
-                                        if (window.confirm('Вы уверены, что хотите отменить заказ?')) {
-                                            alert('Функция отмены заказа в разработке');
-                                        }
-                                    }}
-                                    className="btn btn-cancel"
-                                    style={{
-                                        padding: '10px 20px',
-                                        backgroundColor: '#dc3545',
-                                        color: '#ffffff',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '500'
-                                    }}
-                                >
-                                    Отменить заказ
-                                </button>
-                            )}
                         </div>
                     </div>
                 )}
@@ -855,7 +875,7 @@ const HomePage = () => {
                     flex-direction: column;
                     background-color: #f5f5f5;
                 }
-                
+
                 .container {
                     max-width: 1400px;
                     margin: 0 auto;
@@ -863,7 +883,7 @@ const HomePage = () => {
                     flex: 1;
                     width: 100%;
                 }
-                
+
                 .grid-layout {
                     display: grid;
                     grid-template-columns: 350px 1fr;
@@ -871,7 +891,7 @@ const HomePage = () => {
                     align-items: start;
                     min-height: 0;
                 }
-                
+
                 .sidebar {
                     position: sticky;
                     top: 20px;
@@ -882,12 +902,12 @@ const HomePage = () => {
                     max-height: none;
                     overflow: visible;
                 }
-                
+
                 .sidebar-section {
                     width: 100%;
                     margin-bottom: 0;
                 }
-                
+
                 .user-orders-section {
                     background-color: #ffffff;
                     border: 2px solid #000000;
@@ -896,31 +916,31 @@ const HomePage = () => {
                     margin-top: 0;
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                 }
-                
+
                 .orders-list {
                     max-height: 400px;
                     overflow-y: auto;
                     padding-right: 5px;
                 }
-                
+
                 .orders-list::-webkit-scrollbar {
                     width: 6px;
                 }
-                
+
                 .orders-list::-webkit-scrollbar-track {
                     background: #f1f1f1;
                     border-radius: 3px;
                 }
-                
+
                 .orders-list::-webkit-scrollbar-thumb {
                     background: #888;
                     border-radius: 3px;
                 }
-                
+
                 .orders-list::-webkit-scrollbar-thumb:hover {
                     background: #555;
                 }
-                
+
                 .order-item {
                     border: 1px solid #000;
                     border-radius: 8px;
@@ -929,54 +949,54 @@ const HomePage = () => {
                     background-color: #fff;
                     transition: all 0.3s ease;
                 }
-                
+
                 .order-item:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 }
-                
+
                 .btn-view-details:hover {
                     background-color: #000000 !important;
                     color: #ffffff !important;
                     transform: translateY(-1px);
                     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                 }
-                
+
                 .btn-refresh:hover {
                     opacity: 0.7;
                     transform: rotate(180deg);
                 }
-                
+
                 .main-content-area {
                     min-height: 100vh;
                     overflow: visible;
                 }
-                
+
                 .restaurant-header {
                     margin-bottom: 30px;
                     padding-bottom: 15px;
                     border-bottom: 2px solid #000000;
                 }
-                
+
                 .restaurant-name {
                     font-size: 2rem;
                     margin-bottom: 8px;
                     color: #000000;
                 }
-                
+
                 .restaurant-info {
                     font-size: 1rem;
                     color: #666;
                 }
-                
+
                 .cuisine, .address {
                     margin: 0 5px;
                 }
-                
+
                 .separator {
                     margin: 0 10px;
                 }
-                
+
                 .loading-container {
                     display: flex;
                     flex-direction: column;
@@ -985,7 +1005,7 @@ const HomePage = () => {
                     min-height: 300px;
                     gap: 15px;
                 }
-                
+
                 .spinner {
                     border: 3px solid #f3f3f3;
                     border-top: 3px solid #000000;
@@ -994,17 +1014,17 @@ const HomePage = () => {
                     height: 40px;
                     animation: spin 1s linear infinite;
                 }
-                
+
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
-                
+
                 .error-container {
                     text-align: center;
                     padding: 40px 20px;
                 }
-                
+
                 .btn-retry {
                     background-color: #000000;
                     color: white;
@@ -1014,12 +1034,12 @@ const HomePage = () => {
                     cursor: pointer;
                     margin-top: 15px;
                 }
-                
+
                 .btn-retry:hover {
                     background-color: #333333;
                 }
-                
-                /* Футер (если есть) */
+
+                /* Footer (if present) */
                 .footer {
                     margin-top: auto;
                     background-color: #000;
@@ -1027,57 +1047,57 @@ const HomePage = () => {
                     padding: 20px;
                     text-align: center;
                 }
-                
-                /* Адаптивность */
+
+                /* Responsiveness */
                 @media (max-width: 1200px) {
                     .container {
                         padding: 15px;
                     }
-                    
+
                     .grid-layout {
                         gap: 20px;
                     }
                 }
-                
+
                 @media (max-width: 1024px) {
                     .grid-layout {
                         grid-template-columns: 300px 1fr;
                     }
-                    
+
                     .orders-list {
                         max-height: 350px;
                     }
                 }
-                
+
                 @media (max-width: 768px) {
                     .grid-layout {
                         grid-template-columns: 1fr;
                         gap: 20px;
                     }
-                    
+
                     .sidebar {
                         position: static;
                         gap: 15px;
                     }
-                    
+
                     .orders-list {
                         max-height: 300px;
                     }
                 }
-                
+
                 @media (max-width: 480px) {
                     .container {
                         padding: 10px;
                     }
-                    
+
                     .grid-layout {
                         gap: 15px;
                     }
-                    
+
                     .user-orders-section {
                         padding: 15px;
                     }
-                    
+
                     .orders-list {
                         max-height: 250px;
                     }

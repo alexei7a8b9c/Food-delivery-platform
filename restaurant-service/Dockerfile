@@ -1,7 +1,5 @@
-FROM eclipse-temurin:21-jre-jammy
-
-VOLUME /tmp
-
-COPY target/*.jar app.jar
-
-ENTRYPOINT ["java","-jar","/app.jar"]
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY target/restaurant-service-1.0.0.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]

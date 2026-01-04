@@ -3,17 +3,16 @@ version: '3.8'
 networks:
   food-delivery-network:
     driver: bridge
-    name: food-delivery-network
 
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
-  postgres_backup:
   uploads_data:
+  logs_data:
 
 services:
-  # ==================== ИНФРАСТРУКТУРА ====================
+  # ==================== БАЗОВАЯ ИНФРАСТРУКТУРА ====================
   postgres:
     image: postgres:15-alpine
     container_name: food-delivery-postgres
@@ -21,39 +20,27 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: food_delivery
-      POSTGRES_MULTIPLE_DATABASES: "user_db,order_db,restaurant_db,admin"
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - food-delivery-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 40s
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: food-delivery-redis
     hostname: redis
-    command: redis-server --requirepass redis123 --appendonly yes
+    command: redis-server --requirepass redis123
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - food-delivery-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   rabbitmq:
@@ -70,252 +57,87 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - food-delivery-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   # ==================== EUREKA SERVER ====================
   eureka-server:
-    build:
-      context: ./eureka-server
-      dockerfile: Dockerfile
+    image: eureka-server:latest
     container_name: eureka-server
     hostname: eureka-server
     ports:
       - "8761:8761"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_SECURITY_USER_NAME: admin
-      SPRING_SECURITY_USER_PASSWORD: admin123
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://admin:admin123@eureka-server:8761/eureka/
-      JAVA_OPTS: >
-        -Xms256m
-        -Xmx512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dspring.profiles.active=docker
     networks:
       - food-delivery-network
-    healthcheck:
-      test: ["CMD", "curl", "-u", "admin:admin123", "-f", "http://localhost:8761/actuator/health"]
-      interval: 20s
-      timeout: 10s
-      retries: 8
-      start_period: 60s
     restart: unless-stopped
 
-  # ==================== USER SERVICE ====================
+  # ==================== СЕРВИСЫ ПРИЛОЖЕНИЯ ====================
   user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
+    image: user-service:latest
     container_name: user-service
     hostname: user-service
     ports:
       - "8083:8083"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_APPLICATION_NAME: user-service
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://admin:admin123@eureka-server:8761/eureka/
-      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
-      EUREKA_CLIENT_FETCH_REGISTRY: "true"
-      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
-      EUREKA_INSTANCE_HOSTNAME: user-service
-      EUREKA_INSTANCE_INSTANCE_ID: ${spring.application.name}:${server.port}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
-      SPRING_DATASOURCE_USERNAME: user_db
-      SPRING_DATASOURCE_PASSWORD: user_db
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
-      JWT_SECRET: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
-      JWT_EXPIRATION: 86400000
-      JAVA_OPTS: >
-        -Xms256m
-        -Xmx512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dspring.profiles.active=docker
-        -Deureka.client.serviceUrl.defaultZone=http://admin:admin123@eureka-server:8761/eureka/
     networks:
       - food-delivery-network
     depends_on:
-      eureka-server:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    restart: on-failure:3
+      - eureka-server
+    restart: unless-stopped
 
-  # ==================== RESTAURANT SERVICE ====================
   restaurant-service:
-    build:
-      context: ./restaurant-service
-      dockerfile: Dockerfile
+    image: restaurant-service:latest
     container_name: restaurant-service
     hostname: restaurant-service
     ports:
       - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_APPLICATION_NAME: restaurant-service
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://admin:admin123@eureka-server:8761/eureka/
-      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
-      EUREKA_CLIENT_FETCH_REGISTRY: "true"
-      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
-      EUREKA_INSTANCE_HOSTNAME: restaurant-service
-      EUREKA_INSTANCE_INSTANCE_ID: ${spring.application.name}:${server.port}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/restaurant_db
-      SPRING_DATASOURCE_USERNAME: restaurant_db
-      SPRING_DATASOURCE_PASSWORD: restaurant_db
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
-      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 10MB
-      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 10MB
-      FILE_UPLOAD_DIR: /uploads
-      JWT_SECRET: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
-      JAVA_OPTS: >
-        -Xms256m
-        -Xmx512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dspring.profiles.active=docker
-        -Deureka.client.serviceUrl.defaultZone=http://admin:admin123@eureka-server:8761/eureka/
     volumes:
       - uploads_data:/uploads
     networks:
       - food-delivery-network
     depends_on:
-      eureka-server:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    restart: on-failure:3
+      - eureka-server
+    restart: unless-stopped
 
-  # ==================== ORDER SERVICE ====================
   order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
+    image: order-service:latest
     container_name: order-service
     hostname: order-service
     ports:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_APPLICATION_NAME: order-service
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://admin:admin123@eureka-server:8761/eureka/
-      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
-      EUREKA_CLIENT_FETCH_REGISTRY: "true"
-      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
-      EUREKA_INSTANCE_HOSTNAME: order-service
-      EUREKA_INSTANCE_INSTANCE_ID: ${spring.application.name}:${server.port}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/order_db
-      SPRING_DATASOURCE_USERNAME: order_db
-      SPRING_DATASOURCE_PASSWORD: order_db
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-      SPRING_REDIS_PASSWORD: redis123
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
-      JWT_SECRET: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
-      JWT_EXPIRATION: 86400000
-      JAVA_OPTS: >
-        -Xms256m
-        -Xmx512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dspring.profiles.active=docker
-        -Deureka.client.serviceUrl.defaultZone=http://admin:admin123@eureka-server:8761/eureka/
     networks:
       - food-delivery-network
     depends_on:
-      eureka-server:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-    restart: on-failure:3
+      - eureka-server
+    restart: unless-stopped
 
   # ==================== API GATEWAY ====================
   api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+    image: api-gateway:latest
     container_name: api-gateway
     hostname: api-gateway
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_APPLICATION_NAME: api-gateway
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://admin:admin123@eureka-server:8761/eureka/
-      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
-      EUREKA_CLIENT_FETCH_REGISTRY: "true"
-      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
-      EUREKA_INSTANCE_HOSTNAME: api-gateway
-      JWT_SECRET: mysecretkeymysecretkeymysecretkeymysecretkeymysecretkeymysecretkey
-      JAVA_OPTS: >
-        -Xms256m
-        -Xmx512m
-        -Djava.security.egd=file:/dev/./urandom
-        -Dspring.profiles.active=docker
-        -Deureka.client.serviceUrl.defaultZone=http://admin:admin123@eureka-server:8761/eureka/
-        -Dlogging.level.org.springframework.cloud.gateway=DEBUG
-        -Dlogging.level.com.example.apigateway=DEBUG
     networks:
       - food-delivery-network
     depends_on:
-      eureka-server:
-        condition: service_healthy
-      user-service:
-        condition: service_healthy
-      restaurant-service:
-        condition: service_healthy
-      order-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 150s
-    restart: on-failure:3
+      - eureka-server
+    restart: unless-stopped
 
-  # ==================== FRONTEND ====================
+  # ==================== ФРОНТЕНД ====================
   frontend:
-    build:
-      context: ./front-end
-      dockerfile: Dockerfile
+    image: frontend:latest
     container_name: food-delivery-frontend
     ports:
       - "3000:80"
-    environment:
-      REACT_APP_API_URL: http://localhost:8080
-      REACT_APP_API_BASE: http://localhost:8080
-      REACT_APP_DEBUG: "true"
     networks:
       - food-delivery-network
     depends_on:

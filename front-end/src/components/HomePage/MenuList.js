@@ -26,22 +26,22 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
         try {
             console.log('Loading dishes for restaurant:', restaurantId);
 
-            // Получаем все блюда и фильтруем на клиенте
+            // Get all dishes and filter on the client side
             const response = await dishApi.getAll({
                 page: 0,
-                size: 1000, // Получаем много блюд для фильтрации
+                size: 1000, // Get many dishes for filtering
                 sortBy: 'name',
                 sortDirection: 'asc'
             });
 
             console.log('All dishes response:', response.data);
 
-            // Фильтруем блюда по restaurantId
+            // Filter dishes by restaurantId
             let filteredDishes = (response.data.content || []).filter(dish =>
                 dish.restaurantId == restaurantId
             );
 
-            // Применяем поиск по названию и описанию
+            // Apply search by name and description
             if (searchTerm) {
                 const term = searchTerm.toLowerCase();
                 filteredDishes = filteredDishes.filter(dish =>
@@ -50,7 +50,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
                 );
             }
 
-            // Применяем фильтр по цене
+            // Apply price filter
             if (minPrice) {
                 const min = parseFloat(minPrice);
                 filteredDishes = filteredDishes.filter(dish =>
@@ -69,7 +69,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
             setDishes(filteredDishes);
         } catch (error) {
             console.error('Error loading dishes:', error);
-            // Показываем пользователю более информативное сообщение
+            // Show a more informative message to the user
             if (error.response) {
                 console.error('Response error:', error.response.status, error.response.data);
             }
@@ -97,7 +97,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
         return (
             <div className="loading">
                 <div className="spinner"></div>
-                <p>Загрузка меню...</p>
+                <p>Loading menu...</p>
             </div>
         );
     }
@@ -105,12 +105,12 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
     return (
         <div className="menu-list">
             <div className="menu-header">
-                <h2 className="section-title">Меню</h2>
+                <h2 className="section-title">Menu</h2>
 
                 <form onSubmit={handleSearch} className="search-form">
                     <input
                         type="text"
-                        placeholder="Поиск блюд по названию или описанию..."
+                        placeholder="Search dishes by name or description..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
@@ -119,7 +119,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
                     <div className="price-filters">
                         <input
                             type="number"
-                            placeholder="Мин. цена"
+                            placeholder="Min. price"
                             value={minPrice}
                             onChange={(e) => setMinPrice(e.target.value)}
                             className="price-input"
@@ -128,7 +128,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
                         />
                         <input
                             type="number"
-                            placeholder="Макс. цена"
+                            placeholder="Max. price"
                             value={maxPrice}
                             onChange={(e) => setMaxPrice(e.target.value)}
                             className="price-input"
@@ -139,10 +139,10 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
 
                     <div className="search-buttons">
                         <button type="submit" className="btn btn-search">
-                            🔍 Поиск
+                            🔍 Search
                         </button>
                         <button type="button" onClick={handleClear} className="btn btn-clear">
-                            ❌ Очистить
+                            ❌ Clear
                         </button>
                     </div>
                 </form>
@@ -151,16 +151,16 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
             {!restaurantId ? (
                 <div className="empty-state">
                     <div className="empty-icon">🏪</div>
-                    <h3>Выберите ресторан</h3>
-                    <p>Пожалуйста, выберите ресторан из списка слева</p>
+                    <h3>Select a restaurant</h3>
+                    <p>Please select a restaurant from the list on the left</p>
                 </div>
             ) : dishes.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-icon">🍽️</div>
-                    <h3>Блюд не найдено</h3>
-                    <p>У этого ресторана пока нет блюд в меню</p>
+                    <h3>No dishes found</h3>
+                    <p>This restaurant doesn't have any dishes in the menu yet</p>
                     <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
-                        Чтобы добавить блюда, перейдите на страницу администрирования
+                        To add dishes, go to the administration page
                     </p>
                 </div>
             ) : (
@@ -187,7 +187,7 @@ const MenuList = ({ restaurantId, onAddToCart }) => {
                                     onClick={() => onAddToCart(dish)}
                                     className="btn btn-add-to-cart"
                                 >
-                                    + Добавить в корзину
+                                    + Add to Cart
                                 </button>
                             </div>
                         </div>
