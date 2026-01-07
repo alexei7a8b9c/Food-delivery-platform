@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Function for decoding JWT token
+    // Функция для декодирования JWT токена
     const decodeToken = (token) => {
         try {
             const decoded = jwtDecode(token);
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
                     email: response.data.email,
                     id: response.data.userId,
                     fullName: response.data.fullName,
-                    telephone: responseData.data.telephone || '',
+                    telephone: response.data.telephone || '',
                     token: token,
                     roles: roles,
                     decoded: decoded
@@ -169,11 +169,11 @@ export const AuthProvider = ({ children }) => {
         console.log('Logging out - clearing all user data');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        // Also clear cart
+
         localStorage.removeItem('cart');
         setUser(null);
 
-        // Force page reload for complete state reset
+
         window.location.href = '/';
     };
 
