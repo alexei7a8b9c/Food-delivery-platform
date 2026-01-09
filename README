@@ -1,0 +1,77 @@
+Food Delivery Platform 🍕
+git clone https://github.com/alexei7a8b9c/Food-delivery-platform
+ADMIN login: admin@fooddelivery.com
+ADMIN password: admin123
+A modern, scalable microservices-based food delivery platform built with Spring Boot, Spring Cloud, and PostgreSQL.
+🚀 Overview
+This platform provides a complete food ordering ecosystem with:
+User authentication and management
+Restaurant and menu management
+Order processing and cart functionality
+Real-time notifications via RabbitMQ
+API Gateway for centralized routing
+Service discovery with Eureka Server
+🏗️ Architecture
+The platform follows a microservices architecture with the following services:
+Core Services
+Front-end (Port 3000)
+API Gateway (Port 8080) - Centralized routing and JWT authentication
+Eureka Server (Port 8761) - Service discovery and registration
+User Service (Port 8083) - User authentication and management
+Restaurant Service (Port 8082) - Restaurant and dish management
+Order Service (Port 8081) - Order processing and cart functionality
+Infrastructure
+PostgreSQL - Primary database for each service
+Redis - Caching and cart storage
+RabbitMQ - Message broker for asynchronous communication
+🛠️ Technology Stack
+Backend
+Java 21 - Programming language
+Spring Boot 3.x - Framework
+Spring Cloud Gateway - API Gateway
+Spring Security - Security framework
+Spring Data JPA - ORM framework
+JWT - Authentication tokens
+Flyway - Database migrations
+Databases & Caching
+PostgreSQL - Primary database
+Redis - In-memory data store
+RabbitMQ - Message broker
+Documentation & Monitoring
+Swagger/OpenAPI 3.0 - API documentation
+Spring Boot Actuator - Health checks and metrics
+📋 Prerequisites
+Java 21 or higher
+Maven 3.8+
+PostgreSQL 14+
+Redis 6+
+RabbitMQ 3.9+
+Docker (optional)
+Access the Application
+API Gateway: http://localhost:8080
+Eureka Dashboard: http://localhost:8761
+Swagger UI: http://localhost:8080/swagger-ui.html
+📖 API Documentation
+User Service (Port 8083)
+POST /api/auth/register - User registration
+POST /api/auth/login - User login
+GET /api/users/profile - Get user profile
+GET /api/users/{id} - Get user by ID (Admin only)
+Restaurant Service (Port 8082)
+GET /api/restaurants - Get all restaurants
+GET /api/restaurants/{id} - Get restaurant by ID
+GET /api/restaurants/{id}/dishes - Get restaurant dishes
+POST /api/restaurants - Create restaurant (Admin only)
+GET /api/dishes - Get all dishes
+POST /api/dishes - Create dish (Admin/Manager)
+Order Service (Port 8081)
+GET /api/cart - Get user cart
+POST /api/cart/items - Add item to cart
+POST /api/orders - Create order
+GET /api/orders/user/{userId} - Get user orders
+GET /api/orders/admin/all - Get all orders (Admin/Manager)
+🔐 Authentication
+The platform uses JWT tokens for authentication:
+Register or login to get access token
+Include token in Authorization header: Bearer <token>
+Tokens expire after 24 hours (access token) and 30 days (refresh token)
